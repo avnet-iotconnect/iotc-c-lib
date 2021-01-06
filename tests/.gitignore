@@ -1,0 +1,5 @@
+# test binaries
+test-*
+
+# libs cloned for testing purposes
+cJSON

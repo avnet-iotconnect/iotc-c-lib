@@ -1,0 +1,5 @@
+#project files
+.idea
+.cproject
+.project
+cmake-build-*
