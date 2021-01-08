@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# Shebang is for text editors and IDEs.
+# This file ought to be sourced form other scripts
+
+# When devices connect to IoTHub they need this prefix in front od IoTConnect UUID.
+# Device names become CPID-UUID (with a dash between the two)
+CPID="YourCPID"
+
+# Certificate Creation Settings
+
+# How long will the CA certificate and device certificate be valid for.
+# If the CA Certificate expires, the device certiicates will not be accepeted, regardless of validity
+# 30 days is a safe value allowing for testing certificates
+X509_VALIDITY=9999
+
+
+#### x509 CERTIFICATE-PROPERTIES ####
+# The values in this section should be chosen to reflect in the created certificates.
+# They may be arbitrary and do not tie directly into IoTConnect
+# See https://en.wikipedia.org/wiki/Certificate_signing_request for more information
+# If you are using the self-signed CA Certificate generation you may not need to follow the recommended guidelines,
+# but they are a good practice
+
+X509_O='NrfDemo'        # Organization/Company name
+X509_OU='NrfDemo Org'   # OrganizationalUnit Unit, Field to differentiate between divisions within an organization  Do not abbreviate or use any of these symbols: ! @ # $ % ^ * ( ) ~ ? > < / \.
+X509_L='Chicago'        # Locality/City
+X509_ST='Illinois'      # StateOrProvinceName, U.S. and Canadian customers should enter a State or Province name. Do not abbreviate.
+X509_C='US'             # Country Name - 2-character ISO format country code per https://www.iso.org/obp/ui/#iso:pub:PUB500001:en
+# CN: Common name Name for the generated Root Certificate
+# File names will be based on this, so it is a good idea to avoid spaces and letters that are not filename friendly
+X509_CN='Your Comon Name'
+#########################################
+
