@@ -17,7 +17,7 @@
 void c(const char* p) {
     cJSON* root = cJSON_Parse(p);
     char *jsonBaseUrl = (cJSON_GetObjectItem(root, "baseUrl"))->valuestring;
-    char * base_url = malloc(strlen(jsonBaseUrl) + 1);
+    char * base_url = (char*)malloc(strlen(jsonBaseUrl) + 1);
     strcpy(base_url, jsonBaseUrl);
 }
 static bool split_url(IOTCL_DiscoveryResponse *response) {
@@ -31,7 +31,7 @@ static bool split_url(IOTCL_DiscoveryResponse *response) {
     }
     int num_found = 0;
     char * host = NULL;
-    for (int i = 0; i < base_url_len; i++) {
+    for (size_t i = 0; i < base_url_len; i++) {
         if (base_url_copy[i] == '/') {
             num_found++;
             if (num_found == 2) {
@@ -62,21 +62,24 @@ IOTCL_DiscoveryResponse *IOTC_DiscoveryParseDiscoveryResponse(const char *respon
         return NULL;
     }
 
-    IOTCL_DiscoveryResponse *response = calloc(1, sizeof(IOTCL_DiscoveryResponse));
+    IOTCL_DiscoveryResponse *response = (IOTCL_DiscoveryResponse*)calloc(1, sizeof(IOTCL_DiscoveryResponse));
     if (!response) {
         goto cleanup;
     }
 
-    char *jsonBaseUrl = base_url_cjson->valuestring;
-    if (!jsonBaseUrl) {
-        goto cleanup;
-    }
+    { // separate the declaration into a block to allow jump without warnings
+        char *jsonBaseUrl = base_url_cjson->valuestring;
+        if (!jsonBaseUrl) {
+            goto cleanup;
+        }
 
-    response->url = IOTCL_Strdup(jsonBaseUrl);
-    if (split_url(response)) {
-        cJSON_Delete(json_root);
-        return response;
-    } // else cleanup and return null
+        response->url = IOTCL_Strdup(jsonBaseUrl);
+        if (split_url(response)) {
+            cJSON_Delete(json_root);
+            return response;
+        } // else cleanup and return null
+
+    }
 
     cleanup:
     cJSON_Delete(json_root);
@@ -95,7 +98,7 @@ void IOTCL_DiscoveryFreeDiscoveryResponse(IOTCL_DiscoveryResponse *response) {
 
 IOTCL_SyncResponse *IOTCL_DiscoveryParseSyncResponse(const char *response_data) {
 
-    IOTCL_SyncResponse *response = calloc(1, sizeof(IOTCL_SyncResponse));
+    IOTCL_SyncResponse *response = (IOTCL_SyncResponse*)calloc(1, sizeof(IOTCL_SyncResponse));
     if (NULL == response) {
         return NULL;
     }
@@ -111,7 +114,7 @@ IOTCL_SyncResponse *IOTCL_DiscoveryParseSyncResponse(const char *response_data) 
         response->ds = IOTCL_SR_PARSING_ERROR;
         return response;
     }
-    response->ds = cJSON_GetObjectItem(sync_res_json, "ds")->valueint;
+    response->ds = (IOTCL_SyncResult)cJSON_GetObjectItem(sync_res_json, "ds")->valueint;
     if (response->ds == IOTCL_SR_OK) {
         response->cpid = IOTCL_Strdup((cJSON_GetObjectItem(sync_res_json, "cpId"))->valuestring);
         response->dtg = IOTCL_Strdup((cJSON_GetObjectItem(sync_res_json, "dtg"))->valuestring);

@@ -27,7 +27,7 @@ extern "C" {
 // This templates can be used for raw HTTP headers in case that the platform doesn't GET/POST functionality
 #define IOTCONNECT_DISCOVERY_HEADER_TEMPLATE \
     "GET /api/sdk/cpid/%s/lang/M_C/ver/2.0/env/%s HTTP/1.1\r\n" \
-    "Host: "IOTCONNECT_DISCOVERY_HOSTNAME"\r\n" \
+    "Host: " IOTCONNECT_DISCOVERY_HOSTNAME "\r\n" \
     "Content-Type: application/json\r\n" \
     "Connection: close\r\n" \
     "\r\n"
