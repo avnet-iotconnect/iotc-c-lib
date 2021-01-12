@@ -12,7 +12,8 @@ and MQTT implementation to be handled by the user code, where the library would 
 for interpreting or composing the JSON that needs to be received or sent with underlying specific 
 protocols.
 
-Visit the [iotc-nrf-sdk](https://github.com/Avnet/iotc-nrf-sdk) GitHub repository for an example use of this library.
+Visit the [iotc-nrf-sdk](https://github.com/Avnet/iotc-nrf-sdk) or [iotc-wiced](https://github.com/Avnet/iotc-nrf-sdk) GitHub repositories 
+for examples on use of this library.
 
 ## Features
 
