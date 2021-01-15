@@ -35,7 +35,7 @@ extern "C" {
 // This templates can be used for raw HTTP headers in case that the platform doesn't GET/POST functionality
 // you need to pass URL returned from discovery host ,host form discovery host, post_data_lan and post_data
 #define IOTCONNECT_SYNC_HEADER_TEMPLATE \
-    "POST /%s/sync? HTTP/1.1\r\n" \
+    "POST %s/sync? HTTP/1.1\r\n" \
     "Host: %s\r\n" \
     "Content-Type: application/json; charset=utf-8\r\n" \
     "Connection: close\r\n" \

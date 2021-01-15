@@ -38,8 +38,8 @@ static bool split_url(IOTCL_DiscoveryResponse *response) {
                 host = &base_url_copy[i + 1];
                 // host will be terminated below
             } else if (num_found == 3) {
-                base_url_copy[i] = 0; // terminate host
-                response->path = IOTCL_Strdup(&base_url_copy[i + 1]);
+                response->path = IOTCL_Strdup(&base_url_copy[i]); // first make a copy
+                base_url_copy[i] = 0; // then terminate host so that it can be duped below
                 break;
             }
         }
