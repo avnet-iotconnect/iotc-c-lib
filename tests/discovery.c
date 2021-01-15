@@ -56,7 +56,7 @@ static void report_sync_error(IOTCL_SyncResponse *response, const char* sync_res
 static void test() {
     {
         IOTCL_DiscoveryResponse *dr;
-        dr = IOTC_DiscoveryParseDiscoveryResponse(EXAMPLE_DISCOVERY_RESPONSE);
+        dr = IOTCL_DiscoveryParseDiscoveryResponse(EXAMPLE_DISCOVERY_RESPONSE);
         printf("Discovery Response:\n");
         printf("url: %s\n", dr->url);
         printf("host: %s\n", dr->host);

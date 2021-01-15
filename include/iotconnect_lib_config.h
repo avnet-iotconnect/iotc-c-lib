@@ -8,8 +8,6 @@
 #ifndef IOTCONNECT_LIB_CONFIG_H
 #define IOTCONNECT_LIB_CONFIG_H
 
-#include <errno.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
