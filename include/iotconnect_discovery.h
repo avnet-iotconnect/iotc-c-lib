@@ -65,6 +65,7 @@ typedef enum {
     IOTCL_SR_PARSING_ERROR,
 } IOTCL_SyncResult;
 
+//NOTE: Append "sync?" to the base url or path in order to to do a sync POST
 typedef struct IOTCL_DiscoveryResponse {
     char *url;
     char *host; // parsed out host from the url
@@ -91,7 +92,7 @@ typedef struct IOTCL_SyncResponse {
 
 // You must free the response when done
 // Returned NULL means that there was a memory allocation or a parsing error
-IOTCL_DiscoveryResponse *IOTC_DiscoveryParseDiscoveryResponse(const char *response_data);
+IOTCL_DiscoveryResponse *IOTCL_DiscoveryParseDiscoveryResponse(const char *response_data);
 
 void IOTCL_DiscoveryFreeDiscoveryResponse(IOTCL_DiscoveryResponse *response);
 

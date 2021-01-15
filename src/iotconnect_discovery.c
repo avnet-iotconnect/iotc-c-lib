@@ -50,7 +50,7 @@ static bool split_url(IOTCL_DiscoveryResponse *response) {
     return (response->host && response->path);
 }
 
-IOTCL_DiscoveryResponse *IOTC_DiscoveryParseDiscoveryResponse(const char *response_data) {
+IOTCL_DiscoveryResponse *IOTCL_DiscoveryParseDiscoveryResponse(const char *response_data) {
     cJSON *json_root = cJSON_Parse(response_data);
     if (!json_root) {
         return  NULL;
