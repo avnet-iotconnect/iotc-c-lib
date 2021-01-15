@@ -28,7 +28,6 @@ extern "C" {
 #define IOTCONNECT_DISCOVERY_HEADER_TEMPLATE \
     "GET /api/sdk/cpid/%s/lang/M_C/ver/2.0/env/%s HTTP/1.1\r\n" \
     "Host: " IOTCONNECT_DISCOVERY_HOSTNAME "\r\n" \
-    "Content-Type: application/json\r\n" \
     "Connection: close\r\n" \
     "\r\n"
 
