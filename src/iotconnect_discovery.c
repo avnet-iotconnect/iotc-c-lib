@@ -20,6 +20,30 @@ void c(const char* p) {
     char * base_url = (char*)malloc(strlen(jsonBaseUrl) + 1);
     strcpy(base_url, jsonBaseUrl);
 }
+
+static char *safe_get_string(cJSON *cjson, const char* value_name) {
+    cJSON *value = cJSON_GetObjectItem(cjson, value_name);
+    if (!value) {
+        return NULL;
+    }
+    const char *str_value = cJSON_GetStringValue(value);
+    if (!str_value) {
+        return NULL;
+    }
+    return str_value;
+}
+static char *safe_get_string_and_strdup(cJSON *cjson, const char* value_name) {
+    cJSON *value = cJSON_GetObjectItem(cjson, value_name);
+    if (!value) {
+        return NULL;
+    }
+    const char *str_value = cJSON_GetStringValue(value);
+    if (!str_value) {
+        return NULL;
+    }
+    return IOTCL_Strdup(str_value);
+}
+
 static bool split_url(IOTCL_DiscoveryResponse *response) {
     size_t base_url_len = strlen(response->url);
 
@@ -97,7 +121,7 @@ void IOTCL_DiscoveryFreeDiscoveryResponse(IOTCL_DiscoveryResponse *response) {
 }
 
 IOTCL_SyncResponse *IOTCL_DiscoveryParseSyncResponse(const char *response_data) {
-
+    cJSON* tmp_value = NULL;
     IOTCL_SyncResponse *response = (IOTCL_SyncResponse*)calloc(1, sizeof(IOTCL_SyncResponse));
     if (NULL == response) {
         return NULL;
@@ -114,33 +138,48 @@ IOTCL_SyncResponse *IOTCL_DiscoveryParseSyncResponse(const char *response_data) 
         response->ds = IOTCL_SR_PARSING_ERROR;
         return response;
     }
-    response->ds = (IOTCL_SyncResult)cJSON_GetObjectItem(sync_res_json, "ds")->valueint;
+    tmp_value = cJSON_GetObjectItem(sync_res_json, "ds");
+    if (!tmp_value) {
+        response->ds = IOTCL_SR_PARSING_ERROR;
+    } else {
+        response->ds = cJSON_GetNumberValue(tmp_value);
+    }
     if (response->ds == IOTCL_SR_OK) {
-        response->cpid = IOTCL_Strdup((cJSON_GetObjectItem(sync_res_json, "cpId"))->valuestring);
-        response->dtg = IOTCL_Strdup((cJSON_GetObjectItem(sync_res_json, "dtg"))->valuestring);
-        response->ee = cJSON_GetObjectItem(sync_res_json, "ee")->valueint;
-        response->rc = cJSON_GetObjectItem(sync_res_json, "rc")->valueint;
-        response->at = cJSON_GetObjectItem(sync_res_json, "at")->valueint;
+        response->cpid = safe_get_string_and_strdup(sync_res_json, "cpId");
+        response->dtg = safe_get_string_and_strdup(sync_res_json, "dtg");
+        tmp_value = cJSON_GetObjectItem(sync_res_json, "ee");
+        if (!tmp_value) {
+            response->ee = -1;
+        }
+        tmp_value = cJSON_GetObjectItem(sync_res_json, "rc");
+        if (!tmp_value) {
+            response->rc = -1;
+        }
+        tmp_value = cJSON_GetObjectItem(sync_res_json, "at");
+        if (!tmp_value) {
+            response->at = -1;
+        }
         cJSON *p = cJSON_GetObjectItemCaseSensitive(sync_res_json, "p");
         if (p) {
-            response->broker.name = IOTCL_Strdup((cJSON_GetObjectItem(p, "n"))->valuestring);
-            response->broker.client_id = IOTCL_Strdup((cJSON_GetObjectItem(p, "id"))->valuestring);
-            response->broker.host = IOTCL_Strdup((cJSON_GetObjectItem(p, "h"))->valuestring);
-            response->broker.user_name = IOTCL_Strdup((cJSON_GetObjectItem(p, "un"))->valuestring);
-            response->broker.pass = IOTCL_Strdup((cJSON_GetObjectItem(p, "pwd"))->valuestring);
-            response->broker.sub_topic = IOTCL_Strdup((cJSON_GetObjectItem(p, "sub"))->valuestring);
-            response->broker.pub_topic = IOTCL_Strdup((cJSON_GetObjectItem(p, "pub"))->valuestring);
+            response->broker.name = safe_get_string_and_strdup(p, "n");
+            response->broker.client_id = safe_get_string_and_strdup(p, "id");
+            response->broker.host = safe_get_string_and_strdup(p, "h");
+            response->broker.user_name = safe_get_string_and_strdup(p, "un");
+            response->broker.pass = safe_get_string_and_strdup(p, "pwd");
+            response->broker.sub_topic = safe_get_string_and_strdup(p, "sub");
+            response->broker.pub_topic = safe_get_string_and_strdup(p, "pub");
             if (
                     !response->cpid ||
                     !response->dtg ||
                     !response->broker.host ||
                     !response->broker.client_id ||
                     !response->broker.user_name ||
-                    // !response->broker.pass || << password may actually be null?
+                    // !response->broker.pass || << password may actually be null or empty
                     !response->broker.sub_topic ||
                     !response->broker.pub_topic
                     ) {
-                response->ds = IOTCL_SR_ALLOCATION_ERROR;
+                // Assume parsing eror, but it could alo be (unlikely) allocation error
+                response->ds = IOTCL_SR_PARSING_ERROR;
             }
         } else {
             response->ds = IOTCL_SR_PARSING_ERROR;
@@ -176,6 +215,7 @@ void IOTCL_DiscoveryFreeSyncResponse(IOTCL_SyncResponse *response) {
     free(response->broker.client_id);
     free(response->broker.user_name);
     free(response->broker.pass);
+    free(response->broker.name);
     free(response->broker.sub_topic);
     free(response->broker.pub_topic);
     free(response);
