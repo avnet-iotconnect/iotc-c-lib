@@ -7,6 +7,7 @@
 #ifndef IOTCONNECT_EVENT_H
 #define IOTCONNECT_EVENT_H
 
+#include <stddef.h>
 #include <stdbool.h>
 
 #ifdef __cplusplus
