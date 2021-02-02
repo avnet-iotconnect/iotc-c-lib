@@ -21,17 +21,6 @@ void c(const char* p) {
     strcpy(base_url, jsonBaseUrl);
 }
 
-static char *safe_get_string(cJSON *cjson, const char* value_name) {
-    cJSON *value = cJSON_GetObjectItem(cjson, value_name);
-    if (!value) {
-        return NULL;
-    }
-    const char *str_value = cJSON_GetStringValue(value);
-    if (!str_value) {
-        return NULL;
-    }
-    return str_value;
-}
 static char *safe_get_string_and_strdup(cJSON *cjson, const char* value_name) {
     cJSON *value = cJSON_GetObjectItem(cjson, value_name);
     if (!value) {
