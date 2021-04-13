@@ -13,14 +13,6 @@
 #include "iotconnect_common.h"
 #include "iotconnect_discovery.h"
 
-
-void c(const char* p) {
-    cJSON* root = cJSON_Parse(p);
-    char *jsonBaseUrl = (cJSON_GetObjectItem(root, "baseUrl"))->valuestring;
-    char * base_url = (char*)malloc(strlen(jsonBaseUrl) + 1);
-    strcpy(base_url, jsonBaseUrl);
-}
-
 static char *safe_get_string_and_strdup(cJSON *cjson, const char* value_name) {
     cJSON *value = cJSON_GetObjectItem(cjson, value_name);
     if (!value) {
@@ -115,6 +107,7 @@ IOTCL_SyncResponse *IOTCL_DiscoveryParseSyncResponse(const char *response_data) 
     if (NULL == response) {
         return NULL;
     }
+
     cJSON *sync_json_root = cJSON_Parse(response_data);
     if (!sync_json_root) {
         response->ds = IOTCL_SR_PARSING_ERROR;
@@ -189,7 +182,7 @@ IOTCL_SyncResponse *IOTCL_DiscoveryParseSyncResponse(const char *response_data) 
         }
     }
     // we have duplicated strings, so we can now free the result
-    free(sync_json_root);
+    cJSON_Delete(sync_json_root);
     return response;
 }
 

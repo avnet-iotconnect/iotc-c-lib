@@ -1,6 +1,6 @@
 # iotc-c-lib
 
-This is a C library intended for generally for embedded systems which abstracts IoTConnect MQTT protocol messages
+This is a C library intended generally for embedded systems which abstracts IoTConnect MQTT protocol messages
 and the discovery HTTP protocol.
 
 This library not an SDK. As each embedded platform/os generally has its own MQTT and HTTP 
