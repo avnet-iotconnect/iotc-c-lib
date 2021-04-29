@@ -1,15 +1,9 @@
 # Contributing to the IoTConnect C Library
 
 We would love for you to contribute to our library and help make it even better than it is today!
-As a contributor, here are the guidelines we would like you to follow:
+As a contributor, we would like you to follow the guidelines laid out in this document. 
 
- - [Submission Guidelines](#submit)
- - [Coding Rules](#rules)
- - [Commit Message Guidelines](#commit)
- - [Signing the CLA](#cla)
-
-
-### <a name="submit-pr"></a> Submitting a Pull Request (PR)
+### Submitting a Pull Request (PR)
 
 Before you submit your Pull Request (PR) consider the following guidelines:
 
@@ -28,7 +22,7 @@ Before you submit your Pull Request (PR) consider the following guidelines:
 
 1. In GitHub, send a pull request to `iotc-c-lib:master`.
 
-### Reviewing a Pull Request
+#### Reviewing a Pull Request
 
 The IoTConnect team reserves the right not to accept pull requests at its sole discretion.
 
@@ -46,7 +40,7 @@ That's it! Thank you for your contribution!
 
 After your pull request is merged, you can safely delete your branch and pull the changes from the main (upstream) repository.
 
-## <a name="rules"></a> Code Formatting and Naming Conventions
+### Code Formatting and Naming Conventions
 
 To ensure consistency throughout the source code please follow these steps:
 
