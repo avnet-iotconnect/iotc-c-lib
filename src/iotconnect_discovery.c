@@ -13,7 +13,7 @@
 #include "iotconnect_common.h"
 #include "iotconnect_discovery.h"
 
-static char *safe_get_string_and_strdup(cJSON *cjson, const char* value_name) {
+static char *safe_get_string_and_strdup(cJSON *cjson, const char *value_name) {
     cJSON *value = cJSON_GetObjectItem(cjson, value_name);
     if (!value) {
         return NULL;
@@ -35,7 +35,7 @@ static bool split_url(IOTCL_DiscoveryResponse *response) {
         return false;
     }
     int num_found = 0;
-    char * host = NULL;
+    char *host = NULL;
     for (size_t i = 0; i < base_url_len; i++) {
         if (base_url_copy[i] == '/') {
             num_found++;
@@ -58,7 +58,7 @@ static bool split_url(IOTCL_DiscoveryResponse *response) {
 IOTCL_DiscoveryResponse *IOTCL_DiscoveryParseDiscoveryResponse(const char *response_data) {
     cJSON *json_root = cJSON_Parse(response_data);
     if (!json_root) {
-        return  NULL;
+        return NULL;
     }
 
     cJSON *base_url_cjson = cJSON_GetObjectItem(json_root, "baseUrl");
@@ -67,7 +67,7 @@ IOTCL_DiscoveryResponse *IOTCL_DiscoveryParseDiscoveryResponse(const char *respo
         return NULL;
     }
 
-    IOTCL_DiscoveryResponse *response = (IOTCL_DiscoveryResponse*)calloc(1, sizeof(IOTCL_DiscoveryResponse));
+    IOTCL_DiscoveryResponse *response = (IOTCL_DiscoveryResponse *) calloc(1, sizeof(IOTCL_DiscoveryResponse));
     if (!response) {
         goto cleanup;
     }
@@ -102,8 +102,8 @@ void IOTCL_DiscoveryFreeDiscoveryResponse(IOTCL_DiscoveryResponse *response) {
 }
 
 IOTCL_SyncResponse *IOTCL_DiscoveryParseSyncResponse(const char *response_data) {
-    cJSON* tmp_value = NULL;
-    IOTCL_SyncResponse *response = (IOTCL_SyncResponse*)calloc(1, sizeof(IOTCL_SyncResponse));
+    cJSON *tmp_value = NULL;
+    IOTCL_SyncResponse *response = (IOTCL_SyncResponse *) calloc(1, sizeof(IOTCL_SyncResponse));
     if (NULL == response) {
         return NULL;
     }

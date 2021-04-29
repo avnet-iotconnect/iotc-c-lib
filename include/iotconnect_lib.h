@@ -11,7 +11,9 @@
 
 // SSL style configuration. You can use a different include
 #ifndef ITOTCONNECT_LIB_CONFIG_HEADER
+
 #include "iotconnect_lib_config.h"
+
 #else
 #include ITOTCONNECT_LIB_CONFIG_HEADER
 #endif

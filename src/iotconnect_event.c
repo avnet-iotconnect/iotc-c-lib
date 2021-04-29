@@ -126,7 +126,8 @@ bool IOTCL_ProcessEvent(const char *event) {
             }
         }
 
-        struct IOTCL_EVENT_DATA_TAG *eventData = (struct IOTCL_EVENT_DATA_TAG *) calloc(sizeof(struct IOTCL_EVENT_DATA_TAG), 1);
+        struct IOTCL_EVENT_DATA_TAG *eventData = (struct IOTCL_EVENT_DATA_TAG *) calloc(
+                sizeof(struct IOTCL_EVENT_DATA_TAG), 1);
         if (NULL == eventData) goto cleanup;
 
         eventData->root = root;

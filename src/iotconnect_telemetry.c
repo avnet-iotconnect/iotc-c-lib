@@ -119,7 +119,7 @@ IOTCL_MESSAGE_HANDLE IOTCL_TelemetryCreate() {
     if (!cJSON_AddStringToObject(msg->root_value, "dtg", config->telemetry.dtg)) goto cleanup;
     if (!cJSON_AddNumberToObject(msg->root_value, "mt", 0)) goto cleanup; // telemetry message type (zero)
     sdk_array = cJSON_AddObjectToObject(msg->root_value, "sdk");
-    if (!sdk_array)  goto cleanup;
+    if (!sdk_array) goto cleanup;
     if (!cJSON_AddStringToObject(sdk_array, "l", CONFIG_IOTCONNECT_SDK_NAME)) goto cleanup_array;
     if (!cJSON_AddStringToObject(sdk_array, "v", CONFIG_IOTCONNECT_SDK_VERSION)) goto cleanup_array;
     if (!cJSON_AddStringToObject(sdk_array, "e", config->device.env)) goto cleanup_array;
@@ -150,7 +150,7 @@ bool IOTCL_TelemetryAddWithEpochTime(IOTCL_MESSAGE_HANDLE message, time_t time) 
 bool IOTCL_TelemetryAddWithIsoTime(IOTCL_MESSAGE_HANDLE message, const char *time) {
     if (!message) return false;
     cJSON *const telemetry_object = setup_telemetry_object(message);
-    if (!telemetry_object)  return false;
+    if (!telemetry_object) return false;
     if (!cJSON_AddStringToObject(telemetry_object, "dt", time)) return false;
     if (!cJSON_HasObjectItem(message->root_value, "t")) {
         if (!cJSON_AddStringToObject(message->root_value, "t", time)) return false;
