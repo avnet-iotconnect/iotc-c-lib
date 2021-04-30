@@ -14,16 +14,16 @@
 extern "C" {
 #endif
 
-char *IOTCL_Strdup(const char *str);
+char *iotcl_strdup(const char *str);
 
 // NOTE: This function is not thread-safe
-const char *IOTCL_ToIsoTimestamp(time_t timestamp);
+const char *iotcl_to_iso_timestamp(time_t timestamp);
 
 // NOTE: This function is not thread-safe
-const char *IOTCL_IsoTimestampNow();
+const char *iotcl_iso_timestamp_now();
 
 // Internal function
-void IOTCL_OomError();
+void iotcl_oom_error();
 
 #ifdef __cplusplus
 }

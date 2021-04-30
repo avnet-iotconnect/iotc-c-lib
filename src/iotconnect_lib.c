@@ -11,11 +11,11 @@
 #include "iotconnect_common.h"
 #include "iotconnect_lib.h"
 
-static IOTCL_CONFIG config;
+static IotclConfig config;
 static bool config_is_valid = false;
 
-bool IOTCL_Init(IOTCL_CONFIG *c) {
-    IOTCL_Deinit();
+bool iotcl_init(IotclConfig *c) {
+    iotcl_deinit();
     if (
             !c || !c->device.env || !c->device.cpid || !c->device.duid ||
             0 == strlen(c->device.env) || 0 == strlen(c->device.env) || 0 == strlen(c->device.env)
@@ -32,7 +32,7 @@ bool IOTCL_Init(IOTCL_CONFIG *c) {
     if (!config.device.duid || !config.device.cpid || !config.device.env) {
         // allocation failure
         IOTCL_LOG ("IotConnectLib_Configure: malloc failure" IOTCL_NL);
-        IOTCL_Deinit();
+        iotcl_deinit();
         return false;
     }
     config_is_valid = true;
@@ -40,14 +40,14 @@ bool IOTCL_Init(IOTCL_CONFIG *c) {
 }
 
 
-IOTCL_CONFIG *IOTCL_GetConfig() {
+IotclConfig *iotcl_get_config() {
     if (!config_is_valid) {
         return NULL;
     }
     return &config;
 }
 
-void IOTCL_Deinit() {
+void iotcl_deinit() {
     config_is_valid = false;
 
     memset(&config, 0, sizeof(config));

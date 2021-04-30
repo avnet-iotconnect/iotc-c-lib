@@ -35,7 +35,7 @@ The response can be used to help configure telemetry module and your MQTT client
 // use your-cpid and your-env as part of the url:
 const char* discovery_response_str = native_http_get(IOTCONNECT_DISCOVERY_HOSTNAME, "/api/sdk/cpid/your-cpid/lang/M_C/ver/2.0/env/your-env");
 
-IOTCL_DiscoveryResponse *dr;
+IotclDiscoveryResponse *dr;
 dr = IOTC_DiscoveryParseDiscoveryResponse(discovery_response_str);
 printf("Discovery Response:\n");
 printf("url: %s\n", dr->url);
@@ -46,9 +46,9 @@ printf("path: %s\n", dr->path);
 const char * sync_response_str = native_http_get(dr->host, dr->path);
 
 // Once we have obtained the sync response JSON, we should no longer need the discovery response
-IOTCL_DiscoveryFreeDiscoveryResponse(dr);
+iotcl_discovery_free_discovery_response(dr);
 
-IOTCL_SyncResponse *sr = IOTCL_DiscoveryParseSyncResponse(sync_response_str);
+IotclSyncResponse *sr = iotcl_discovery_parse_sync_response(sync_response_str);
 // the reponse now contains the dtg and MQTT information that you can pass to telemetry module of this library and your MQTT client implementation 
 printf("dtg: %s\n", sr->dtg);
 printf("cpid: %s\n", sr->cpid);
@@ -59,7 +59,7 @@ printf("MQTT host: %s\n", sr->broker.host);
 intialize_mqtt_client(sr->broker);
 
 // Free the synce response once you are done using the information provided by it
-IOTCL_DiscoveryFreeSyncResponse(gsr);
+iotcl_discovery_free_sync_response(gsr);
 ```
 
 Configure the Telemetry module, compose and send a message to MQTT.  
@@ -71,7 +71,7 @@ Configure the Telemetry module, compose and send a message to MQTT.
 
 void send_telemetry() {
     
-    IOTCL_CONFIG config;
+    IotclConfig config;
     memset(&config, 0, sizeof(config));
     config.device.cpid = "MyCpid";
     config.device.duid = "my-device-id";
@@ -81,28 +81,28 @@ void send_telemetry() {
     // or pass from discovery response above
     config.telemetry.dtg = sr->dtg;
     
-    IOTCL_Init(&config);
+    iotcl_init(&config);
     
-    IOTCL_MESSAGE_HANDLE msg = IOTCL_TelemetryCreate();
+    IotclMessageHandle msg = iotcl_telemetry_create();
     // Initial entry will be created with system timestamp
     // You can call AddWith*Time before making Set* calls in order to add a custom timestamp
     
-    IOTCL_TelemetrySetNumber(msg, "number-value", 123);
-    IOTCL_TelemetrySetString(msg, "string-value", "myvalue");
+    iotcl_telemetry_set_number(msg, "number-value", 123);
+    iotcl_telemetry_set_string(msg, "string-value", "myvalue");
     // ... etc. See the telemetry header file and tests/telemetry.c for more examples
     
     // construct json string from message handle (false = not pretty-formatted to reduce string size)
-    const char *json_str = IOTCL_CreateSerializedString(msg, false);
+    const char *json_str = iotcl_create_serialized_string(msg, false);
     
     // We no longer need the message handle. We have the json string
-    IOTCL_TelemetryDestroy(msg);
+    iotcl_telemetry_destroy(msg);
     
     // pass the string to mqtt sybsystem
     printf("%s\n", str);
     send_string_to_pub_topic(str);
     
     // we are done with the serialized string, so destroy it here
-    IOTCL_DestroySerialized(str);
+    iotcl_destroy_serialized(str);
 }
 ```
 
@@ -114,22 +114,22 @@ in your configured callback functions.
 
 // declare on_cmd and on_ota callback handlers
 
-void on_cmd(IOTCL_EVENT_DATA data) {
-    const char *command = IOTCL_CloneCommand(data);
+void on_cmd(IotclEventData data) {
+    const char *command = iotcl_clone_command(data);
     printf("Command is: %s\n", command); // handle the command string here... tokenize etc.
     free(command);
 
     // end ack true (success) to the command. you can also pass false (failure) and a message reponse
-    const char *ack_json = IOTCL_CreateAckStringAndDestroyEvent(data, true, NULL);
+    const char *ack_json = iotcl_create_ack_string_and_destroy_event(data, true, NULL);
     send_string_to_pub_topic(ack_json)
     printf("Sent CMD ack: %s\n", ack);
     free(ack);
 }
 
-void on_ota(IOTCL_EVENT_DATA data) {
-    const char *url = IOTCL_CloneDownloadUrl(data, 0);
-    const char *sw_ver = IOTCL_CloneSwVersion(data);
-    const char *hw_ver = IOTCL_CloneHwVersion(data);
+void on_ota(IotclEventData data) {
+    const char *url = iotcl_clone_download_url(data, 0);
+    const char *sw_ver = iotcl_clone_sw_version(data);
+    const char *hw_ver = iotcl_clone_hw_version(data);
     printf("Download URL is: %s\n", url);
     printf("SW Version is: %s\n", sw_ver);
     printf("HW Version is: %s\n", hw_ver);
@@ -142,20 +142,20 @@ void on_ota(IOTCL_EVENT_DATA data) {
     free(hw_ver);
 
     // end ack true (success) to the command. you can also pass false (failure) and a message reponse
-    const char *ack = IOTCL_CreateAckStringAndDestroyEvent(data, true, NULL);
+    const char *ack = iotcl_create_ack_string_and_destroy_event(data, true, NULL);
     send_string_to_pub_topic(ack_json)
     printf("Sent CMD ack: %s\n", ack);
     free(ack);
 }
 
 void on_mqtt_sub_message(const char* json_str) {
-    if (!IOTCL_ProcessEvent(json_str)) {
+    if (!iotcl_process_event(json_str)) {
         printf("Error encountered while processing %s\n", TEST_STR_V1);
     }
 }
 
 void confiigure_events() {
-    IOTCL_CONFIG config;
+    IotclConfig config;
     memset(&config, 0, sizeof(config));
 
     config.device.env = "prod";
@@ -165,7 +165,7 @@ void confiigure_events() {
     config.event_functions.ota_cb = on_ota;
     config.event_functions.cmd_cb = on_cmd;
 
-    IOTCL_Init(&config);
+    iotcl_init(&config);
 }
 ```
 

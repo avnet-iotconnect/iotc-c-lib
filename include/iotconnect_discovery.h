@@ -63,17 +63,17 @@ typedef enum {
     IOTCL_SR_UNKNOWN_DEVICE_STATUS = 20,
     IOTCL_SR_ALLOCATION_ERROR,
     IOTCL_SR_PARSING_ERROR,
-} IOTCL_SyncResult;
+} IotclSyncResult;
 
 //NOTE: Append "sync?" to the base url or path in order to to do a sync POST
-typedef struct IOTCL_DiscoveryResponse {
+typedef struct IotclDiscoveryResponse {
     char *url;
     char *host; // parsed out host from the url
     char *path; // parsed out base ULR request path
-} IOTCL_DiscoveryResponse;
+} IotclDiscoveryResponse;
 
-typedef struct IOTCL_SyncResponse {
-    IOTCL_SyncResult ds;
+typedef struct IotclSyncResponse {
+    IotclSyncResult ds;
     char *cpid; // validated CPID from the cloud
     char *dtg;
     int ee; // reserved for future use
@@ -88,19 +88,19 @@ typedef struct IOTCL_SyncResponse {
         char *pub_topic;
         char *sub_topic;
     } broker;
-} IOTCL_SyncResponse;
+} IotclSyncResponse;
 
 // You must free the response when done
 // Returned NULL means that there was a memory allocation or a parsing error
-IOTCL_DiscoveryResponse *IOTCL_DiscoveryParseDiscoveryResponse(const char *response_data);
+IotclDiscoveryResponse *iotcl_discovery_parse_discovery_response(const char *response_data);
 
-void IOTCL_DiscoveryFreeDiscoveryResponse(IOTCL_DiscoveryResponse *response);
+void iotcl_discovery_free_discovery_response(IotclDiscoveryResponse *response);
 
 // This function returns NULL in case of allocation failure
 // The user mast check the ds value for "OK". Corresponding error should be handled/repoted and the response should be freed
-IOTCL_SyncResponse *IOTCL_DiscoveryParseSyncResponse(const char *response_data);
+IotclSyncResponse *iotcl_discovery_parse_sync_response(const char *response_data);
 
-void IOTCL_DiscoveryFreeSyncResponse(IOTCL_SyncResponse *response);
+void iotcl_discovery_free_sync_response(IotclSyncResponse *response);
 
 
 #ifdef __cplusplus

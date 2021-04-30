@@ -16,7 +16,7 @@
 #include "iotconnect_telemetry.h"
 
 void test() {
-    IOTCL_CONFIG config;
+    IotclConfig config;
 
 
     memset(&config, 0, sizeof(config));
@@ -25,30 +25,30 @@ void test() {
     config.device.env = "prod";
     config.telemetry.dtg = "5a913fef-428b-4a41-9927-6e0f4a1602ba";
 
-    IOTCL_Init(&config);
+    iotcl_init(&config);
 
-    IOTCL_MESSAGE_HANDLE msg = IOTCL_TelemetryCreate();
+    IotclMessageHandle msg = iotcl_telemetry_create();
     // Initial entry will be created with system timestamp
     // You can call AddWith*Time before making Set* calls in order to add a custom timestamp
 
     // NOTE: Do not mix epoch and ISO timestamps
-    IOTCL_TelemetrySetNumber(msg, "789", 123);
-    IOTCL_TelemetrySetString(msg, "boo.abc.tuv", "prs");
+    iotcl_telemetry_set_number(msg, "789", 123);
+    iotcl_telemetry_set_string(msg, "boo.abc.tuv", "prs");
 
     // Create a new entry with different time and values
-    IOTCL_TelemetryAddWithIsoTime(msg, IOTCL_ToIsoTimestamp(123457));
-    IOTCL_TelemetrySetNumber(msg, "boo.bar", 111);
-    IOTCL_TelemetrySetString(msg, "123", "456");
-    IOTCL_TelemetrySetNumber(msg, "789", 123.55);
+    iotcl_telemetry_add_with_iso_time(msg, iotcl_to_iso_timestamp(123457));
+    iotcl_telemetry_set_number(msg, "boo.bar", 111);
+    iotcl_telemetry_set_string(msg, "123", "456");
+    iotcl_telemetry_set_number(msg, "789", 123.55);
 
-    IOTCL_TelemetryAddWithIsoTime(msg, IOTCL_IsoTimestampNow());
-    IOTCL_TelemetrySetNull(msg, "nulltest");
-    IOTCL_TelemetrySetBool(msg, "booltest", true);
+    iotcl_telemetry_add_with_iso_time(msg, iotcl_iso_timestamp_now());
+    iotcl_telemetry_set_null(msg, "nulltest");
+    iotcl_telemetry_set_bool(msg, "booltest", true);
 
-    const char *str = IOTCL_CreateSerializedString(msg, true);
-    IOTCL_TelemetryDestroy(msg);
+    const char *str = iotcl_create_serialized_string(msg, true);
+    iotcl_telemetry_destroy(msg);
     printf("%s\n", str);
-    IOTCL_DestroySerialized(str);
+    iotcl_destroy_serialized(str);
 }
 
 static int tracker;

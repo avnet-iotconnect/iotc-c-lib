@@ -22,15 +22,15 @@ static char *safe_get_string_and_strdup(cJSON *cjson, const char *value_name) {
     if (!str_value) {
         return NULL;
     }
-    return IOTCL_Strdup(str_value);
+    return iotcl_strdup(str_value);
 }
 
-static bool split_url(IOTCL_DiscoveryResponse *response) {
+static bool split_url(IotclDiscoveryResponse *response) {
     size_t base_url_len = strlen(response->url);
 
 
     // mutable version that will allow us to modify the url string
-    char *base_url_copy = IOTCL_Strdup(response->url);
+    char *base_url_copy = iotcl_strdup(response->url);
     if (!base_url_copy) {
         return false;
     }
@@ -43,19 +43,19 @@ static bool split_url(IOTCL_DiscoveryResponse *response) {
                 host = &base_url_copy[i + 1];
                 // host will be terminated below
             } else if (num_found == 3) {
-                response->path = IOTCL_Strdup(&base_url_copy[i]); // first make a copy
+                response->path = iotcl_strdup(&base_url_copy[i]); // first make a copy
                 base_url_copy[i] = 0; // then terminate host so that it can be duped below
                 break;
             }
         }
     }
-    response->host = IOTCL_Strdup(host);
+    response->host = iotcl_strdup(host);
     free(base_url_copy);
 
     return (response->host && response->path);
 }
 
-IOTCL_DiscoveryResponse *IOTCL_DiscoveryParseDiscoveryResponse(const char *response_data) {
+IotclDiscoveryResponse *iotcl_discovery_parse_discovery_response(const char *response_data) {
     cJSON *json_root = cJSON_Parse(response_data);
     if (!json_root) {
         return NULL;
@@ -67,7 +67,7 @@ IOTCL_DiscoveryResponse *IOTCL_DiscoveryParseDiscoveryResponse(const char *respo
         return NULL;
     }
 
-    IOTCL_DiscoveryResponse *response = (IOTCL_DiscoveryResponse *) calloc(1, sizeof(IOTCL_DiscoveryResponse));
+    IotclDiscoveryResponse *response = (IotclDiscoveryResponse *) calloc(1, sizeof(IotclDiscoveryResponse));
     if (!response) {
         goto cleanup;
     }
@@ -78,7 +78,7 @@ IOTCL_DiscoveryResponse *IOTCL_DiscoveryParseDiscoveryResponse(const char *respo
             goto cleanup;
         }
 
-        response->url = IOTCL_Strdup(jsonBaseUrl);
+        response->url = iotcl_strdup(jsonBaseUrl);
         if (split_url(response)) {
             cJSON_Delete(json_root);
             return response;
@@ -88,11 +88,11 @@ IOTCL_DiscoveryResponse *IOTCL_DiscoveryParseDiscoveryResponse(const char *respo
 
     cleanup:
     cJSON_Delete(json_root);
-    IOTCL_DiscoveryFreeDiscoveryResponse(response);
+    iotcl_discovery_free_discovery_response(response);
     return NULL;
 }
 
-void IOTCL_DiscoveryFreeDiscoveryResponse(IOTCL_DiscoveryResponse *response) {
+void iotcl_discovery_free_discovery_response(IotclDiscoveryResponse *response) {
     if (response) {
         free(response->url);
         free(response->host);
@@ -101,9 +101,9 @@ void IOTCL_DiscoveryFreeDiscoveryResponse(IOTCL_DiscoveryResponse *response) {
     }
 }
 
-IOTCL_SyncResponse *IOTCL_DiscoveryParseSyncResponse(const char *response_data) {
+IotclSyncResponse *iotcl_discovery_parse_sync_response(const char *response_data) {
     cJSON *tmp_value = NULL;
-    IOTCL_SyncResponse *response = (IOTCL_SyncResponse *) calloc(1, sizeof(IOTCL_SyncResponse));
+    IotclSyncResponse *response = (IotclSyncResponse *) calloc(1, sizeof(IotclSyncResponse));
     if (NULL == response) {
         return NULL;
     }
@@ -186,7 +186,7 @@ IOTCL_SyncResponse *IOTCL_DiscoveryParseSyncResponse(const char *response_data) 
     return response;
 }
 
-void IOTCL_DiscoveryFreeSyncResponse(IOTCL_SyncResponse *response) {
+void iotcl_discovery_free_sync_response(IotclSyncResponse *response) {
     if (!response) {
         return;
     }
@@ -200,6 +200,6 @@ void IOTCL_DiscoveryFreeSyncResponse(IOTCL_SyncResponse *response) {
     free(response->broker.sub_topic);
     free(response->broker.pub_topic);
     free(response);
-    memset(response, 0, sizeof(IOTCL_SyncResponse));
+    memset(response, 0, sizeof(IotclSyncResponse));
 }
 

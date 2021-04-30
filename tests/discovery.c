@@ -8,12 +8,12 @@
  "{\"baseUrl\":\"https://avnetagent.iotconnect.io/api/2.0/agent/\",\"logInfo\":\"<logInfo><hostName /><user /><password /><topic /></logInfo>\"}"
 
 #define EXAMPLE_GOOD_SYNC_RESPONSE \
- "{\"d\":{\"sc\":{\"hb\":null,\"log\":null,\"sf\":5,\"df\":30},\"p\":{\"n\":\"mqtt\",\"h\":\"poc-iotconnect-iothub-eu.azure-devices.net\",\"p\":8883,\"id\":\"your-device-duid\",\"un\":\"poc-iotconnect-iothub-eu.azure-devices.net/avtds-nrf-352656100880056/?api-version=2018-06-30\",\"pwd\":\"\",\"pub\":\"devices/avtds-nrf-352656100880056/messages/events/\",\"sub\":\"devices/avtds-nrf-352656100880056/messages/devicebound/#\"},\"d\":null,\"att\":null,\"set\":null,\"r\":null,\"ota\":{\"force\":false,\"guid\":\"87E9A4C5-35D2-4D49-9396-8E0E7D13E4E0\",\"urls\":[\"https://pociotconnectblobstorage.blob.core.windows.net/firmware/E853AD82-E207-4F29-A72A-7C6A15EF4136.bin?sv=2018-03-28&sr=b&sig=LOydmMfXxRj%2BF8BGJPxKmD4pnveeV4OAIUxUxmlDkIE%3D&se=2021-01-11T19%3A56%3A12Z&sp=r\"],\"ver\":{\"sw\":\"01.00.00\",\"hw\":\"1.0\"}},\"dtg\":\"891ed197-9621-44ea-819c-e7b2d40afafe\",\"cpId\":\"you-cpid\",\"rc\":0,\"ee\":0,\"at\":2,\"ds\":0}}"
+ "{\"d\":{\"sc\":{\"hb\":null,\"log\":null,\"sf\":5,\"df\":30},\"p\":{\"n\":\"mqtt\",\"h\":\"poc-iotconnect-iothub-eu.azure-devices.net\",\"p\":8883,\"id\":\"your-device-duid\",\"un\":\"poc-iotconnect-iothub-eu.azure-devices.net/your-device-duid/?api-version=2018-06-30\",\"pwd\":\"\",\"pub\":\"devices/your-device-duid/messages/events/\",\"sub\":\"devices/your-device-duid/messages/devicebound/#\"},\"d\":null,\"att\":null,\"set\":null,\"r\":null,\"ota\":{\"force\":false,\"guid\":\"87E9A4C5-35D2-4D49-9396-8E0E7D13E4E0\",\"urls\":[\"https://pociotconnectblobstorage.blob.core.windows.net/firmware/E853AD82-E207-4F29-A72A-7C6A15EF4136.bin?sv=2018-03-28&sr=b&sig=LOydmMfXxRj%2BF8BGJPxKmD4pnveeV4OAIUxUxmlDkIE%3D&se=2021-01-11T19%3A56%3A12Z&sp=r\"],\"ver\":{\"sw\":\"01.00.00\",\"hw\":\"1.0\"}},\"dtg\":\"891ed197-9621-44ea-819c-e7b2d40afafe\",\"cpId\":\"you-cpid\",\"rc\":0,\"ee\":0,\"at\":2,\"ds\":0}}"
 
 #define DEVICE_NOT_FOUND_SYNC_RESPONSE \
  "{\"d\":{\"sc\":null,\"p\":null,\"d\":null,\"att\":null,\"set\":null,\"r\":null,\"ota\":null,\"dtg\":\"00000000-0000-0000-0000-000000000000\",\"cpId\":null,\"rc\":3,\"ee\":0,\"at\":0,\"ds\":3}}"
 
-static void report_sync_error(IOTCL_SyncResponse *response, const char* sync_response_str) {
+static void report_sync_error(IotclSyncResponse *response, const char* sync_response_str) {
     if (NULL == response) {
         printf("IOTC_SyncResponse is NULL. Out of memory?\n");
         return;
@@ -55,18 +55,18 @@ static void report_sync_error(IOTCL_SyncResponse *response, const char* sync_res
 
 static void test() {
     {
-        IOTCL_DiscoveryResponse *dr;
-        dr = IOTCL_DiscoveryParseDiscoveryResponse(EXAMPLE_DISCOVERY_RESPONSE);
+        IotclDiscoveryResponse *dr;
+        dr = iotcl_discovery_parse_discovery_response(EXAMPLE_DISCOVERY_RESPONSE);
         printf("Discovery Response:\n");
         printf("url: %s\n", dr->url);
         printf("host: %s\n", dr->host);
         printf("path: %s\n", dr->path);
-        IOTCL_DiscoveryFreeDiscoveryResponse(dr);
+        iotcl_discovery_free_discovery_response(dr);
     }
 
     {
-        IOTCL_SyncResponse *gsr; // good sync response example
-        gsr = IOTCL_DiscoveryParseSyncResponse(EXAMPLE_GOOD_SYNC_RESPONSE);
+        IotclSyncResponse *gsr; // good sync response example
+        gsr = iotcl_discovery_parse_sync_response(EXAMPLE_GOOD_SYNC_RESPONSE);
         if (!gsr || gsr->ds != IOTCL_SR_OK) {
             report_sync_error(gsr, EXAMPLE_GOOD_SYNC_RESPONSE);
             exit(-1); // test failed
@@ -81,24 +81,21 @@ static void test() {
         printf("MQTT sub topic: %s\n", gsr->broker.sub_topic);
 
         printf("Good response test success\n");
-        IOTCL_DiscoveryFreeSyncResponse(gsr);
+        iotcl_discovery_free_sync_response(gsr);
     }
 
     {
-        IOTCL_SyncResponse *bsr; // bad sync response example
-        bsr = IOTCL_DiscoveryParseSyncResponse(DEVICE_NOT_FOUND_SYNC_RESPONSE);
+        IotclSyncResponse *bsr; // bad sync response example
+        bsr = iotcl_discovery_parse_sync_response(DEVICE_NOT_FOUND_SYNC_RESPONSE);
         if (!bsr || bsr->ds != IOTCL_SR_DEVICE_NOT_FOUND) {
             printf("False positive or wrong error reported. Test failed!\n");
         } else {
             report_sync_error(bsr, DEVICE_NOT_FOUND_SYNC_RESPONSE);
             printf("Bad response test success\n");
         }
-       IOTCL_DiscoveryFreeSyncResponse(bsr);
+        iotcl_discovery_free_sync_response(bsr);
     }
 }
-
-
-
 
 int main() {
     test();

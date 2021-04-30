@@ -33,19 +33,19 @@ typedef struct {
     const char *duid;   // Your Device Unique ID
     const char *cpid;   // Obtained Settings->KeyVault at IoTConnect Web Site
     const char *env;    // Obtained Settings->KeyVault at IoTConnect Web Site
-} IOTCL_DEVICE_CONFIG;
+} IotclDeviceConfig;
 
 typedef struct {
-    IOTCL_DEVICE_CONFIG device;
-    IOTCL_TELEMETRY_CONFIG telemetry;
-    IOTCL_EVENT_FUNCTIONS event_functions; // Event callbacks for the event library. @see iotconnect_event.h
-} IOTCL_CONFIG;
+    IotclDeviceConfig device;
+    IotclTelemetryConfig telemetry;
+    IotclEventFunctions event_functions; // Event callbacks for the event library. @see iotconnect_event.h
+} IotclConfig;
 
-bool IOTCL_Init(IOTCL_CONFIG *c);
+bool iotcl_init(IotclConfig *c);
 
-IOTCL_CONFIG *IOTCL_GetConfig(void);
+IotclConfig *iotcl_get_config(void);
 
-void IOTCL_Deinit();
+void iotcl_deinit();
 
 #ifdef __cplusplus
 }

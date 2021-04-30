@@ -15,15 +15,15 @@ static const char *to_iso_timestamp(time_t *timestamp) {
     return timebuf;
 }
 
-const char *IOTCL_ToIsoTimestamp(time_t timestamp) {
+const char *iotcl_to_iso_timestamp(time_t timestamp) {
     return to_iso_timestamp(&timestamp);
 }
 
-const char *IOTCL_IsoTimestampNow() {
+const char *iotcl_iso_timestamp_now() {
     return to_iso_timestamp(NULL);
 }
 
-char *IOTCL_Strdup(const char *str) {
+char *iotcl_strdup(const char *str) {
     if (!str) {
         return NULL;
     }

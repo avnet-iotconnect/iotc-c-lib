@@ -17,7 +17,7 @@
 #error "cJSON version must be 1.7.13 or newer"
 #endif
 
-struct IOTCL_EVENT_DATA_TAG {
+struct IotclEventDataTag {
     cJSON *data;
     cJSON *root;
     IotConnectEventType type;
@@ -53,10 +53,10 @@ static int to_ack_status(bool success, IotConnectEventType type) {
 }
 
 
-static bool iotc_process_callback(struct IOTCL_EVENT_DATA_TAG *eventData) {
+static bool iotc_process_callback(struct IotclEventDataTag *eventData) {
     if (!eventData) return false;
 
-    IOTCL_CONFIG *config = IOTCL_GetConfig();
+    IotclConfig *config = iotcl_get_config();
     if (!config) return false;
 
     if (config->event_functions.msg_cb) {
@@ -86,7 +86,7 @@ static inline bool is_valid_string(const cJSON *json) {
     return (NULL != json && cJSON_IsString(json) && json->valuestring != NULL);
 }
 
-bool IOTCL_ProcessEvent(const char *event) {
+bool iotcl_process_event(const char *event) {
     cJSON *root = cJSON_Parse(event);
     if (!root) return false;
 
@@ -126,8 +126,8 @@ bool IOTCL_ProcessEvent(const char *event) {
             }
         }
 
-        struct IOTCL_EVENT_DATA_TAG *eventData = (struct IOTCL_EVENT_DATA_TAG *) calloc(
-                sizeof(struct IOTCL_EVENT_DATA_TAG), 1);
+        struct IotclEventDataTag *eventData = (struct IotclEventDataTag *) calloc(
+                sizeof(struct IotclEventDataTag), 1);
         if (NULL == eventData) goto cleanup;
 
         eventData->root = root;
@@ -144,16 +144,16 @@ bool IOTCL_ProcessEvent(const char *event) {
 
 }
 
-char *IOTCL_CloneCommand(IOTCL_EVENT_DATA data) {
+char *iotcl_clone_command(IotclEventData data) {
     cJSON *command = cJSON_GetObjectItemCaseSensitive(data->data, "command");
     if (NULL == command || !is_valid_string(command)) {
         return NULL;
     }
 
-    return IOTCL_Strdup(command->valuestring);
+    return iotcl_strdup(command->valuestring);
 }
 
-char *IOTCL_CloneDownloadUrl(IOTCL_EVENT_DATA data, size_t index) {
+char *iotcl_clone_download_url(IotclEventData data, size_t index) {
     cJSON *urls = cJSON_GetObjectItemCaseSensitive(data->data, "urls");
     if (NULL == urls || !cJSON_IsArray(urls)) {
         return NULL;
@@ -161,11 +161,11 @@ char *IOTCL_CloneDownloadUrl(IOTCL_EVENT_DATA data, size_t index) {
     if ((size_t) cJSON_GetArraySize(urls) > index) {
         cJSON *url = cJSON_GetArrayItem(urls, index);
         if (is_valid_string(url)) {
-            return IOTCL_Strdup(url->valuestring);
+            return iotcl_strdup(url->valuestring);
         } else if (cJSON_IsObject(url)) {
             cJSON *url_str = cJSON_GetObjectItem(url, "url");
             if (is_valid_string(url_str)) {
-                return IOTCL_Strdup(url_str->valuestring);
+                return iotcl_strdup(url_str->valuestring);
             }
         }
     }
@@ -173,23 +173,23 @@ char *IOTCL_CloneDownloadUrl(IOTCL_EVENT_DATA data, size_t index) {
 }
 
 
-char *IOTCL_CloneSwVersion(IOTCL_EVENT_DATA data) {
+char *iotcl_clone_sw_version(IotclEventData data) {
     cJSON *ver = cJSON_GetObjectItemCaseSensitive(data->data, "ver");
     if (cJSON_IsObject(ver)) {
         cJSON *sw = cJSON_GetObjectItem(ver, "sw");
         if (is_valid_string(sw)) {
-            return IOTCL_Strdup(sw->valuestring);
+            return iotcl_strdup(sw->valuestring);
         }
     }
     return NULL;
 }
 
-char *IOTCL_CloneHwVersion(IOTCL_EVENT_DATA data) {
+char *iotcl_clone_hw_version(IotclEventData data) {
     cJSON *ver = cJSON_GetObjectItemCaseSensitive(data->data, "ver");
     if (cJSON_IsObject(ver)) {
         cJSON *sw = cJSON_GetObjectItem(ver, "hw");
         if (is_valid_string(sw)) {
-            return IOTCL_Strdup(sw->valuestring);
+            return iotcl_strdup(sw->valuestring);
         }
     }
     return NULL;
@@ -203,7 +203,7 @@ static char *create_ack(
 
     char *result = NULL;
 
-    IOTCL_CONFIG *config = IOTCL_GetConfig();
+    IotclConfig *config = iotcl_get_config();
 
     if (!config) {
         return NULL;
@@ -217,7 +217,7 @@ static char *create_ack(
 
     // message type 5 in response is the command response. Type 11 is OTA response.
     if (!cJSON_AddNumberToObject(ack_json, "mt", message_type == DEVICE_COMMAND ? 5 : 11)) goto cleanup;
-    if (!cJSON_AddStringToObject(ack_json, "t", IOTCL_IsoTimestampNow())) goto cleanup;
+    if (!cJSON_AddStringToObject(ack_json, "t", iotcl_iso_timestamp_now())) goto cleanup;
 
     if (!cJSON_AddStringToObject(ack_json, "uniqueId", config->device.duid)) goto cleanup;
     if (!cJSON_AddStringToObject(ack_json, "cpId", config->device.cpid)) goto cleanup;
@@ -256,8 +256,8 @@ static char *create_ack(
     return result;
 }
 
-char *IOTCL_CreateAckStringAndDestroyEvent(
-        IOTCL_EVENT_DATA data,
+char *iotcl_create_ack_string_and_destroy_event(
+        IotclEventData data,
         bool success,
         const char *message
 ) {
@@ -265,11 +265,11 @@ char *IOTCL_CreateAckStringAndDestroyEvent(
     // alrwady checked that ack ID is valid in the messages
     char *ack_id = cJSON_GetObjectItemCaseSensitive(data->data, "ackId")->valuestring;
     char *ret = create_ack(success, message, data->type, ack_id);
-    IOTCL_DestroyEvent(data);
+    iotcl_destroy_event(data);
     return ret;
 }
 
-char *IOTCL_CreateOtaAckResponse(
+char *iotcl_create_ota_ack_response(
         const char *ota_ack_id,
         bool success,
         const char *message
@@ -278,7 +278,7 @@ char *IOTCL_CreateOtaAckResponse(
     return ret;
 }
 
-void IOTCL_DestroyEvent(IOTCL_EVENT_DATA data) {
+void iotcl_destroy_event(IotclEventData data) {
     cJSON_Delete(data->root);
     free(data);
 }
