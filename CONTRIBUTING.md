@@ -46,7 +46,7 @@ To ensure consistency throughout the source code please follow these steps:
 
 * All features or bug fixes must be tested by one or more unit-tests.
 * Follow the existing naming conventions in the project.
-* The project uses GTK/Gnome naming convention and K&R 1TBS (OTBS) Formatting, with acceptable OTBS exceptions loke iotcl_telemetry_create where full conformance would reduce readability.
+* The project uses GTK/Gnome naming convention and K&R 1TBS (OTBS) Formatting, with acceptable OTBS exceptions like iotcl_telemetry_create where full conformance would reduce readability.
 * Format your code with CLion *CTRL-ALT-L* or Eclipse *CTRL-SHIFT-F* K&R Formatter with 120 character line wrap and 4 spaces indentation. 
 * If you use another IDE, please ensure that your code is consistent with the existing coding style.
 * Ensure that headers have ```#ifdef __cplusplus``` for C++ compatibility.
