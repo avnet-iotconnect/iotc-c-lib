@@ -14,7 +14,7 @@ Before you submit your Pull Request (PR) consider the following guidelines:
 
 1. Add your changes **including appropriate test cases**.
 
-1. Follow our [Coding Standard Guidelines](#rules).
+1. Follow our Follow our Coding Standard Guidelines.
 
 1. Run the full test suite, and ensure that all tests pass.
 
@@ -40,7 +40,7 @@ That's it! Thank you for your contribution!
 
 After your pull request is merged, you can safely delete your branch and pull the changes from the main (upstream) repository.
 
-### Code Formatting and Naming Conventions
+### Coding Standard Guidelines
 
 To ensure consistency throughout the source code please follow these steps:
 
