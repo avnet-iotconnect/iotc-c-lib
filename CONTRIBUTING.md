@@ -50,3 +50,5 @@ To ensure consistency throughout the source code please follow these steps:
 * Format your code with CLion *CTRL-ALT-L* or Eclipse *CTRL-SHIFT-F* K&R Formatter with 120 character line wrap and 4 spaces indentation. 
 * If you use another IDE, please ensure that your code is consistent with the existing coding style.
 * Ensure that headers have ```#ifdef __cplusplus``` for C++ compatibility.
+* Avoid using fixed size types (like uint32_t, int16_t etc.), where possible. Use them only if if you feel that underlying layer use/requirement can be broken, if you are intending to pack values into storage or compose binary network packets. Use conversions/casts where it is acceptable.
+* Avoid unneccessary comment blocks for the sake of just having a comment block. For example, if function is called ```walk_animal()``` a comment block stating that "The function "Walks an animal" is redundant. So use self-describing function names and reserve comments for important things, so that the users actually read them.
