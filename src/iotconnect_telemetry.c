@@ -7,17 +7,13 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <cJSON.h>
 
 #include "iotconnect_common.h"
 #include "iotconnect_lib.h"
 #include "iotconnect_telemetry.h"
 
 
-#include <cJSON.h>
-
-/////////////////////////////////////////////////////////
-// cJSON implementation
 
 struct IotclMessageHandleTag {
     cJSON *root_value;
@@ -90,13 +86,13 @@ static cJSON *setup_telemetry_object(IotclMessageHandle message) {
     return telemetry_object; // object inside the "d" array of the the root object
 
     cleanup_cto:
-    cJSON_free(message->current_telemetry_object);
+    cJSON_Delete(message->current_telemetry_object);
 
     cleanup_da:
-    cJSON_free(data_array);
+    cJSON_Delete(data_array);
 
     cleanup_to:
-    cJSON_free(telemetry_object);
+    cJSON_Delete(telemetry_object);
 
     return NULL;
 }
@@ -253,7 +249,7 @@ const char *iotcl_create_serialized_string(IotclMessageHandle message, bool pret
 }
 
 void iotcl_destroy_serialized(const char *serialized_string) {
-    cJSON_free((char *) serialized_string);
+    cJSON_free((void *)serialized_string); // use cJSON_free so that we can track mallocs
 }
 
 void iotcl_telemetry_destroy(IotclMessageHandle message) {

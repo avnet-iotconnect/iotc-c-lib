@@ -20,7 +20,8 @@
 struct IotclEventDataTag {
     cJSON *data;
     cJSON *root;
-    IotConnectEventType type;
+    IotclEventType type;
+    int error;
 };
 
 /*
@@ -36,7 +37,7 @@ Table 16 [Possible values for st]
 4 Firmware command Failed with some reason
 7 Firmware command executed successfully
 */
-static int to_ack_status(bool success, IotConnectEventType type) {
+static int to_ack_status(bool success, IotclEventType type) {
     int status = 4; // default is "failure"
     if (success == true) {
         switch (type) {
@@ -52,27 +53,37 @@ static int to_ack_status(bool success, IotConnectEventType type) {
     return status;
 }
 
-
-static bool iotc_process_callback(struct IotclEventDataTag *eventData) {
-    if (!eventData) return false;
+static bool iotc_process_callback(struct IotclEventDataTag *event_data) {
+    if (!event_data) return false;
 
     IotclConfig *config = iotcl_get_config();
     if (!config) return false;
 
     if (config->event_functions.msg_cb) {
-        config->event_functions.msg_cb(eventData, eventData->type);
+        config->event_functions.msg_cb(event_data, event_data->type);
     }
-    switch (eventData->type) {
+    switch (event_data->type) {
         case DEVICE_COMMAND:
             if (config->event_functions.cmd_cb) {
-                config->event_functions.cmd_cb(eventData);
+                config->event_functions.cmd_cb(event_data);
             }
             break;
         case DEVICE_OTA:
             if (config->event_functions.ota_cb) {
-                config->event_functions.ota_cb(eventData);
+                config->event_functions.ota_cb(event_data);
             }
             break;
+        case REQ_HELLO:// all below fall through
+        case REQ_GET_ATTRIBUTES:
+        case REQ_GET_DEVICE_SETTINGS:
+        case REQ_GET_CHILD_DEVICES:
+        case REQ_RULES:
+            if (config->event_functions.response_cb) {
+                config->event_functions.response_cb(event_data, event_data->type);
+            }
+            iotcl_destroy_event(event_data);
+            break;
+
         default:
             break;
     }
@@ -85,7 +96,36 @@ static bool iotc_process_callback(struct IotclEventDataTag *eventData) {
 static inline bool is_valid_string(const cJSON *json) {
     return (NULL != json && cJSON_IsString(json) && json->valuestring != NULL);
 }
+bool iotcl_process_v2_event(cJSON *root) {
+    cJSON *d = NULL;
+    cJSON *j_data = cJSON_GetObjectItemCaseSensitive(root, "d");
+    if (!j_data) return false;
 
+    cJSON *ct = cJSON_GetObjectItemCaseSensitive(j_data, "ct");
+    cJSON *ec = cJSON_GetObjectItemCaseSensitive(j_data, "ec");
+    struct IotclEventDataTag *event_data = (struct IotclEventDataTag *) calloc(
+            sizeof(struct IotclEventDataTag), 1);
+    if (NULL == event_data) goto cleanup;
+
+    if (ec->valueint == 0) {
+        // if has error code, then no data
+        d = cJSON_GetObjectItemCaseSensitive(root, "d");
+        free(event_data);
+        if (!d) goto cleanup;
+    }
+
+    event_data->root = root;
+    event_data->data = d;
+    event_data->type = ct->valueint;
+    event_data->error = ec->valueint;
+    return iotc_process_callback(event_data);
+
+    cleanup:
+    cJSON_Delete(root);
+
+    return false;
+
+}
 bool iotcl_process_event(const char *event) {
     cJSON *root = cJSON_Parse(event);
     if (!root) return false;
@@ -93,7 +133,9 @@ bool iotcl_process_event(const char *event) {
     { // scope out the on-the fly varialble declarations for cleanup jump
         // root object should only have cmdType
         cJSON *j_type = cJSON_GetObjectItemCaseSensitive(root, "cmdType");
-        if (!is_valid_string(j_type)) goto cleanup;
+        if (!is_valid_string(j_type)) {
+            return iotcl_process_v2_event(root);
+        }
 
         cJSON *j_ack_id = NULL;
         cJSON *data = NULL; // data should have ackId
@@ -109,7 +151,7 @@ bool iotcl_process_event(const char *event) {
             goto cleanup;
         }
 
-        IotConnectEventType type = (IotConnectEventType) strtol(&j_type->valuestring[2], NULL, 16);
+        IotclEventType type = (IotclEventType) strtol(&j_type->valuestring[2], NULL, 16);
 
         if (type < DEVICE_COMMAND) {
             goto cleanup;
@@ -126,19 +168,20 @@ bool iotcl_process_event(const char *event) {
             }
         }
 
-        struct IotclEventDataTag *eventData = (struct IotclEventDataTag *) calloc(
+        struct IotclEventDataTag *event_data = (struct IotclEventDataTag *) calloc(
                 sizeof(struct IotclEventDataTag), 1);
-        if (NULL == eventData) goto cleanup;
+        if (NULL == event_data) goto cleanup;
 
-        eventData->root = root;
-        eventData->data = data;
-        eventData->type = type;
-        return iotc_process_callback(eventData);
+        event_data->root = root;
+        event_data->data = data;
+        event_data->type = type;
+        event_data->error = 0;
+        return iotc_process_callback(event_data);
     }
 
     cleanup:
     if (root) {
-        cJSON_free(root);
+        cJSON_Delete(root);
     }
     return false;
 
@@ -195,10 +238,21 @@ char *iotcl_clone_hw_version(IotclEventData data) {
     return NULL;
 }
 
+char *iotcl_clone_response_dtg(IotclEventData data) {
+    cJSON *meta = cJSON_GetObjectItemCaseSensitive(data->data, "meta");
+    if (cJSON_IsObject(meta)) {
+        cJSON *dtg = cJSON_GetObjectItem(meta, "dtg");
+        if (is_valid_string(dtg)) {
+            return iotcl_strdup(dtg->valuestring);
+        }
+    }
+    return NULL;
+}
+
 static char *create_ack(
         bool success,
         const char *message,
-        IotConnectEventType message_type,
+        IotclEventType message_type,
         const char *ack_id) {
 
     char *result = NULL;

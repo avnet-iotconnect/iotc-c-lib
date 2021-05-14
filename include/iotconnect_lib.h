@@ -20,6 +20,7 @@
 
 #include "iotconnect_event.h"
 #include "iotconnect_telemetry.h"
+#include "iotconnect_request.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,6 +39,7 @@ typedef struct {
 typedef struct {
     IotclDeviceConfig device;
     IotclTelemetryConfig telemetry;
+    IotclRequestConfig request;
     IotclEventFunctions event_functions; // Event callbacks for the event library. @see iotconnect_event.h
 } IotclConfig;
 

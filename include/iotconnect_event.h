@@ -24,12 +24,20 @@ typedef enum {
     ON_FORCE_SYNC = 0x12,
     ON_ADD_REMOVE_DEVICE = 0x13,
     ON_ADD_REMOVE_RULE = 0x15,
-    ON_CLOSE = 0x99
-} IotConnectEventType;
+    ON_CLOSE = 0x99,
+    /* being request IDs and Responses. NOTE: in decimal*/
+    REQ_HELLO = 200,
+    REQ_GET_ATTRIBUTES = 201, // TODO: Implement
+    REQ_GET_DEVICE_SETTINGS = 202, // (Twins) TODO: Implement
+    REQ_GET_CHILD_DEVICES = 203, // (Gateway device child devices) TODO: Implement
+    REQ_RULES = 204 // (for edge devices) TODO: Implement
+} IotclEventType;
 
 typedef struct IotclEventDataTag *IotclEventData;
 
-typedef void (*IotclMessageCallback)(IotclEventData data, IotConnectEventType type);
+typedef void (*IotclMessageCallback)(IotclEventData data, IotclEventType type);
+
+typedef void (*IotclResponseCallback)(IotclEventData data, IotclEventType type);
 
 typedef void (*IotclOtaCallback)(IotclEventData data);
 
@@ -37,9 +45,10 @@ typedef void (*IotclCommandCallback)(IotclEventData data);
 
 //callback configuration for the events module
 typedef struct {
+    IotclResponseCallback response_cb;   // callback for responses to requests (hello etc.)
     IotclOtaCallback ota_cb; // callback for OTA events.
     IotclCommandCallback cmd_cb; // callback for command events.
-    IotclMessageCallback msg_cb; // callback for ALL messages, including the specific ones like cmd or ota callback.
+    IotclMessageCallback msg_cb; // optional callback for ALL messages, including the specific ones like requests, cmd or ota callback.
     IotclCommandCallback unsupported_cb;   // callback when event that cannot be decoded by the library is received.
 } IotclEventFunctions;
 
@@ -68,6 +77,11 @@ char *iotcl_clone_hw_version(IotclEventData data);
 // Returns a malloc-ed copy of the Ack ID of the OTA message or a command.
 // The user must manually free the returned string when it is no longer needed.
 char *iotcl_clone_ack_id(IotclEventData data);
+
+// Returns a malloc-ed copy of the Device Template GUID for hello response.
+// This value can be used to configure the telemetry module.
+// The user must free the returned string when it is no longer needed.
+char *iotcl_clone_response_dtg(IotclEventData data);
 
 // Creates an OTA or a command ack json with optional message (can be NULL).
 // The user is responsible to free the returned string.

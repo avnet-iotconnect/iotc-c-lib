@@ -56,17 +56,6 @@ CMAKE_BINARY_DIR = /avnet/iotc-c-lib/tests
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target rebuild_cache
-rebuild_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
-	/opt/clion-2020.1.1/bin/cmake/linux/bin/cmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
-.PHONY : rebuild_cache
-
-# Special rule for the target rebuild_cache
-rebuild_cache/fast: rebuild_cache
-
-.PHONY : rebuild_cache/fast
-
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
@@ -77,6 +66,17 @@ edit_cache:
 edit_cache/fast: edit_cache
 
 .PHONY : edit_cache/fast
+
+# Special rule for the target rebuild_cache
+rebuild_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
+	/opt/clion-2020.1.1/bin/cmake/linux/bin/cmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+.PHONY : rebuild_cache
+
+# Special rule for the target rebuild_cache
+rebuild_cache/fast: rebuild_cache
+
+.PHONY : rebuild_cache/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -137,6 +137,19 @@ test-event/fast:
 .PHONY : test-event/fast
 
 #=============================================================================
+# Target rules for targets named test-request
+
+# Build rule for target.
+test-request: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test-request
+.PHONY : test-request
+
+# fast build rule for target.
+test-request/fast:
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/build
+.PHONY : test-request/fast
+
+#=============================================================================
 # Target rules for targets named test-telemetry
 
 # Build rule for target.
@@ -157,6 +170,7 @@ avnet/iotc-c-lib/src/iotconnect_common.o: avnet/iotc-c-lib/src/iotconnect_common
 avnet/iotc-c-lib/src/iotconnect_common.c.o:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/avnet/iotc-c-lib/src/iotconnect_common.c.o
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/avnet/iotc-c-lib/src/iotconnect_common.c.o
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/avnet/iotc-c-lib/src/iotconnect_common.c.o
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/avnet/iotc-c-lib/src/iotconnect_common.c.o
 .PHONY : avnet/iotc-c-lib/src/iotconnect_common.c.o
 
@@ -168,6 +182,7 @@ avnet/iotc-c-lib/src/iotconnect_common.i: avnet/iotc-c-lib/src/iotconnect_common
 avnet/iotc-c-lib/src/iotconnect_common.c.i:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/avnet/iotc-c-lib/src/iotconnect_common.c.i
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/avnet/iotc-c-lib/src/iotconnect_common.c.i
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/avnet/iotc-c-lib/src/iotconnect_common.c.i
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/avnet/iotc-c-lib/src/iotconnect_common.c.i
 .PHONY : avnet/iotc-c-lib/src/iotconnect_common.c.i
 
@@ -179,6 +194,7 @@ avnet/iotc-c-lib/src/iotconnect_common.s: avnet/iotc-c-lib/src/iotconnect_common
 avnet/iotc-c-lib/src/iotconnect_common.c.s:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/avnet/iotc-c-lib/src/iotconnect_common.c.s
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/avnet/iotc-c-lib/src/iotconnect_common.c.s
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/avnet/iotc-c-lib/src/iotconnect_common.c.s
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/avnet/iotc-c-lib/src/iotconnect_common.c.s
 .PHONY : avnet/iotc-c-lib/src/iotconnect_common.c.s
 
@@ -190,6 +206,7 @@ avnet/iotc-c-lib/src/iotconnect_discovery.o: avnet/iotc-c-lib/src/iotconnect_dis
 avnet/iotc-c-lib/src/iotconnect_discovery.c.o:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/avnet/iotc-c-lib/src/iotconnect_discovery.c.o
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/avnet/iotc-c-lib/src/iotconnect_discovery.c.o
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/avnet/iotc-c-lib/src/iotconnect_discovery.c.o
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/avnet/iotc-c-lib/src/iotconnect_discovery.c.o
 .PHONY : avnet/iotc-c-lib/src/iotconnect_discovery.c.o
 
@@ -201,6 +218,7 @@ avnet/iotc-c-lib/src/iotconnect_discovery.i: avnet/iotc-c-lib/src/iotconnect_dis
 avnet/iotc-c-lib/src/iotconnect_discovery.c.i:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/avnet/iotc-c-lib/src/iotconnect_discovery.c.i
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/avnet/iotc-c-lib/src/iotconnect_discovery.c.i
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/avnet/iotc-c-lib/src/iotconnect_discovery.c.i
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/avnet/iotc-c-lib/src/iotconnect_discovery.c.i
 .PHONY : avnet/iotc-c-lib/src/iotconnect_discovery.c.i
 
@@ -212,6 +230,7 @@ avnet/iotc-c-lib/src/iotconnect_discovery.s: avnet/iotc-c-lib/src/iotconnect_dis
 avnet/iotc-c-lib/src/iotconnect_discovery.c.s:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/avnet/iotc-c-lib/src/iotconnect_discovery.c.s
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/avnet/iotc-c-lib/src/iotconnect_discovery.c.s
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/avnet/iotc-c-lib/src/iotconnect_discovery.c.s
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/avnet/iotc-c-lib/src/iotconnect_discovery.c.s
 .PHONY : avnet/iotc-c-lib/src/iotconnect_discovery.c.s
 
@@ -223,6 +242,7 @@ avnet/iotc-c-lib/src/iotconnect_event.o: avnet/iotc-c-lib/src/iotconnect_event.c
 avnet/iotc-c-lib/src/iotconnect_event.c.o:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/avnet/iotc-c-lib/src/iotconnect_event.c.o
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/avnet/iotc-c-lib/src/iotconnect_event.c.o
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/avnet/iotc-c-lib/src/iotconnect_event.c.o
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/avnet/iotc-c-lib/src/iotconnect_event.c.o
 .PHONY : avnet/iotc-c-lib/src/iotconnect_event.c.o
 
@@ -234,6 +254,7 @@ avnet/iotc-c-lib/src/iotconnect_event.i: avnet/iotc-c-lib/src/iotconnect_event.c
 avnet/iotc-c-lib/src/iotconnect_event.c.i:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/avnet/iotc-c-lib/src/iotconnect_event.c.i
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/avnet/iotc-c-lib/src/iotconnect_event.c.i
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/avnet/iotc-c-lib/src/iotconnect_event.c.i
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/avnet/iotc-c-lib/src/iotconnect_event.c.i
 .PHONY : avnet/iotc-c-lib/src/iotconnect_event.c.i
 
@@ -245,6 +266,7 @@ avnet/iotc-c-lib/src/iotconnect_event.s: avnet/iotc-c-lib/src/iotconnect_event.c
 avnet/iotc-c-lib/src/iotconnect_event.c.s:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/avnet/iotc-c-lib/src/iotconnect_event.c.s
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/avnet/iotc-c-lib/src/iotconnect_event.c.s
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/avnet/iotc-c-lib/src/iotconnect_event.c.s
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/avnet/iotc-c-lib/src/iotconnect_event.c.s
 .PHONY : avnet/iotc-c-lib/src/iotconnect_event.c.s
 
@@ -256,6 +278,7 @@ avnet/iotc-c-lib/src/iotconnect_lib.o: avnet/iotc-c-lib/src/iotconnect_lib.c.o
 avnet/iotc-c-lib/src/iotconnect_lib.c.o:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/avnet/iotc-c-lib/src/iotconnect_lib.c.o
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/avnet/iotc-c-lib/src/iotconnect_lib.c.o
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/avnet/iotc-c-lib/src/iotconnect_lib.c.o
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/avnet/iotc-c-lib/src/iotconnect_lib.c.o
 .PHONY : avnet/iotc-c-lib/src/iotconnect_lib.c.o
 
@@ -267,6 +290,7 @@ avnet/iotc-c-lib/src/iotconnect_lib.i: avnet/iotc-c-lib/src/iotconnect_lib.c.i
 avnet/iotc-c-lib/src/iotconnect_lib.c.i:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/avnet/iotc-c-lib/src/iotconnect_lib.c.i
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/avnet/iotc-c-lib/src/iotconnect_lib.c.i
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/avnet/iotc-c-lib/src/iotconnect_lib.c.i
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/avnet/iotc-c-lib/src/iotconnect_lib.c.i
 .PHONY : avnet/iotc-c-lib/src/iotconnect_lib.c.i
 
@@ -278,8 +302,45 @@ avnet/iotc-c-lib/src/iotconnect_lib.s: avnet/iotc-c-lib/src/iotconnect_lib.c.s
 avnet/iotc-c-lib/src/iotconnect_lib.c.s:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/avnet/iotc-c-lib/src/iotconnect_lib.c.s
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/avnet/iotc-c-lib/src/iotconnect_lib.c.s
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/avnet/iotc-c-lib/src/iotconnect_lib.c.s
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/avnet/iotc-c-lib/src/iotconnect_lib.c.s
 .PHONY : avnet/iotc-c-lib/src/iotconnect_lib.c.s
+
+avnet/iotc-c-lib/src/iotconnect_request.o: avnet/iotc-c-lib/src/iotconnect_request.c.o
+
+.PHONY : avnet/iotc-c-lib/src/iotconnect_request.o
+
+# target to build an object file
+avnet/iotc-c-lib/src/iotconnect_request.c.o:
+	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/avnet/iotc-c-lib/src/iotconnect_request.c.o
+	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/avnet/iotc-c-lib/src/iotconnect_request.c.o
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/avnet/iotc-c-lib/src/iotconnect_request.c.o
+	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/avnet/iotc-c-lib/src/iotconnect_request.c.o
+.PHONY : avnet/iotc-c-lib/src/iotconnect_request.c.o
+
+avnet/iotc-c-lib/src/iotconnect_request.i: avnet/iotc-c-lib/src/iotconnect_request.c.i
+
+.PHONY : avnet/iotc-c-lib/src/iotconnect_request.i
+
+# target to preprocess a source file
+avnet/iotc-c-lib/src/iotconnect_request.c.i:
+	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/avnet/iotc-c-lib/src/iotconnect_request.c.i
+	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/avnet/iotc-c-lib/src/iotconnect_request.c.i
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/avnet/iotc-c-lib/src/iotconnect_request.c.i
+	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/avnet/iotc-c-lib/src/iotconnect_request.c.i
+.PHONY : avnet/iotc-c-lib/src/iotconnect_request.c.i
+
+avnet/iotc-c-lib/src/iotconnect_request.s: avnet/iotc-c-lib/src/iotconnect_request.c.s
+
+.PHONY : avnet/iotc-c-lib/src/iotconnect_request.s
+
+# target to generate assembly for a file
+avnet/iotc-c-lib/src/iotconnect_request.c.s:
+	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/avnet/iotc-c-lib/src/iotconnect_request.c.s
+	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/avnet/iotc-c-lib/src/iotconnect_request.c.s
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/avnet/iotc-c-lib/src/iotconnect_request.c.s
+	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/avnet/iotc-c-lib/src/iotconnect_request.c.s
+.PHONY : avnet/iotc-c-lib/src/iotconnect_request.c.s
 
 avnet/iotc-c-lib/src/iotconnect_telemetry.o: avnet/iotc-c-lib/src/iotconnect_telemetry.c.o
 
@@ -289,6 +350,7 @@ avnet/iotc-c-lib/src/iotconnect_telemetry.o: avnet/iotc-c-lib/src/iotconnect_tel
 avnet/iotc-c-lib/src/iotconnect_telemetry.c.o:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/avnet/iotc-c-lib/src/iotconnect_telemetry.c.o
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/avnet/iotc-c-lib/src/iotconnect_telemetry.c.o
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/avnet/iotc-c-lib/src/iotconnect_telemetry.c.o
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/avnet/iotc-c-lib/src/iotconnect_telemetry.c.o
 .PHONY : avnet/iotc-c-lib/src/iotconnect_telemetry.c.o
 
@@ -300,6 +362,7 @@ avnet/iotc-c-lib/src/iotconnect_telemetry.i: avnet/iotc-c-lib/src/iotconnect_tel
 avnet/iotc-c-lib/src/iotconnect_telemetry.c.i:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/avnet/iotc-c-lib/src/iotconnect_telemetry.c.i
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/avnet/iotc-c-lib/src/iotconnect_telemetry.c.i
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/avnet/iotc-c-lib/src/iotconnect_telemetry.c.i
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/avnet/iotc-c-lib/src/iotconnect_telemetry.c.i
 .PHONY : avnet/iotc-c-lib/src/iotconnect_telemetry.c.i
 
@@ -311,6 +374,7 @@ avnet/iotc-c-lib/src/iotconnect_telemetry.s: avnet/iotc-c-lib/src/iotconnect_tel
 avnet/iotc-c-lib/src/iotconnect_telemetry.c.s:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/avnet/iotc-c-lib/src/iotconnect_telemetry.c.s
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/avnet/iotc-c-lib/src/iotconnect_telemetry.c.s
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/avnet/iotc-c-lib/src/iotconnect_telemetry.c.s
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/avnet/iotc-c-lib/src/iotconnect_telemetry.c.s
 .PHONY : avnet/iotc-c-lib/src/iotconnect_telemetry.c.s
 
@@ -322,6 +386,7 @@ cJSON/cJSON.o: cJSON/cJSON.c.o
 cJSON/cJSON.c.o:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/cJSON/cJSON.c.o
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/cJSON/cJSON.c.o
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/cJSON/cJSON.c.o
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/cJSON/cJSON.c.o
 .PHONY : cJSON/cJSON.c.o
 
@@ -333,6 +398,7 @@ cJSON/cJSON.i: cJSON/cJSON.c.i
 cJSON/cJSON.c.i:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/cJSON/cJSON.c.i
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/cJSON/cJSON.c.i
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/cJSON/cJSON.c.i
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/cJSON/cJSON.c.i
 .PHONY : cJSON/cJSON.c.i
 
@@ -344,6 +410,7 @@ cJSON/cJSON.s: cJSON/cJSON.c.s
 cJSON/cJSON.c.s:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/cJSON/cJSON.c.s
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/cJSON/cJSON.c.s
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/cJSON/cJSON.c.s
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/cJSON/cJSON.c.s
 .PHONY : cJSON/cJSON.c.s
 
@@ -355,6 +422,7 @@ cJSON/cJSON_Utils.o: cJSON/cJSON_Utils.c.o
 cJSON/cJSON_Utils.c.o:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/cJSON/cJSON_Utils.c.o
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/cJSON/cJSON_Utils.c.o
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/cJSON/cJSON_Utils.c.o
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/cJSON/cJSON_Utils.c.o
 .PHONY : cJSON/cJSON_Utils.c.o
 
@@ -366,6 +434,7 @@ cJSON/cJSON_Utils.i: cJSON/cJSON_Utils.c.i
 cJSON/cJSON_Utils.c.i:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/cJSON/cJSON_Utils.c.i
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/cJSON/cJSON_Utils.c.i
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/cJSON/cJSON_Utils.c.i
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/cJSON/cJSON_Utils.c.i
 .PHONY : cJSON/cJSON_Utils.c.i
 
@@ -377,6 +446,7 @@ cJSON/cJSON_Utils.s: cJSON/cJSON_Utils.c.s
 cJSON/cJSON_Utils.c.s:
 	$(MAKE) -f CMakeFiles/test-discovery.dir/build.make CMakeFiles/test-discovery.dir/cJSON/cJSON_Utils.c.s
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/cJSON/cJSON_Utils.c.s
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/cJSON/cJSON_Utils.c.s
 	$(MAKE) -f CMakeFiles/test-telemetry.dir/build.make CMakeFiles/test-telemetry.dir/cJSON/cJSON_Utils.c.s
 .PHONY : cJSON/cJSON_Utils.c.s
 
@@ -434,6 +504,33 @@ event.c.s:
 	$(MAKE) -f CMakeFiles/test-event.dir/build.make CMakeFiles/test-event.dir/event.c.s
 .PHONY : event.c.s
 
+request.o: request.c.o
+
+.PHONY : request.o
+
+# target to build an object file
+request.c.o:
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/request.c.o
+.PHONY : request.c.o
+
+request.i: request.c.i
+
+.PHONY : request.i
+
+# target to preprocess a source file
+request.c.i:
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/request.c.i
+.PHONY : request.c.i
+
+request.s: request.c.s
+
+.PHONY : request.s
+
+# target to generate assembly for a file
+request.c.s:
+	$(MAKE) -f CMakeFiles/test-request.dir/build.make CMakeFiles/test-request.dir/request.c.s
+.PHONY : request.c.s
+
 telemetry.o: telemetry.c.o
 
 .PHONY : telemetry.o
@@ -467,11 +564,12 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
-	@echo "... rebuild_cache"
+	@echo "... edit_cache"
 	@echo "... test-discovery"
 	@echo "... test-event"
+	@echo "... rebuild_cache"
+	@echo "... test-request"
 	@echo "... test-telemetry"
-	@echo "... edit_cache"
 	@echo "... avnet/iotc-c-lib/src/iotconnect_common.o"
 	@echo "... avnet/iotc-c-lib/src/iotconnect_common.i"
 	@echo "... avnet/iotc-c-lib/src/iotconnect_common.s"
@@ -484,6 +582,9 @@ help:
 	@echo "... avnet/iotc-c-lib/src/iotconnect_lib.o"
 	@echo "... avnet/iotc-c-lib/src/iotconnect_lib.i"
 	@echo "... avnet/iotc-c-lib/src/iotconnect_lib.s"
+	@echo "... avnet/iotc-c-lib/src/iotconnect_request.o"
+	@echo "... avnet/iotc-c-lib/src/iotconnect_request.i"
+	@echo "... avnet/iotc-c-lib/src/iotconnect_request.s"
 	@echo "... avnet/iotc-c-lib/src/iotconnect_telemetry.o"
 	@echo "... avnet/iotc-c-lib/src/iotconnect_telemetry.i"
 	@echo "... avnet/iotc-c-lib/src/iotconnect_telemetry.s"
@@ -499,6 +600,9 @@ help:
 	@echo "... event.o"
 	@echo "... event.i"
 	@echo "... event.s"
+	@echo "... request.o"
+	@echo "... request.i"
+	@echo "... request.s"
 	@echo "... telemetry.o"
 	@echo "... telemetry.i"
 	@echo "... telemetry.s"

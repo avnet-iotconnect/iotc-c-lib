@@ -8,7 +8,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Only for malloc leak tracking. User code should NOT include cJSON
+#include <cJSON.h>
+
 #include "iotconnect_lib.h"
+
+static int tracker; // used for malloc tracking
+
 
 // test for older version of iotconnect protocol
 static const char *TEST_STR_V1 =
@@ -17,7 +23,7 @@ static const char *TEST_STR_V1 =
 static const char *TEST_STR_V2 =
         "{\"cmdType\":\"0x02\",\"data\":{\"cpid\":\"MyCpid\",\"guid\":\"6ac6e586-68f1-40be-9d52-c11e75367f60\",\"uniqueId\":\"MyDeviceId\",\"command\":\"ota\",\"ack\":false,\"ackId\":\"7bd13714-dc07-44ea-99f2-c606f8cf2d2a\",\"cmdType\":\"0x02\",\"ver\":{\"sw\":\"0.2\",\"hw\":\"0.1\"},\"urls\":[{\"url\":\"https://forlifeblobstorage.blob.core.windows.net/firmware/4B82F95B-5B0F-408F-BDAF-A7A7C2F027AF.sfb?sv=2018-03-28&sr=b&sig=gQqmSF8Fs9tYolrzE4n%2Fj9NBdSq7%2BFCN89wZYVnFN6U%3D&se=2020-06-30T20%3A08%3A53Z&sp=r\"}]}}";
 
-void on_event(IotclEventData data, IotConnectEventType type) {
+void on_event(IotclEventData data, IotclEventType type) {
     (void) data;
     printf("Got event type %d\n", type);
 }
@@ -32,6 +38,7 @@ void on_cmd(IotclEventData data) {
     if (NULL != ack) {
         printf("Sent CMD ack: %s\n", ack);
         free((void *) ack);
+        tracker--; // p_malloc was called below by cJSON when json object was serialized. Adjust the malloc tracker
     } else {
         printf("Error while creating the ack JSON");
     }
@@ -63,6 +70,7 @@ void on_ota(IotclEventData data) {
     if (NULL != ack) {
         printf("Sent OTA ack: %s\n", ack);
         free((void *) ack);
+        tracker--; // p_malloc was called below by cJSON when json object was serialized. Adjust the malloc tracker
     }
 }
 
@@ -102,7 +110,34 @@ void test() {
     }
 }
 
+void *p_malloc(size_t size) {
+    tracker++;
+
+    //printf("---%d---\n", tracker);
+
+    return malloc(size);
+}
+
+void p_free(void *ptr) {
+    if (NULL != ptr) {
+        tracker--;
+    }
+    free(ptr);
+}
 
 int main() {
+    printf("---%d---\n", tracker);
+
+    cJSON_Hooks hooks;
+    hooks.malloc_fn = p_malloc;
+    hooks.free_fn = p_free;
+    cJSON_InitHooks(&hooks);
+
+    tracker = 0;
     test();
+    printf("---(%d)---\n", tracker);
+    if (0 != tracker) {
+        return -1;
+    }
 }
+
