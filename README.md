@@ -36,20 +36,20 @@ The response can be used to help configure telemetry module and your MQTT client
 const char* discovery_response_str = native_http_get(IOTCONNECT_DISCOVERY_HOSTNAME, "/api/sdk/cpid/your-cpid/lang/M_C/ver/2.0/env/your-env");
 
 IotclDiscoveryResponse *dr;
-dr = IOTC_DiscoveryParseDiscoveryResponse(discovery_response_str);
+dr = iotcl_discovery_parse_discovery_response(discovery_response_str);
 printf("Discovery Response:\n");
 printf("url: %s\n", dr->url);
 printf("host: %s\n", dr->host);
 printf("path: %s\n", dr->path);
 
-// pass either dr->url) or host/path combination to your http code to GET the sync reponse
+// pass either dr->url) or host/path combination to your http code to GET the sync response
 const char * sync_response_str = native_http_get(dr->host, dr->path);
 
 // Once we have obtained the sync response JSON, we should no longer need the discovery response
 iotcl_discovery_free_discovery_response(dr);
 
 IotclSyncResponse *sr = iotcl_discovery_parse_sync_response(sync_response_str);
-// the reponse now contains the dtg and MQTT information that you can pass to telemetry module of this library and your MQTT client implementation 
+// the response now contains the dtg and MQTT information that you can pass to telemetry module of this library and your MQTT client implementation 
 printf("dtg: %s\n", sr->dtg);
 printf("cpid: %s\n", sr->cpid);
 printf("MQTT host: %s\n", sr->broker.host);
@@ -58,7 +58,7 @@ printf("MQTT host: %s\n", sr->broker.host);
 // pass the info and initialize your MQTT client with the broker information
 intialize_mqtt_client(sr->broker);
 
-// Free the synce response once you are done using the information provided by it
+// Free the sync response once you are done using the information provided by it
 iotcl_discovery_free_sync_response(gsr);
 ```
 
@@ -119,11 +119,11 @@ void on_cmd(IotclEventData data) {
     printf("Command is: %s\n", command); // handle the command string here... tokenize etc.
     free(command);
 
-    // end ack true (success) to the command. you can also pass false (failure) and a message reponse
+    // end ack true (success) to the command. you can also pass false (failure) and a message response
     const char *ack_json = iotcl_create_ack_string_and_destroy_event(data, true, NULL);
     send_string_to_pub_topic(ack_json)
-    printf("Sent CMD ack: %s\n", ack);
-    free(ack);
+    printf("Sent CMD ack: %s\n", ack_json);
+    free(ack_json);
 }
 
 void on_ota(IotclEventData data) {
@@ -141,7 +141,7 @@ void on_ota(IotclEventData data) {
     free(sw_ver);
     free(hw_ver);
 
-    // end ack true (success) to the command. you can also pass false (failure) and a message reponse
+    // end ack true (success) to the command. you can also pass false (failure) and a message response
     const char *ack = iotcl_create_ack_string_and_destroy_event(data, true, NULL);
     send_string_to_pub_topic(ack_json)
     printf("Sent CMD ack: %s\n", ack);

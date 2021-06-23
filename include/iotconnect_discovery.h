@@ -97,7 +97,7 @@ IotclDiscoveryResponse *iotcl_discovery_parse_discovery_response(const char *res
 void iotcl_discovery_free_discovery_response(IotclDiscoveryResponse *response);
 
 // This function returns NULL in case of allocation failure
-// The user mast check the ds value for "OK". Corresponding error should be handled/repoted and the response should be freed
+// The user mast check the ds value for "OK". Corresponding error should be handled/reported and the response should be freed
 IotclSyncResponse *iotcl_discovery_parse_sync_response(const char *response_data);
 
 void iotcl_discovery_free_sync_response(IotclSyncResponse *response);
