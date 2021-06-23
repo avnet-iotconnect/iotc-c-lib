@@ -195,6 +195,14 @@ char *iotcl_clone_hw_version(IotclEventData data) {
     return NULL;
 }
 
+char *iotcl_clone_ack_id(IotclEventData data) {
+    cJSON *ackid = cJSON_GetObjectItemCaseSensitive(data->data, "ackId");
+    if (is_valid_string(ackid)) {
+        return iotcl_strdup(ackid->valuestring);
+    }
+    return NULL;
+}
+
 static char *create_ack(
         bool success,
         const char *message,
