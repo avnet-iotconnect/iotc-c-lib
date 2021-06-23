@@ -9,6 +9,7 @@
 #include <malloc.h>
 
 // Only for malloc leak tracking. User code should NOT include cJSON
+#include <stdlib.h>
 #include <cJSON.h>
 
 #include "iotconnect_lib.h"
