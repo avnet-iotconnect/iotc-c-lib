@@ -154,6 +154,83 @@ bool iotcl_telemetry_add_with_iso_time(IotclMessageHandle message, const char *t
     return true;
 }
 
+static cJSON* setup_telemetry_v2_object(IotclMessageHandle message) {
+    IotclConfig* config = iotcl_get_config();
+    if (!config) return NULL;
+    if (!message) return NULL;
+
+    cJSON* telemetry_object = cJSON_CreateObject();
+    if (!telemetry_object) {
+        return NULL;
+    }
+    if (!cJSON_AddItemToArray(message->telemetry_data_array, telemetry_object)) {
+        goto cleanup;
+    }
+    // setup the actual telemetry object to be used in subsequent calls
+    message->current_telemetry_object = cJSON_CreateObject();
+    if (!message->current_telemetry_object) {
+        goto cleanup;
+    }
+    if (!cJSON_AddItemToObject(telemetry_object, "d",
+        message->current_telemetry_object)) {
+        goto cleanup_cto;
+    }
+    return telemetry_object; // object inside the "d" array of the the root object
+
+cleanup_cto:
+    cJSON_Delete(message->current_telemetry_object);
+cleanup:
+    cJSON_Delete(telemetry_object);
+    return NULL;
+}
+
+IotclMessageHandle iotcl_telemetry_v2_create() {
+    IotclConfig *config = iotcl_get_config();
+    if (!config || !config->request.sid || !config->telemetry.dtg) {
+        return NULL;
+    }
+    struct IotclMessageHandleTag *msg =
+            (struct IotclMessageHandleTag *) calloc(sizeof(struct IotclMessageHandleTag), 1);
+    if (!msg) {
+        return NULL;
+    }
+    msg->root_value = cJSON_CreateObject();
+    if (!msg->root_value) {
+        goto cleanup;
+    }
+    if (!cJSON_AddStringToObject(msg->root_value, "sid", config->request.sid)) {
+        goto cleanup;
+    }
+    if (!cJSON_AddStringToObject(msg->root_value, "dtg", config->telemetry.dtg)) {
+        goto cleanup;
+    }
+    if (!cJSON_AddNumberToObject(msg->root_value, "mt", 0)) {
+        goto cleanup; // telemetry message type (zero)
+    }
+    msg->telemetry_data_array = cJSON_AddArrayToObject(msg->root_value, "d");
+    if (!msg->telemetry_data_array) {
+        goto cleanup;
+    }
+    cJSON* const telemetry_object = setup_telemetry_v2_object(msg);
+    if (!telemetry_object) {
+        goto cleanup;
+    }
+    const char* p_ts = iotcl_iso_timestamp_now();
+    if (!cJSON_AddStringToObject(telemetry_object, "dt", p_ts)) {
+        goto cleanup;
+    }
+    if (!cJSON_HasObjectItem(msg->root_value, "dt")) {
+        if (!cJSON_AddStringToObject(msg->root_value, "dt", p_ts)) {
+            goto cleanup;
+        }
+    }
+    return msg;
+
+cleanup:
+    cJSON_free(msg);
+    return NULL;
+}
+
 bool iotcl_telemetry_set_number(IotclMessageHandle message, const char *path, double value) {
     if (!message) return false;
     if (NULL == message->current_telemetry_object) {

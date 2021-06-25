@@ -110,8 +110,10 @@ bool iotcl_process_v2_event(cJSON *root) {
     if (ec->valueint == 0) {
         // if has error code, then no data
         d = cJSON_GetObjectItemCaseSensitive(root, "d");
-        free(event_data);
-        if (!d) goto cleanup;
+        if (!d) {
+            free(event_data);
+            goto cleanup;
+        }
     }
 
     event_data->root = root;
@@ -244,6 +246,16 @@ char *iotcl_clone_response_dtg(IotclEventData data) {
         cJSON *dtg = cJSON_GetObjectItem(meta, "dtg");
         if (is_valid_string(dtg)) {
             return iotcl_strdup(dtg->valuestring);
+        }
+    }
+    return NULL;
+}
+
+char* iotcl_clone_response_sid(IotclEventData data) {
+    if ((data->error == 0) && (data->data != NULL)) {
+        cJSON* sid = cJSON_GetObjectItemCaseSensitive(data->data, "sid");
+        if (is_valid_string(sid)) {
+            return iotcl_strdup(sid->valuestring);
         }
     }
     return NULL;

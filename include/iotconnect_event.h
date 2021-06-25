@@ -83,6 +83,11 @@ char *iotcl_clone_ack_id(IotclEventData data);
 // The user must free the returned string when it is no longer needed.
 char *iotcl_clone_response_dtg(IotclEventData data);
 
+// Returns a malloc-ed copy of the Company SDK GUID for hello response.
+// This value can be used to configure the telemetry module.
+// The user must free the returned string when it is no longer needed.
+char* iotcl_clone_response_sid(IotclEventData data);
+
 // Creates an OTA or a command ack json with optional message (can be NULL).
 // The user is responsible to free the returned string.
 // This function also frees up all resources taken by the message.
