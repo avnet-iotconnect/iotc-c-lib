@@ -86,6 +86,13 @@ const char *iotcl_create_serialized_string(IotclMessageHandle message, bool pret
 
 void iotcl_destroy_serialized(const char *serialized_string);
 
+/*
+ * Create a V2 message handle given IoTConnect configuration.
+ * This handle can be used to add data to the message.
+ * The handle cannot be re-used and should be destroyed to free up resources, once the message is sent.
+ */
+IotclMessageHandle iotcl_telemetry_v2_create(void);
+
 #ifdef __cplusplus
 }
 #endif
