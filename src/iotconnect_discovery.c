@@ -200,6 +200,5 @@ void iotcl_discovery_free_sync_response(IotclSyncResponse *response) {
     free(response->broker.sub_topic);
     free(response->broker.pub_topic);
     free(response);
-    memset(response, 0, sizeof(IotclSyncResponse));
 }
 
