@@ -47,7 +47,7 @@ IotclConfig *iotcl_get_config() {
     return &config;
 }
 
-void iotcl_deinit() {
+void iotcl_deinit(void) {
     config_is_valid = false;
 
     memset(&config, 0, sizeof(config));
