@@ -50,6 +50,8 @@ void test() {
     iotcl_telemetry_destroy(msg);
     printf("%s\n", str);
     iotcl_destroy_serialized(str);
+
+    // FIXME Does this need an iotcl_deinit() -- config is no longer valid when this routine returns -- if there are multiple calls to test() 
 }
 
 static int tracker;

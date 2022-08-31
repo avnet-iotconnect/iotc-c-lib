@@ -27,8 +27,12 @@ bool iotcl_init(IotclConfig *c) {
         IOTCL_LOG ("IotConnectLib_Configure: combined name (cpid + uuid) exceeded maximum value" IOTCL_NL);
         return false;
     }
+    // FIXME this is a shallow copy -- have potential dangling pointers from c here?
+    // Only works if c is static, or allocated -- not if its from some local variable?
     memcpy(&config, c, sizeof(config));
 
+    // FIXME this check looks superfluous? already checked c before it was copied -- maybe it's needed for a deep copy
+    // if duid/cpid/env are allocated?
     if (!config.device.duid || !config.device.cpid || !config.device.env) {
         // allocation failure
         IOTCL_LOG ("IotConnectLib_Configure: malloc failure" IOTCL_NL);

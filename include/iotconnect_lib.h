@@ -11,6 +11,8 @@
 
 // SSL style configuration. You can use a different include
 #ifndef ITOTCONNECT_LIB_CONFIG_HEADER
+// FIXME this looks like a typo ITOTCONNECT_LIB_CONFIG_HEADER should be IOTCONNECT_LIB_CONFIG_HEADER
+// however, it's used in multiple repos, so needs thought before modifying?
 
 #include "iotconnect_lib_config.h"
 
