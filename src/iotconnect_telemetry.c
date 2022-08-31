@@ -14,7 +14,7 @@
 #include "iotconnect_telemetry.h"
 
 
-#include <cJSON.h>
+#include "cJSON.h"
 
 /////////////////////////////////////////////////////////
 // cJSON implementation

@@ -5,8 +5,8 @@
  */
 #include <stdlib.h>
 #include <string.h>
-#include <cJSON.h>
 
+#include "cJSON.h"
 #include "iotconnect_common.h"
 #include "iotconnect_lib.h"
 
