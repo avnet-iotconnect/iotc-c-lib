@@ -18,7 +18,7 @@ bool iotcl_init(IotclConfig *c) {
     iotcl_deinit();
     if (
             !c || !c->device.env || !c->device.cpid || !c->device.duid ||
-            0 == strlen(c->device.env) || 0 == strlen(c->device.env) || 0 == strlen(c->device.env)
+            0 == strlen(c->device.env) || 0 == strlen(c->device.cpid) || 0 == strlen(c->device.duid)
             ) {
         IOTCL_LOG ("IotConnectLib_Configure: configuration parameters missing" IOTCL_NL);
         return false;
