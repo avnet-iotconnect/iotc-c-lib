@@ -80,7 +80,7 @@ Command is: ota
 SW Version is: 0.2
 Sent OTA ack: {"mt":11,"t":"2020-07-29T18:15:58.000Z","uniqueId":"my-device-id","cpId":"MyCpid","sdk":{"l":"M_C","v":"2.0","e":"avnetpoc"},"d":{"ackId":"7bd13714-dc07-44ea-99f2-c606f8cf2d2a","msg":"","st":7}}
 */
-void test() {
+static void test(void) {
     IotclConfig config;
     memset(&config, 0, sizeof(config));
 
@@ -103,6 +103,6 @@ void test() {
 }
 
 
-int main() {
+int main(void) {
     test();
 }
