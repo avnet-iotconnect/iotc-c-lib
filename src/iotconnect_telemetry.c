@@ -75,8 +75,8 @@ static cJSON *setup_telemetry_object(IotclMessageHandle message) {
 
     cJSON *telemetry_object = cJSON_CreateObject();
     if (!telemetry_object) return NULL;
-    cJSON_AddStringToObject(telemetry_object, "id", config->device.duid);
-    cJSON_AddStringToObject(telemetry_object, "tg", "");
+    if (!cJSON_AddStringToObject(telemetry_object, "id", config->device.duid)) goto cleanup_to;
+    if (!cJSON_AddStringToObject(telemetry_object, "tg", "")) goto cleanup_to;
     cJSON *data_array = cJSON_AddArrayToObject(telemetry_object, "d");
     if (!data_array) goto cleanup_to;
     if (!cJSON_AddItemToArray(message->telemetry_data_array, telemetry_object)) goto cleanup_da;
@@ -140,9 +140,13 @@ IotclMessageHandle iotcl_telemetry_create() {
 bool iotcl_telemetry_add_with_epoch_time(IotclMessageHandle message, time_t time) {
     if (!message) return false;
     cJSON *telemetry_object = setup_telemetry_object(message);
-    cJSON_AddNumberToObject(telemetry_object, "ts", time);
+    if (!cJSON_AddNumberToObject(telemetry_object, "ts", time)) {
+        return false;
+    }
     if (!cJSON_HasObjectItem(message->root_value, "ts")) {
-        cJSON_AddNumberToObject(message->root_value, "ts", time);
+        if (!cJSON_AddNumberToObject(message->root_value, "ts", time)) {
+            return false;
+        }
     }
     return true;
 }
