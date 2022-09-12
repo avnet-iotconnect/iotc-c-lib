@@ -16,7 +16,7 @@
 #include "iotconnect_common.h"
 #include "iotconnect_telemetry.h"
 
-void test() {
+static void test(void) {
     IotclConfig config;
 
 
@@ -68,7 +68,7 @@ void p_free(void *ptr) {
     free(ptr);
 }
 
-int main() {
+int main(void) {
     printf("---%d---\n", tracker);
 
     cJSON_Hooks hooks;

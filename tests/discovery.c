@@ -53,7 +53,7 @@ static void report_sync_error(IotclSyncResponse *response, const char* sync_resp
     printf("Raw server response was:\n--------------\n%s\n--------------\n", sync_response_str);
 }
 
-static void test() {
+static void test(void) {
     {
         IotclDiscoveryResponse *dr;
         dr = iotcl_discovery_parse_discovery_response(EXAMPLE_DISCOVERY_RESPONSE);
@@ -97,6 +97,6 @@ static void test() {
     }
 }
 
-int main() {
+int main(void) {
     test();
 }

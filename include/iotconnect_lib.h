@@ -45,7 +45,7 @@ bool iotcl_init(IotclConfig *c);
 
 IotclConfig *iotcl_get_config(void);
 
-void iotcl_deinit();
+void iotcl_deinit(void);
 
 #ifdef __cplusplus
 }

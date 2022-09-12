@@ -19,7 +19,7 @@ const char *iotcl_to_iso_timestamp(time_t timestamp) {
     return to_iso_timestamp(&timestamp);
 }
 
-const char *iotcl_iso_timestamp_now() {
+const char *iotcl_iso_timestamp_now(void) {
     return to_iso_timestamp(NULL);
 }
 

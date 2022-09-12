@@ -101,7 +101,7 @@ static cJSON *setup_telemetry_object(IotclMessageHandle message) {
     return NULL;
 }
 
-IotclMessageHandle iotcl_telemetry_create() {
+IotclMessageHandle iotcl_telemetry_create(void) {
     cJSON *sdk_array = NULL;
     IotclConfig *config = iotcl_get_config();
     if (!config) return NULL;

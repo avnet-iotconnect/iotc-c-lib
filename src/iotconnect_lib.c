@@ -40,14 +40,14 @@ bool iotcl_init(IotclConfig *c) {
 }
 
 
-IotclConfig *iotcl_get_config() {
+IotclConfig *iotcl_get_config(void) {
     if (!config_is_valid) {
         return NULL;
     }
     return &config;
 }
 
-void iotcl_deinit() {
+void iotcl_deinit(void) {
     config_is_valid = false;
 
     memset(&config, 0, sizeof(config));
