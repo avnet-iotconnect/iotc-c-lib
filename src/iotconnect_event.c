@@ -146,7 +146,7 @@ bool iotcl_process_event(const char *event) {
 
     cleanup:
 
-    cJSON_free(root);
+    cJSON_Delete(root);
     return status;
 }
 
