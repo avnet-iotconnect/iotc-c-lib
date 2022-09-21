@@ -87,8 +87,12 @@ static inline bool is_valid_string(const cJSON *json) {
 }
 
 bool iotcl_process_event(const char *event) {
+    bool status = false;
     cJSON *root = cJSON_Parse(event);
-    if (!root) return false;
+
+    if (!root) {
+       return false;
+    }
 
     { // scope out the on-the fly varialble declarations for cleanup jump
         // root object should only have cmdType
@@ -133,15 +137,17 @@ bool iotcl_process_event(const char *event) {
         eventData->root = root;
         eventData->data = data;
         eventData->type = type;
-        return iotc_process_callback(eventData);
+
+        status = iotc_process_callback(eventData);
+
+        free(eventData);
+        goto cleanup;
     }
 
     cleanup:
-    if (root) {
-        cJSON_free(root);
-    }
-    return false;
 
+    cJSON_Delete(root);
+    return status;
 }
 
 char *iotcl_clone_command(IotclEventData data) {
