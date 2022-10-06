@@ -18,7 +18,7 @@ Before you submit your Pull Request (PR) consider the following guidelines:
 
 1. Run the full test suite, and ensure that all tests pass.
 
-1. Push your branch to the repo.
+1. Push your branch to the repo. (Rebase your branch to the latest, PR will be rejected since it cannot be merged after review)
 
 1. In GitHub, send a pull request to `iotc-c-lib:master`.
 
