@@ -51,11 +51,12 @@ cJSON *json_object_dotset_locate(cJSON *search_object, char **leaf_name, const c
                 parent_object = cJSON_GetObjectItem(target_object, last_token);
             } else {
                 parent_object = cJSON_AddObjectToObject(target_object, last_token);
-
-                // NOTE: The user should clean up the search object if we return
-                // That should free all added objects, so this should be safe to do
-                if (!parent_object) goto cleanup;
             }
+
+            // NOTE: The user should clean up the search object if we return
+            // That should free all added objects, so this should be safe to do
+            if (!parent_object) goto cleanup;
+
             target_object = parent_object;
         }
     } while (token != NULL);
@@ -115,11 +116,11 @@ IotclMessageHandle iotcl_telemetry_create(void) {
 
     if (!msg->root_value) goto cleanup;
 
-    if (!cJSON_AddStringToObject(msg->root_value, "cpid", config->device.cpid)) goto cleanup;
-    if (!cJSON_AddStringToObject(msg->root_value, "dtg", config->telemetry.dtg)) goto cleanup;
-    if (!cJSON_AddNumberToObject(msg->root_value, "mt", 0)) goto cleanup; // telemetry message type (zero)
+    if (!cJSON_AddStringToObject(msg->root_value, "cpid", config->device.cpid)) goto cleanup_value;
+    if (!cJSON_AddStringToObject(msg->root_value, "dtg", config->telemetry.dtg)) goto cleanup_value;
+    if (!cJSON_AddNumberToObject(msg->root_value, "mt", 0)) goto cleanup_value; // telemetry message type (zero)
     sdk_array = cJSON_AddObjectToObject(msg->root_value, "sdk");
-    if (!sdk_array) goto cleanup;
+    if (!sdk_array) goto cleanup_value;
     if (!cJSON_AddStringToObject(sdk_array, "l", CONFIG_IOTCONNECT_SDK_NAME)) goto cleanup_array;
     if (!cJSON_AddStringToObject(sdk_array, "v", CONFIG_IOTCONNECT_SDK_VERSION)) goto cleanup_array;
     if (!cJSON_AddStringToObject(sdk_array, "e", config->device.env)) goto cleanup_array;
@@ -132,6 +133,10 @@ IotclMessageHandle iotcl_telemetry_create(void) {
 
     cleanup_array:
     cJSON_free(sdk_array);
+
+    cleanup_value:
+    cJSON_free(msg->root_value);
+
     cleanup:
     cJSON_free(msg);
     return NULL;
