@@ -140,7 +140,6 @@ bool iotcl_process_event(const char *event) {
 
         status = iotc_process_callback(eventData);
 
-        free(eventData);
         goto cleanup;
     }
 
