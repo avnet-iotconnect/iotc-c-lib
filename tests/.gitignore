@@ -1,6 +1,8 @@
 cmake-build-debug
 *.cmake
 CMakeCache.txt
+Makefile
+CMakeFiles
 *.cbp
 
 # test binaries
