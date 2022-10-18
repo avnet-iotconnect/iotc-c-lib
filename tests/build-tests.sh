@@ -9,5 +9,7 @@ if [[ ! -d cJSON ]]; then
 fi
 test -d cJSON
 
-make
+cmake .
+cmake --build . --target test-discovery test-event test-telemetry
+
 popd
