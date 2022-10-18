@@ -138,9 +138,11 @@ bool iotcl_process_event(const char *event) {
         eventData->data = data;
         eventData->type = type;
 
-        status = iotc_process_callback(eventData);
-
-        goto cleanup;
+        // eventData and root (via eventData->root) will be freed when the user calls
+        // iotcl_destroy_event(). The user is responsible to free this data inside the callback,
+        // once they are done with it. This is done so that the user can choose to keep the event data
+        // for purposes of replying with an ack once another process (perhaps in another thread) completes.
+        return iotc_process_callback(eventData);
     }
 
     cleanup:
@@ -275,7 +277,7 @@ char *iotcl_create_ack_string_and_destroy_event(
         const char *message
 ) {
     if (!data) return NULL;
-    // alrwady checked that ack ID is valid in the messages
+    // already checked that ack ID is valid in the messages
     char *ack_id = cJSON_GetObjectItemCaseSensitive(data->data, "ackId")->valuestring;
     char *ret = create_ack(success, message, data->type, ack_id);
     iotcl_destroy_event(data);
