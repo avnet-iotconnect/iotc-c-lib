@@ -28,7 +28,7 @@ typedef struct IotclMessageHandleTag *IotclMessageHandle;
  * This handle can be used to add data to the message.
  * The handle cannot be re-used and should be destroyed to free up resources, once the message is sent.
  */
-IotclMessageHandle iotcl_telemetry_create();
+IotclMessageHandle iotcl_telemetry_create(void);
 
 /*
  * Destroys the IoTConnect message handle.

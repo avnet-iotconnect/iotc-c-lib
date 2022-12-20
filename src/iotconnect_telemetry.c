@@ -69,7 +69,6 @@ cJSON *json_object_dotset_locate(cJSON *search_object, char **leaf_name, const c
     return NULL;
 }
 
-
 static cJSON *setup_telemetry_object(IotclMessageHandle message, const char *time) {
     IotclConfig *config = iotcl_get_config();
     if (!config) return NULL;
@@ -98,7 +97,7 @@ IotclMessageHandle iotcl_telemetry_create(void) {
     IotclConfig *config = iotcl_get_config();
     if (!config) return NULL;
     struct IotclMessageHandleTag *msg =
-        (struct IotclMessageHandleTag *) calloc(sizeof(struct IotclMessageHandleTag), 1);
+            (struct IotclMessageHandleTag *) calloc(sizeof(struct IotclMessageHandleTag), 1);
 
     if (!msg) return NULL;
     msg->root_value = cJSON_CreateObject();
@@ -106,9 +105,9 @@ IotclMessageHandle iotcl_telemetry_create(void) {
     if (!cJSON_AddStringToObject(msg->root_value, "dt", iotcl_iso_timestamp_now())) goto cleanup;   
 
     msg->telemetry_data_array = cJSON_AddArrayToObject(msg->root_value, "d");
-    if (!msg->telemetry_data_array){
-        goto cleanup_array;
-    }
+    
+    if (!msg->telemetry_data_array) goto cleanup_array;
+    
     return msg;
 
     cleanup_array:
@@ -121,7 +120,7 @@ IotclMessageHandle iotcl_telemetry_create(void) {
 bool iotcl_telemetry_add_with_epoch_time(IotclMessageHandle message, time_t time) {
     if (!message) return false;
     cJSON *telemetry_object = setup_telemetry_object(message, time);
-        if (!cJSON_AddNumberToObject(telemetry_object, "ts", time)) {
+    if (!cJSON_AddNumberToObject(telemetry_object, "ts", time)) {
         return false;
     }
     if (!cJSON_HasObjectItem(message->root_value, "ts")) {

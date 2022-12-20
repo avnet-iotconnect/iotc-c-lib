@@ -99,7 +99,7 @@ static bool iotc_process_callback(struct IotclEventDataTag *eventData) {
 
 
 /************************ CJSON IMPLEMENTATION **************************/
-static inline bool is_valid_string(const cJSON* json) {
+static inline bool is_valid_string(const cJSON *json) {
     return (NULL != json && cJSON_IsString(json) && json->valuestring != NULL);
 }
 
@@ -114,9 +114,8 @@ bool iotcl_process_event(const char *event) {
 
     if (!root){
         return false;
-    }
-        
-    {// scope out the on-the fly varialble declarations for cleanup jump
+    }  
+    { // scope out the on-the fly varialble declarations for cleanup jump
         // root object should only have cmdType
         cJSON *j_type = cJSON_GetObjectItemCaseSensitive(root, "ct");
         if (j_type) {

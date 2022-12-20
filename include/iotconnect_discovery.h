@@ -43,7 +43,7 @@ extern "C" {
     "\r\n" \
     "%s"
 
-// You will typically use this JSON post data to get mqtt client information for 1.0 json formate not used in 2.1
+// You will typically use this JSON post data to get mqtt client information for 1.0 json format not used in 2.1
 #define IOTCONNECT_DISCOVERY_PROTOCOL_POST_DATA_TEMPLATE "{\"cpId\":\"%s\",\"uniqueId\":\"%s\",\"option\":{\"attribute\":false,\"setting\":false,\"protocol\":true,\"device\":false,\"sdkConfig\":false,\"rule\":false}}"
 
 // add 1 for string terminator
@@ -71,7 +71,6 @@ typedef struct IotclDiscoveryResponse {
     char *host; // parsed out host from the url
     char *path; // parsed out base ULR request path
 } IotclDiscoveryResponse;
-
 
 typedef struct IotclSyncResponse {
     IotclSyncResult ec;
@@ -111,8 +110,6 @@ typedef struct IotclSyncResponse {
         char *sub_topic;
     } broker;
 } IotclSyncResponse;
-
-
 
 // You must free the response when done
 // Returned NULL means that there was a memory allocation or a parsing error

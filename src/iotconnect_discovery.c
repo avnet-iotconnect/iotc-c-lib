@@ -57,7 +57,6 @@ static bool split_url(IotclDiscoveryResponse *response) {
 }
 
 IotclDiscoveryResponse *iotcl_discovery_parse_discovery_response(const char *response_data) {
-
     cJSON *base_url_cjson;
     cJSON *json_root = cJSON_Parse(response_data);
     if (!json_root) {
