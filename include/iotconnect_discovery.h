@@ -1,7 +1,7 @@
-/* Copyright (C) 2020 Avnet - All Rights Reserved
+﻿/* Copyright (C) 2020 Avnet - All Rights Reserved
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
- * Authors: Nikola Markovic <nikola.markovic@avnet.com> et al.
+ * Authors: Nikola Markovic <nikola.markovic@avnet.com> et al & Neerav Parasher <neerav.parasar@softwebsolutions.com>.
  */
 
 /*
@@ -43,7 +43,7 @@ extern "C" {
     "\r\n" \
     "%s"
 
-// You will typically use this JSON post data to get mqtt client information
+// You will typically use this JSON post data to get mqtt client information for 1.0 json formate not used in 2.1
 #define IOTCONNECT_DISCOVERY_PROTOCOL_POST_DATA_TEMPLATE "{\"cpId\":\"%s\",\"uniqueId\":\"%s\",\"option\":{\"attribute\":false,\"setting\":false,\"protocol\":true,\"device\":false,\"sdkConfig\":false,\"rule\":false}}"
 
 // add 1 for string terminator
@@ -72,13 +72,32 @@ typedef struct IotclDiscoveryResponse {
     char *path; // parsed out base ULR request path
 } IotclDiscoveryResponse;
 
+
 typedef struct IotclSyncResponse {
-    IotclSyncResult ds;
+    IotclSyncResult ec;
     char *cpid; // validated CPID from the cloud
     char *dtg;
     int ee; // reserved for future use
     int rc; // reserved for future use
     int at; // reserved for future use
+    struct meta_data {
+        int df;
+        int start_hb;
+        int hb_event;
+        char *cd;
+        char *gtw;
+        char *tg;
+        char *g;
+        int edge;
+        double v;
+    }meta;
+    struct has_data {
+        int d;    //If 1 � Gateway Device can send 204 message to get all child devices
+        int attr; //If 1 � Device can send 201 message to get all attribute details
+        int set;  //If 1 � Device can send 202 message to get updates on settings/twins
+        int r;    //If 1 � Edge Device can send 203 message to get all rules
+        int ota;  //If 1 � Device can send 205 message to get pending OTA
+    }has;
     struct protocol {
         char *client_id;
         char *name;
@@ -86,9 +105,14 @@ typedef struct IotclSyncResponse {
         char *user_name;
         char *pass;
         char *pub_topic;
+        char *di_pub;
+        char *hb_pub;
+        char *ack_pub_topic;
         char *sub_topic;
     } broker;
 } IotclSyncResponse;
+
+
 
 // You must free the response when done
 // Returned NULL means that there was a memory allocation or a parsing error
@@ -97,7 +121,7 @@ IotclDiscoveryResponse *iotcl_discovery_parse_discovery_response(const char *res
 void iotcl_discovery_free_discovery_response(IotclDiscoveryResponse *response);
 
 // This function returns NULL in case of allocation failure
-// The user mast check the ds value for "OK". Corresponding error should be handled/reported and the response should be freed
+// The user mast check the ec value for "OK". Corresponding error should be handled/reported and the response should be freed
 IotclSyncResponse *iotcl_discovery_parse_sync_response(const char *response_data);
 
 void iotcl_discovery_free_sync_response(IotclSyncResponse *response);

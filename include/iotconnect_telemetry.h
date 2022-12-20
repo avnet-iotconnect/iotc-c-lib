@@ -1,7 +1,7 @@
 /* Copyright (C) 2020 Avnet - All Rights Reserved
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
- * Authors: Nikola Markovic <nikola.markovic@avnet.com> et al.
+ * Authors: Nikola Markovic <nikola.markovic@avnet.com> et al & Neerav Parasher <neerav.parasar@softwebsolutions.com>.
  */
 
 #ifndef IOTCONNECT_TELEMETRY_H
@@ -28,7 +28,7 @@ typedef struct IotclMessageHandleTag *IotclMessageHandle;
  * This handle can be used to add data to the message.
  * The handle cannot be re-used and should be destroyed to free up resources, once the message is sent.
  */
-IotclMessageHandle iotcl_telemetry_create(void);
+IotclMessageHandle iotcl_telemetry_create();
 
 /*
  * Destroys the IoTConnect message handle.
@@ -54,21 +54,21 @@ bool iotcl_telemetry_add_with_iso_time(IotclMessageHandle message, const char *t
 bool iotcl_telemetry_add_with_epoch_time(IotclMessageHandle message, time_t time);
 
 /*
- * Sets a number value in in the last created data set. Creates one with current time if none were created
+ * Sets a number value in the last created data set. Creates one with current time if none were created
  * previously with TelemetryAddWith*Time() call.
  * Path is an (optional) dotted notation that can be used to set values in nested objects.
  */
 bool iotcl_telemetry_set_number(IotclMessageHandle message, const char *path, double value);
 
 /*
- * Sets a string value in in the last created data set. Creates one with current time if none were created
+ * Sets a string value in the last created data set. Creates one with current time if none were created
  * previously with TelemetryAddWith*Time() call.
  * Path is an (optional) dotted notation that can be used to set values in nested objects.
  */
 bool iotcl_telemetry_set_string(IotclMessageHandle message, const char *path, const char *value);
 
 /*
- * Sets a boolean value in in the last created data set. Creates one with current time if none were created
+ * Sets a boolean value in the last created data set. Creates one with current time if none were created
  * previously with TelemetryAddWith*Time() call.
  * Path is an (optional) dotted notation that can be used to set values in nested objects.
  */

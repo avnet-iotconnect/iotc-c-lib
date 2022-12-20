@@ -1,7 +1,7 @@
 /* Copyright (C) 2020 Avnet - All Rights Reserved
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
- * Authors: Nikola Markovic <nikola.markovic@avnet.com> et al.
+ * Authors: Nikola Markovic <nikola.markovic@avnet.com> et al & Neerav Parasher <neerav.parasar@softwebsolutions.com>.
  */
 
 #ifndef IOTCONNECT_EVENT_H
@@ -15,16 +15,23 @@ extern "C" {
 #endif
 
 typedef enum {
-    UNKNOWN_EVENT = 0,
-    DEVICE_COMMAND = 0x01,
-    DEVICE_OTA = 0x02,
-    MODULE_UPDATE_COMMAND = 0x03,
-    ON_CHANGE_ATTRIBUTE = 0x10,
-    ON_CHANGE_SETTING = 0x11,
-    ON_FORCE_SYNC = 0x12,
-    ON_ADD_REMOVE_DEVICE = 0x13,
-    ON_ADD_REMOVE_RULE = 0x15,
-    ON_CLOSE = 0x99
+    DEVICE_COMMAND = 0,
+    DEVICE_OTA = 1,
+    MODULE_UPDATE_COMMAND = 2,
+    ON_CHANGE_ATTRIBUTE = 101,
+    REFRESH_SETTING_TWIN = 102,
+    RULE_CHANGE_COMMAND = 103,
+    REFRESH_CHILD_DEVICE = 104,
+    DF_CHANGE = 105,
+    DEVICE_DELETE = 106,
+    DEVICE_DISABLE = 107,
+    ON_CLOSE = 108,
+    STOP_OPERATION = 109,
+    HEARTBEAT_COMMAND = 110,
+    STOP_HEARTBEAT = 111,
+    Device_connection_status = 116,
+    UNKNOWN_EVENT = 0x10,
+    ON_FORCE_SYNC = 0x12
 } IotConnectEventType;
 
 typedef struct IotclEventDataTag *IotclEventData;
@@ -35,12 +42,21 @@ typedef void (*IotclOtaCallback)(IotclEventData data);
 
 typedef void (*IotclCommandCallback)(IotclEventData data);
 
+typedef void (*IotclGetDfCallback)(IotclEventData data);//
+
+typedef void (*IotclStartHBCallback)(IotclEventData data);
+
+typedef void (*IotclStartHBStopCallback)(IotclEventData data);
+
 //callback configuration for the events module
 typedef struct {
     IotclOtaCallback ota_cb; // callback for OTA events.
     IotclCommandCallback cmd_cb; // callback for command events.
     IotclMessageCallback msg_cb; // callback for ALL messages, including the specific ones like cmd or ota callback.
     IotclCommandCallback unsupported_cb;   // callback when event that cannot be decoded by the library is received.
+    IotclGetDfCallback get_df; // callback for data frequency change.
+    IotclStartHBCallback hb_cmd; // callback to Start the heartbeat operation.
+    IotclStartHBStopCallback hb_stop; // callback for Stop heartbeat operation.
 } IotclEventFunctions;
 
 
@@ -68,6 +84,26 @@ char *iotcl_clone_hw_version(IotclEventData data);
 // Returns a malloc-ed copy of the Ack ID of the OTA message or a command.
 // The user must manually free the returned string when it is no longer needed.
 char *iotcl_clone_ack_id(IotclEventData data);
+
+// The event received JSON from the cloud.
+// The function will process the received message and extract the data frequency value.
+// Return int value of data frequency.
+int df_update(IotclEventData data);
+
+// The event received JSON form the cloud.
+// The function will process the received message and extract the heartbeat frequency value.
+// Return int value of heartbeat frequency value.
+int hb_update(IotclEventData data);
+
+// The user should supply the event received JSON from the cloud.
+// The function will process the received message and extract the ct value.
+// Return int value of ct.
+int hb_event(IotclEventData data);
+
+
+// Function creating blank JSON {} string.
+// Return string to called function.
+char *prosess_hb();
 
 // Creates an OTA or a command ack json with optional message (can be NULL).
 // The user is responsible to free the returned string.
