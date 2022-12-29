@@ -29,7 +29,6 @@ typedef enum {
     STOP_OPERATION = 109,
     HEARTBEAT_COMMAND = 110,
     STOP_HEARTBEAT = 111,
-    Device_connection_status = 116,
     UNKNOWN_EVENT = 0x10,
     ON_FORCE_SYNC = 0x12
 } IotConnectEventType;
@@ -87,23 +86,24 @@ char *iotcl_clone_ack_id(IotclEventData data);
 
 // The event received JSON from the cloud.
 // The function will process the received message and extract the data frequency value.
+// The value will be used to send telemetry at intervals. (eg. 60 sec)
 // Return int value of data frequency.
-int df_update(IotclEventData data);
+int iotcl_df_update(IotclEventData data);
 
 // The event received JSON form the cloud.
 // The function will process the received message and extract the heartbeat frequency value.
 // Return int value of heartbeat frequency value.
-int hb_update(IotclEventData data);
+int iotcl_hb_update(IotclEventData data);
 
 // The user should supply the event received JSON from the cloud.
 // The function will process the received message and extract the ct value.
 // Return int value of ct.
-int hb_event(IotclEventData data);
-
+int iotcl_hb_event(IotclEventData data);
 
 // Function creating blank JSON {} string.
+// The string Sanding to Iotconnect at intervals is to ensure the connection between device and cloud.
 // Return string to called function.
-char *prosess_hb();
+char *iotcl_prosess_hb();
 
 // Creates an OTA or a command ack json with optional message (can be NULL).
 // The user is responsible to free the returned string.

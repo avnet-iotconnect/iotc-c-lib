@@ -356,29 +356,28 @@ void iotcl_destroy_event(IotclEventData data) {
     free(data);
 }
 
-int df_update(IotclEventData data) {
+int iotcl_df_update(IotclEventData data) {
     int ret = NULL;
     cJSON* df = cJSON_GetObjectItemCaseSensitive(data->root, "df");
     ret = df->valueint;
-
     return ret;
 }
 
-int hb_update(IotclEventData data) {
+int iotcl_hb_update(IotclEventData data) {
     int ret = NULL;
     cJSON* hb = cJSON_GetObjectItemCaseSensitive(data->root, "f");
     ret = hb->valueint;
     return ret;
 }
 
-int hb_event(IotclEventData data) {
+int iotcl_hb_event(IotclEventData data) {
     int ret = NULL;
     cJSON* hbct = cJSON_GetObjectItemCaseSensitive(data->root, "ct");
     ret = hbct->valueint;
     return ret;
 }
 
-char* prosess_hb() {
+char *iotcl_prosess_hb() {
     char* result = NULL;
     cJSON* hb_root = cJSON_CreateObject();
     if (!hb_root) {
@@ -390,5 +389,3 @@ cleanup:
     cJSON_Delete(hb_root);
     return result;
 }
-
-
