@@ -248,4 +248,3 @@ void iotcl_discovery_free_sync_response(IotclSyncResponse *response) {
     free(response->meta.gtw);
     free(response);
 }
-

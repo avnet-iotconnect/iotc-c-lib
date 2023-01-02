@@ -70,21 +70,6 @@ static bool iotc_process_callback(struct IotclEventDataTag *eventData) {
                 config->event_functions.ota_cb(eventData);
             }
             break;
-        case DF_CHANGE:
-            if (config->event_functions.get_df) {
-                config->event_functions.get_df(eventData);
-            }
-            break;
-        case HEARTBEAT_COMMAND:
-            if (config->event_functions.hb_cmd) {
-                config->event_functions.hb_cmd(eventData);
-            }
-            break;
-        case STOP_HEARTBEAT:
-            if (config->event_functions.hb_stop) {
-                config->event_functions.hb_stop(eventData);
-            }
-            break;
         case ON_CLOSE: case DEVICE_DELETE: case DEVICE_DISABLE: case STOP_OPERATION:
             if (config->event_functions.msg_cb) {
                 config->event_functions.msg_cb(eventData, eventData->type);
@@ -354,38 +339,4 @@ char *iotcl_create_ota_ack_response(
 void iotcl_destroy_event(IotclEventData data) {
     cJSON_Delete(data->root);
     free(data);
-}
-
-int iotcl_df_update(IotclEventData data) {
-    int ret = NULL;
-    cJSON* df = cJSON_GetObjectItemCaseSensitive(data->root, "df");
-    ret = df->valueint;
-    return ret;
-}
-
-int iotcl_hb_update(IotclEventData data) {
-    int ret = NULL;
-    cJSON* hb = cJSON_GetObjectItemCaseSensitive(data->root, "f");
-    ret = hb->valueint;
-    return ret;
-}
-
-int iotcl_hb_event(IotclEventData data) {
-    int ret = NULL;
-    cJSON* hbct = cJSON_GetObjectItemCaseSensitive(data->root, "ct");
-    ret = hbct->valueint;
-    return ret;
-}
-
-char *iotcl_prosess_hb() {
-    char* result = NULL;
-    cJSON* hb_root = cJSON_CreateObject();
-    if (!hb_root) {
-        return NULL;
-    }
-    result = cJSON_PrintUnformatted(hb_root);
-    if (!result)goto cleanup;
-cleanup:
-    cJSON_Delete(hb_root);
-    return result;
 }

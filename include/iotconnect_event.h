@@ -41,11 +41,6 @@ typedef void (*IotclOtaCallback)(IotclEventData data);
 
 typedef void (*IotclCommandCallback)(IotclEventData data);
 
-typedef void (*IotclGetDfCallback)(IotclEventData data);//
-
-typedef void (*IotclStartHBCallback)(IotclEventData data);
-
-typedef void (*IotclStartHBStopCallback)(IotclEventData data);
 
 //callback configuration for the events module
 typedef struct {
@@ -53,9 +48,6 @@ typedef struct {
     IotclCommandCallback cmd_cb; // callback for command events.
     IotclMessageCallback msg_cb; // callback for ALL messages, including the specific ones like cmd or ota callback.
     IotclCommandCallback unsupported_cb;   // callback when event that cannot be decoded by the library is received.
-    IotclGetDfCallback get_df; // callback for data frequency change.
-    IotclStartHBCallback hb_cmd; // callback to Start the heartbeat operation.
-    IotclStartHBStopCallback hb_stop; // callback for Stop heartbeat operation.
 } IotclEventFunctions;
 
 
@@ -83,27 +75,6 @@ char *iotcl_clone_hw_version(IotclEventData data);
 // Returns a malloc-ed copy of the Ack ID of the OTA message or a command.
 // The user must manually free the returned string when it is no longer needed.
 char *iotcl_clone_ack_id(IotclEventData data);
-
-// The event received JSON from the cloud.
-// The function will process the received message and extract the data frequency value.
-// The value will be used to send telemetry at intervals. (eg. 60 sec)
-// Return int value of data frequency.
-int iotcl_df_update(IotclEventData data);
-
-// The event received JSON form the cloud.
-// The function will process the received message and extract the heartbeat frequency value.
-// Return int value of heartbeat frequency value.
-int iotcl_hb_update(IotclEventData data);
-
-// The user should supply the event received JSON from the cloud.
-// The function will process the received message and extract the ct value.
-// Return int value of ct.
-int iotcl_hb_event(IotclEventData data);
-
-// Function creating blank JSON {} string.
-// The string Sanding to Iotconnect at intervals is to ensure the connection between device and cloud.
-// Return string to called function.
-char *iotcl_prosess_hb();
 
 // Creates an OTA or a command ack json with optional message (can be NULL).
 // The user is responsible to free the returned string.
