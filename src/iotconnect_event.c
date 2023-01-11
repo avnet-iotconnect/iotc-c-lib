@@ -3,6 +3,7 @@
  * Proprietary and confidential
  * Authors: Nikola Markovic <nikola.markovic@avnet.com> et al & Neerav Parasher <neerav.parasar@softwebsolutions.com>.
  */
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -90,9 +91,6 @@ static inline bool is_valid_string(const cJSON *json) {
 
 bool iotcl_process_event(const char *event) {
     int cmd_type;
-    int get_attr;
-    cJSON* j_type = NULL;
-    cJSON* dproperty = NULL;
     cJSON* cmd = NULL;
     cJSON* j_ack_id = NULL;
     cJSON* root = cJSON_Parse(event);
@@ -133,7 +131,7 @@ bool iotcl_process_event(const char *event) {
                 break;
 
             case ON_CHANGE_ATTRIBUTE://ct :101
-                get_attr = 201;
+                // FIXME TODO CHECK unused -- int get_attr = 201;
                 break;
 
             case REFRESH_SETTING_TWIN://ct :102
@@ -169,9 +167,12 @@ bool iotcl_process_event(const char *event) {
             struct IotclEventDataTag *eventData = (struct IotclEventDataTag *) calloc(sizeof(struct IotclEventDataTag), 1);
             if (NULL == eventData) goto cleanup;
             eventData->root = root;
-            eventData->data;
+            // FIXME TODO CHECK -- eventData->data should be assigned or removed?;
             eventData->type = type;
-            return iotc_process_callback(eventData);
+            // FIXME TODO CHECK -- memory leak?
+            bool result = iotc_process_callback(eventData);
+            free(eventData);
+            return result;
         }
         cJSON* dProperties = cJSON_GetObjectItemCaseSensitive(root, "d");
         if (dProperties) {
@@ -194,9 +195,12 @@ bool iotcl_process_event(const char *event) {
             struct IotclEventDataTag* eventData = (struct IotclEventDataTag*)calloc(sizeof(struct IotclEventDataTag), 1);
             if (NULL == eventData) goto cleanup;
             eventData->root = root;
-            eventData->data;
+            // FIXME TODO CHECK -- eventData->data should be assigned or removed?;
             eventData->type = type;
-            return iotc_process_callback(eventData);
+            // FIXME TODO CHECK -- memory leak?
+            bool result = iotc_process_callback(eventData);
+            free(eventData);
+            return result;
         }
     }
     cleanup:

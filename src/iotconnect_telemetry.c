@@ -4,10 +4,11 @@
  * Authors: Nikola Markovic <nikola.markovic@avnet.com> et al & Neerav Parasher <neerav.parasar@softwebsolutions.com>.
  */
 
+#include <stdio.h>
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <time.h>
 
 #include "iotconnect_common.h"
 #include "iotconnect_lib.h"
@@ -82,7 +83,7 @@ static cJSON *setup_telemetry_object(IotclMessageHandle message, const char *tim
     message->current_telemetry_object = cJSON_AddObjectToObject(telemetry_object, "d");
     if (!message->current_telemetry_object) goto cleanup_cto;
     if (!cJSON_AddItemToArray(message->telemetry_data_array, telemetry_object)) goto cleanup_cto;
-    char *sen = cJSON_Print(message->telemetry_data_array);
+    // FIXME TODO CHECK unused -- char *sen = cJSON_Print(message->telemetry_data_array);
     return telemetry_object; // object inside the "d" object of the the root object
 
     cleanup_cto:
@@ -119,7 +120,8 @@ IotclMessageHandle iotcl_telemetry_create(void) {
 
 bool iotcl_telemetry_add_with_epoch_time(IotclMessageHandle message, time_t time) {
     if (!message) return false;
-    cJSON *telemetry_object = setup_telemetry_object(message, time);
+    // FIXME TODO CHECK -- setup_telemetry_object needs a char* as second argument
+    cJSON *telemetry_object = setup_telemetry_object(message, iotcl_to_iso_timestamp(time));
     if (!cJSON_AddNumberToObject(telemetry_object, "ts", time)) {
         return false;
     }
@@ -134,7 +136,7 @@ bool iotcl_telemetry_add_with_epoch_time(IotclMessageHandle message, time_t time
 bool iotcl_telemetry_add_with_iso_time(IotclMessageHandle message, const char *time) {
     if (!message) return false;
     cJSON *const telemetry_object = setup_telemetry_object(message, time);
-    char *sensors_data = cJSON_Print(telemetry_object);
+    // FIXME TODO CHECK unused -- char *sensors_data = cJSON_Print(telemetry_object);
     
     if (!telemetry_object){
         return false;

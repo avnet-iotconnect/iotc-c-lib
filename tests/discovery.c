@@ -18,7 +18,8 @@ static void report_sync_error(IotclSyncResponse *response, const char* sync_resp
         printf("IOTC_SyncResponse is NULL. Out of memory?\n");
         return;
     }
-    switch(response->ds) {
+    // FIXME TODO CHECK -- field is renamed?
+    switch(response->ec) {
         case IOTCL_SR_DEVICE_NOT_REGISTERED:
             printf("IOTC_SyncResponse error: Not registered\n");
             break;
@@ -67,7 +68,8 @@ static void test(void) {
     {
         IotclSyncResponse *gsr; // good sync response example
         gsr = iotcl_discovery_parse_sync_response(EXAMPLE_GOOD_SYNC_RESPONSE);
-        if (!gsr || gsr->ds != IOTCL_SR_OK) {
+        // FIXME TODO CHECK -- field is renamed?
+        if (!gsr || gsr->ec != IOTCL_SR_OK) {
             report_sync_error(gsr, EXAMPLE_GOOD_SYNC_RESPONSE);
             exit(-1); // test failed
         }
@@ -87,7 +89,8 @@ static void test(void) {
     {
         IotclSyncResponse *bsr; // bad sync response example
         bsr = iotcl_discovery_parse_sync_response(DEVICE_NOT_FOUND_SYNC_RESPONSE);
-        if (!bsr || bsr->ds != IOTCL_SR_DEVICE_NOT_FOUND) {
+        // FIXME TODO CHECK -- field is renamed?
+        if (!bsr || bsr->ec != IOTCL_SR_DEVICE_NOT_FOUND) {
             printf("False positive or wrong error reported. Test failed!\n");
         } else {
             report_sync_error(bsr, DEVICE_NOT_FOUND_SYNC_RESPONSE);

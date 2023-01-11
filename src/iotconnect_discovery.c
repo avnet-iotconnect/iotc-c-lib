@@ -57,12 +57,12 @@ static bool split_url(IotclDiscoveryResponse *response) {
 }
 
 IotclDiscoveryResponse *iotcl_discovery_parse_discovery_response(const char *response_data) {
-    cJSON *base_url_cjson;
+    cJSON *base_url_cjson = NULL;
     cJSON *json_root = cJSON_Parse(response_data);
     if (!json_root) {
         return NULL;
     }
-    char *root_data = cJSON_GetObjectItem(json_root, "d");//edit
+    cJSON *root_data = cJSON_GetObjectItem(json_root, "d");//edit
     if (!root_data) {
         cJSON_Delete(json_root);
         return NULL;
@@ -76,6 +76,7 @@ IotclDiscoveryResponse *iotcl_discovery_parse_discovery_response(const char *res
         goto cleanup;
     }
 
+    if(base_url_cjson != NULL)
     { // separate the declaration into a block to allow jump without warnings
         char *jsonBaseUrl = base_url_cjson->valuestring;
         if (!jsonBaseUrl) {
