@@ -166,7 +166,7 @@ char *iotcl_clone_download_url(IotclEventData data, size_t index) {
         return NULL;
     }
     if ((size_t) cJSON_GetArraySize(urls) > index) {
-        cJSON *url = cJSON_GetArrayItem(urls, index);
+        cJSON *url = cJSON_GetArrayItem(urls, (int) index);
         if (is_valid_string(url)) {
             return iotcl_strdup(url->valuestring);
         } else if (cJSON_IsObject(url)) {

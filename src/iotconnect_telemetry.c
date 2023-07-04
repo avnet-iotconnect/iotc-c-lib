@@ -105,12 +105,20 @@ static cJSON *setup_telemetry_object(IotclMessageHandle message) {
 IotclMessageHandle iotcl_telemetry_create(void) {
     cJSON *sdk_array = NULL;
     IotclConfig *config = iotcl_get_config();
-    if (!config) return NULL;
-    if (!config->telemetry.dtg) return NULL;
+    if (!config) {
+        return NULL;
+    }
+    if (!config->telemetry.dtg)
+    {
+        return NULL;
+    }
     struct IotclMessageHandleTag *msg =
             (struct IotclMessageHandleTag *) calloc(sizeof(struct IotclMessageHandleTag), 1);
 
-    if (!msg) return NULL;
+    if (!msg)
+    {
+        return NULL;
+    }
 
     msg->root_value = cJSON_CreateObject();
 
@@ -132,24 +140,28 @@ IotclMessageHandle iotcl_telemetry_create(void) {
     return msg;
 
     cleanup_array:
-    cJSON_free(sdk_array);
+    cJSON_Delete(sdk_array);
 
     cleanup_value:
-    cJSON_free(msg->root_value);
+    cJSON_Delete(msg->root_value);
 
     cleanup:
-    cJSON_free(msg);
+    free(msg);
     return NULL;
 }
 
 bool iotcl_telemetry_add_with_epoch_time(IotclMessageHandle message, time_t time) {
     if (!message) return false;
     cJSON *telemetry_object = setup_telemetry_object(message);
-    if (!cJSON_AddNumberToObject(telemetry_object, "ts", time)) {
+    if (!telemetry_object)
+    {
+        return false;
+    }
+    if (!cJSON_AddNumberToObject(telemetry_object, "ts", (double) time)) {
         return false;
     }
     if (!cJSON_HasObjectItem(message->root_value, "ts")) {
-        if (!cJSON_AddNumberToObject(message->root_value, "ts", time)) {
+        if (!cJSON_AddNumberToObject(message->root_value, "ts", (double) time)) {
             return false;
         }
     }
@@ -252,13 +264,21 @@ bool iotcl_telemetry_set_null(IotclMessageHandle message, const char *path) {
 }
 
 const char *iotcl_create_serialized_string(IotclMessageHandle message, bool pretty) {
-    if (!message) return NULL;
-    if (!message->root_value) return NULL;
-    if (pretty) {
-        return cJSON_Print(message->root_value);
-    } else {
-        return cJSON_PrintUnformatted(message->root_value);
+    const char *serialized_string = NULL;
+    if (!message) {
+        PRINTF("message is NULL\n");
+        return NULL;
     }
+    if (!message->root_value) {
+        PRINTF("message->root_value is NULL\n");
+        return NULL;
+    }
+    serialized_string = (pretty) ? cJSON_Print(message->root_value) : cJSON_PrintUnformatted(message->root_value);
+    if (!serialized_string) {
+        PRINTF("serialized_string is NULL\n");
+        return NULL;
+    }
+    return serialized_string;
 }
 
 void iotcl_destroy_serialized(const char *serialized_string) {
@@ -268,6 +288,6 @@ void iotcl_destroy_serialized(const char *serialized_string) {
 void iotcl_telemetry_destroy(IotclMessageHandle message) {
     if (message) {
         cJSON_Delete(message->root_value);
+        free(message);
     }
-    free(message);
 }

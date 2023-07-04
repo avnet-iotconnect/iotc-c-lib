@@ -9,18 +9,17 @@
 
 static char timebuf[sizeof "2011-10-08T07:07:01.000Z"];
 
-static const char *to_iso_timestamp(time_t *timestamp) {
-    time_t ts = timestamp ? *timestamp : time(NULL);
+// Obviously, this function is not thread-safe, due to the fixed buffer
+const char *iotcl_iso_timestamp_now(void) {
+    time_t ts = time(NULL);
     strftime(timebuf, (sizeof timebuf), "%Y-%m-%dT%H:%M:%S.000Z", gmtime(&ts));
     return timebuf;
 }
 
-const char *iotcl_to_iso_timestamp(time_t timestamp) {
-    return to_iso_timestamp(&timestamp);
-}
-
-const char *iotcl_iso_timestamp_now(void) {
-    return to_iso_timestamp(NULL);
+unsigned long get_expiry_from_now(unsigned long int expiry_secs)
+{
+    const time_t expiration = time(NULL) + expiry_secs;
+    return (unsigned long) expiration;
 }
 
 char *iotcl_strdup(const char *str) {

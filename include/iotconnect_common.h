@@ -17,13 +17,9 @@ extern "C" {
 char *iotcl_strdup(const char *str);
 
 // NOTE: This function is not thread-safe
-const char *iotcl_to_iso_timestamp(time_t timestamp);
-
-// NOTE: This function is not thread-safe
 const char *iotcl_iso_timestamp_now(void);
 
-// Internal function
-void iotcl_oom_error(void);
+unsigned long get_expiry_from_now(unsigned long int expiry_secs);
 
 #ifdef __cplusplus
 }
