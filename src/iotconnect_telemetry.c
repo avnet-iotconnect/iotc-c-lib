@@ -23,6 +23,7 @@ struct IotclMessageHandleTag {
     cJSON *root_value;
     cJSON *telemetry_data_array;
     cJSON *current_telemetry_object; // an object inside the "d" array inside the "d" array of the root object
+    cJSON *parent;
 };
 
 cJSON *json_object_dotset_locate(cJSON *search_object, char **leaf_name, const char *path) {
@@ -74,74 +75,71 @@ static cJSON *setup_telemetry_object(IotclMessageHandle message) {
     if (!config) return NULL;
     if (!message) return NULL;
 
-    cJSON *telemetry_object = cJSON_CreateObject();
-    if (!telemetry_object) return NULL;
-    if (!cJSON_AddStringToObject(telemetry_object, "id", config->device.duid)) goto cleanup_to;
-    if (!cJSON_AddStringToObject(telemetry_object, "tg", "")) goto cleanup_to;
-    cJSON *data_array = cJSON_AddArrayToObject(telemetry_object, "d");
-    if (!data_array) goto cleanup_to;
-    if (!cJSON_AddItemToArray(message->telemetry_data_array, telemetry_object)) goto cleanup_da;
+    cJSON *telemetry_array = cJSON_CreateObject();    //telemetry object is the data object d.
+    if (!telemetry_array) return NULL;
 
-    // setup the actual telemetry object to be used in subsequent calls
+    if (!cJSON_AddStringToObject(telemetry_array, "id", config->device.duid)) goto cleanup_to;
+    if (!cJSON_AddStringToObject(telemetry_array, "tg", "")) goto cleanup_to;
+    //add 3rd level d object which has cpu, version, sensor data.
+    cJSON *d3_object = cJSON_AddObjectToObject(telemetry_array, "d");  //add "d" object for telemetry data(cpu, version)
+    if (!d3_object) goto cleanup_da;
+    //add telemetry object(id, tg, d_object) to "d" array of root.
+    if (!cJSON_AddItemToArray(message->telemetry_data_array, telemetry_array)) goto cleanup_cto;
+
+    //setup the actual telemetry object to be used in subsequent calls
     message->current_telemetry_object = cJSON_CreateObject();
-    if (!message->current_telemetry_object) goto cleanup_da;
+    if (!message->current_telemetry_object) goto cleanup_cto;
+    message->current_telemetry_object = d3_object;
 
-    if (!cJSON_AddItemToArray(data_array, message->current_telemetry_object)) goto cleanup_cto;
-
-    return telemetry_object; // object inside the "d" array of the the root object
+    return telemetry_array; // return 2nd level d array
 
     cleanup_cto:
     cJSON_free(message->current_telemetry_object);
 
     cleanup_da:
-    cJSON_free(data_array);
+    cJSON_free(d3_object);
 
     cleanup_to:
-    cJSON_free(telemetry_object);
+    cJSON_free(telemetry_array);
 
     return NULL;
 }
 
 IotclMessageHandle iotcl_telemetry_create(void) {
-    cJSON *sdk_array = NULL;
+
     IotclConfig *config = iotcl_get_config();
     if (!config) return NULL;
-    if (!config->telemetry.dtg) return NULL;
+//    if (!config->telemetry.dtg) return NULL;
     struct IotclMessageHandleTag *msg =
             (struct IotclMessageHandleTag *) calloc(sizeof(struct IotclMessageHandleTag), 1);
 
     if (!msg) return NULL;
 
-    msg->root_value = cJSON_CreateObject();
+    msg->parent = cJSON_CreateObject();    //create a root
 
-    if (!msg->root_value) goto cleanup;
+    if (!cJSON_AddStringToObject(msg->parent, "cd", "")) goto cleanup_root;    //cd value is on connection info's topic. 6-digit. for example "XG4EMVL"
+    if (!cJSON_AddNumberToObject(msg->parent, "mt", 0)) goto cleanup_root;
 
-    if (!cJSON_AddStringToObject(msg->root_value, "cpid", config->device.cpid)) goto cleanup_value;
-    if (!cJSON_AddStringToObject(msg->root_value, "dtg", config->telemetry.dtg)) goto cleanup_value;
-    if (!cJSON_AddNumberToObject(msg->root_value, "mt", 0)) goto cleanup_value; // telemetry message type (zero)
-    sdk_array = cJSON_AddObjectToObject(msg->root_value, "sdk");
-    if (!sdk_array) goto cleanup_value;
-    if (!cJSON_AddStringToObject(sdk_array, "l", CONFIG_IOTCONNECT_SDK_NAME)) goto cleanup_array;
-    if (!cJSON_AddStringToObject(sdk_array, "v", CONFIG_IOTCONNECT_SDK_VERSION)) goto cleanup_array;
-    if (!cJSON_AddStringToObject(sdk_array, "e", config->device.env)) goto cleanup_array;
+    //create 1st level d object which is msg->root_vlaue
+    msg->root_value = cJSON_AddObjectToObject(msg->parent, "d");
+    if (!msg->root_value) goto cleanup_root;
 
-    msg->telemetry_data_array = cJSON_AddArrayToObject(msg->root_value, "d");
-
-    if (!msg->telemetry_data_array) goto cleanup_array;
+    //add 2nd level d array
+    msg->telemetry_data_array = cJSON_AddArrayToObject(msg->root_value, "d"); //create 2nd d_array in 1st d object
+    if (!msg->telemetry_data_array) goto cleanup_msg;
 
     return msg;
 
-    cleanup_array:
-    cJSON_free(sdk_array);
+    cleanup_root:
+    cJSON_free(msg->parent);
 
-    cleanup_value:
+    cleanup_msg:
     cJSON_free(msg->root_value);
-
-    cleanup:
-    cJSON_free(msg);
     return NULL;
 }
 
+
+// Not used
 bool iotcl_telemetry_add_with_epoch_time(IotclMessageHandle message, time_t time) {
     if (!message) return false;
     cJSON *telemetry_object = setup_telemetry_object(message);
@@ -158,12 +156,12 @@ bool iotcl_telemetry_add_with_epoch_time(IotclMessageHandle message, time_t time
 
 bool iotcl_telemetry_add_with_iso_time(IotclMessageHandle message, const char *time) {
     if (!message) return false;
+    if (!cJSON_AddStringToObject(message->root_value, "dt", time)) return false;
+
     cJSON *const telemetry_object = setup_telemetry_object(message);
     if (!telemetry_object) return false;
+
     if (!cJSON_AddStringToObject(telemetry_object, "dt", time)) return false;
-    if (!cJSON_HasObjectItem(message->root_value, "t")) {
-        if (!cJSON_AddStringToObject(message->root_value, "t", time)) return false;
-    }
     return true;
 }
 
@@ -253,11 +251,11 @@ bool iotcl_telemetry_set_null(IotclMessageHandle message, const char *path) {
 
 const char *iotcl_create_serialized_string(IotclMessageHandle message, bool pretty) {
     if (!message) return NULL;
-    if (!message->root_value) return NULL;
+    if (!message->parent) return NULL;
     if (pretty) {
-        return cJSON_Print(message->root_value);
+    	return cJSON_Print(message->parent);
     } else {
-        return cJSON_PrintUnformatted(message->root_value);
+    	return cJSON_PrintUnformatted(message->parent);
     }
 }
 
@@ -267,7 +265,7 @@ void iotcl_destroy_serialized(const char *serialized_string) {
 
 void iotcl_telemetry_destroy(IotclMessageHandle message) {
     if (message) {
-        cJSON_Delete(message->root_value);
+    	cJSON_Delete(message->parent);
     }
     free(message);
 }
