@@ -109,7 +109,7 @@ IotclMessageHandle iotcl_telemetry_create(void) {
 
     IotclConfig *config = iotcl_get_config();
     if (!config) return NULL;
-//    if (!config->telemetry.dtg) return NULL;
+    if (!config->telemetry.cd) return NULL;
     struct IotclMessageHandleTag *msg =
             (struct IotclMessageHandleTag *) calloc(sizeof(struct IotclMessageHandleTag), 1);
 
@@ -117,8 +117,11 @@ IotclMessageHandle iotcl_telemetry_create(void) {
 
     msg->parent = cJSON_CreateObject();    //create a root
 
-    if (!cJSON_AddStringToObject(msg->parent, "cd", "")) goto cleanup_root;    //cd value is on connection info's topic. 6-digit. for example "XG4EMVL"
+    if (!cJSON_AddStringToObject(msg->parent, "cd", config->telemetry.cd)) goto cleanup_root;
     if (!cJSON_AddNumberToObject(msg->parent, "mt", 0)) goto cleanup_root;
+
+//    msg->root_value = root;
+//    if (!msg->root_value) goto cleanup;
 
     //create 1st level d object which is msg->root_vlaue
     msg->root_value = cJSON_AddObjectToObject(msg->parent, "d");
@@ -253,8 +256,10 @@ const char *iotcl_create_serialized_string(IotclMessageHandle message, bool pret
     if (!message) return NULL;
     if (!message->parent) return NULL;
     if (pretty) {
+//        return cJSON_Print(message->root_value);
     	return cJSON_Print(message->parent);
     } else {
+//        return cJSON_PrintUnformatted(message->root_value);
     	return cJSON_PrintUnformatted(message->parent);
     }
 }
@@ -266,6 +271,7 @@ void iotcl_destroy_serialized(const char *serialized_string) {
 void iotcl_telemetry_destroy(IotclMessageHandle message) {
     if (message) {
     	cJSON_Delete(message->parent);
+//        cJSON_Delete(message->root_value);
     }
     free(message);
 }

@@ -14,6 +14,7 @@
 static IotclConfig config;
 static bool config_is_valid = false;
 
+// for iotconnect azure
 bool iotcl_init(IotclConfig *c) {
     iotcl_deinit();
     if (
@@ -30,6 +31,29 @@ bool iotcl_init(IotclConfig *c) {
     memcpy(&config, c, sizeof(config));
 
     if (!config.device.duid || !config.device.cpid || !config.device.env) {
+        // allocation failure
+        IOTCL_LOG ("IotConnectLib_Configure: malloc failure" IOTCL_NL);
+        iotcl_deinit();
+        return false;
+    }
+    config_is_valid = true;
+    return true;
+}
+
+// for iotconnect aws
+bool iotcl_init_v2(IotclConfig *c) {
+    iotcl_deinit();
+    if (!c || !c->device.duid || 0 == strlen(c->device.duid)) {
+        IOTCL_LOG ("IotConnectLib_Configure: configuration parameters missing" IOTCL_NL);
+        return false;
+    }
+    if (1 /* dash, separator */  + strlen(c->device.duid) > MAX_DEVICE_COMBINED_NAME) {
+        IOTCL_LOG ("IotConnectLib_Configure: combined name exceeded maximum value" IOTCL_NL);
+        return false;
+    }
+    memcpy(&config, c, sizeof(config));
+
+    if (!config.device.duid) {
         // allocation failure
         IOTCL_LOG ("IotConnectLib_Configure: malloc failure" IOTCL_NL);
         iotcl_deinit();
