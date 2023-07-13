@@ -43,6 +43,8 @@ typedef struct {
 
 bool iotcl_init(IotclConfig *c);
 
+bool iotcl_init_v2(IotclConfig *c);
+
 IotclConfig *iotcl_get_config(void);
 
 void iotcl_deinit(void);
