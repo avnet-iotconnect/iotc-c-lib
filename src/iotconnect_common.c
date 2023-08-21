@@ -16,7 +16,7 @@ const char *iotcl_iso_timestamp_now(void) {
     return timebuf;
 }
 
-unsigned long get_expiry_from_now(unsigned long int expiry_secs)
+unsigned long get_expiry_from_now(time_t expiry_secs)
 {
     const time_t expiration = time(NULL) + expiry_secs;
     return (unsigned long) expiration;

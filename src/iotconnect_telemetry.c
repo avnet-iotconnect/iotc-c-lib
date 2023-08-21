@@ -7,6 +7,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 
 #include "iotconnect_common.h"
@@ -266,16 +267,16 @@ bool iotcl_telemetry_set_null(IotclMessageHandle message, const char *path) {
 const char *iotcl_create_serialized_string(IotclMessageHandle message, bool pretty) {
     const char *serialized_string = NULL;
     if (!message) {
-        PRINTF("message is NULL\n");
+        fprintf(stderr, "message is NULL\n");
         return NULL;
     }
     if (!message->root_value) {
-        PRINTF("message->root_value is NULL\n");
+        fprintf(stderr, "message->root_value is NULL\n");
         return NULL;
     }
     serialized_string = (pretty) ? cJSON_Print(message->root_value) : cJSON_PrintUnformatted(message->root_value);
     if (!serialized_string) {
-        PRINTF("serialized_string is NULL\n");
+        fprintf(stderr, "serialized_string is NULL\n");
         return NULL;
     }
     return serialized_string;
