@@ -21,18 +21,6 @@ extern "C" {
 // IoTHub max device id is 128, which is "<CPID>-<DUID>" (with a dash)
 #define CONFIG_IOTCONNECT_CPID_MAX_LEN (CONFIG_IOTCONNECT_CLIENTID_MAX_LEN - 1 - CONFIG_IOTCONNECT_DUID_MAX_LEN)
 
-#ifdef CONFIG_IOTCONNECT_LIB_LOG
-#define IOTCL_LOG CONFIG_IOTCONNECT_LIB_LOG
-#elif !defined(IOTCL_LOG)
-#define IOTCL_LOG (void)// noop
-#endif
-
-#ifdef CONFIG_IOTCONNECT_LIB_LOG_NEWLINE
-#define IOTCL_NL CONFIG_IOTCONNECT_LIB_LOG_NEWLINE
-#elif !defined(IOTCL_NL)
-#define IOTCL_NL // noop
-#endif
-
 #ifndef CONFIG_IOTCONNECT_SDK_NAME
 #define CONFIG_IOTCONNECT_SDK_NAME "M_C"
 #endif

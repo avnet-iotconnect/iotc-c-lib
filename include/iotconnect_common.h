@@ -10,6 +10,15 @@
 
 #include <time.h>
 
+// No mutexes
+// Don't implement if a particular level isn't required.
+// Could specify as functions, if required.
+#include <stdio.h>
+#define IOTC_LOG(...) do{ printf("LOG: ");printf(__VA_ARGS__);}while(0)
+#define IOTC_DEBUG(...) do{ printf("DEBUG: ");printf(__VA_ARGS__);}while(0)
+#define IOTC_WARN(...) do{ printf("WARN: ");printf(__VA_ARGS__);}while(0)
+#define IOTC_ERROR(...) do{ printf("ERROR: ");printf(__VA_ARGS__);}while(0)
+
 #ifdef __cplusplus
 extern "C" {
 #endif

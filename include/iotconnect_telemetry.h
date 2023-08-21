@@ -14,13 +14,6 @@
 extern "C" {
 #endif
 
-typedef struct {
-    // Can be copied at the device page. Can be obtained via REST Sync call.
-    // Device template GUID required to send telemetry data.
-    const char *dtg;
-} IotclTelemetryConfig;
-
-
 typedef struct IotclMessageHandleTag *IotclMessageHandle;
 
 /*
@@ -29,6 +22,14 @@ typedef struct IotclMessageHandleTag *IotclMessageHandle;
  * The handle cannot be re-used and should be destroyed to free up resources, once the message is sent.
  */
 IotclMessageHandle iotcl_telemetry_create(void);
+
+/*
+ * Returns a serialised IoTConnect message, which will the caller will need to free()
+ */
+const char *iotcl_serialise_telemetry_strings(unsigned int no_strings, char *string_names[], char *string_values[],
+                                        unsigned int no_numbers, char *number_names[], double number_values[],
+                                        unsigned int no_bools, char *bool_names[], bool bool_values[],
+                                        unsigned int no_nulls, char *null_names[]);
 
 /*
  * Destroys the IoTConnect message handle.

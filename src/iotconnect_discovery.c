@@ -16,10 +16,12 @@
 static char *safe_get_string_and_strdup(cJSON *cjson, const char *value_name) {
     cJSON *value = cJSON_GetObjectItem(cjson, value_name);
     if (!value) {
+        IOTC_ERROR("cJSON_GetObjectItem failed\n");
         return NULL;
     }
     const char *str_value = cJSON_GetStringValue(value);
     if (!str_value) {
+        IOTC_ERROR("cJSON_GetStringValue failed\n");
         return NULL;
     }
     return iotcl_strdup(str_value);
@@ -32,6 +34,7 @@ static bool split_url(IotclDiscoveryResponse *response) {
     // mutable version that will allow us to modify the url string
     char *base_url_copy = iotcl_strdup(response->url);
     if (!base_url_copy) {
+        IOTC_ERROR("iotcl_strdup failed\n");
         return false;
     }
     int num_found = 0;
@@ -58,12 +61,14 @@ static bool split_url(IotclDiscoveryResponse *response) {
 IotclDiscoveryResponse *iotcl_discovery_parse_discovery_response(const char *response_data) {
     cJSON *json_root = cJSON_Parse(response_data);
     if (!json_root) {
+        IOTC_ERROR("cJSON_Parse failed\n");
         return NULL;
     }
 
     cJSON *base_url_cjson = cJSON_GetObjectItem(json_root, "baseUrl");
     if (!base_url_cjson) {
         cJSON_Delete(json_root);
+        IOTC_ERROR("missing baseurl\n");
         return NULL;
     }
 
@@ -75,10 +80,16 @@ IotclDiscoveryResponse *iotcl_discovery_parse_discovery_response(const char *res
     { // separate the declaration into a block to allow jump without warnings
         char *jsonBaseUrl = base_url_cjson->valuestring;
         if (!jsonBaseUrl) {
+            IOTC_ERROR("jsonBaseUrl is NULL\n");
             goto cleanup;
         }
 
         response->url = iotcl_strdup(jsonBaseUrl);
+        if (!response->url) {
+            IOTC_ERROR("iotcl_strdup failed\n");
+            goto cleanup;
+        }
+
         if (split_url(response)) {
             cJSON_Delete(json_root);
             return response;
@@ -89,6 +100,8 @@ IotclDiscoveryResponse *iotcl_discovery_parse_discovery_response(const char *res
     cleanup:
     cJSON_Delete(json_root);
     iotcl_discovery_free_discovery_response(response);
+
+    IOTC_ERROR("iotcl_discovery_parse_discovery_response failed\n");
     return NULL;
 }
 
@@ -102,26 +115,33 @@ void iotcl_discovery_free_discovery_response(IotclDiscoveryResponse *response) {
 }
 
 IotclSyncResponse *iotcl_discovery_parse_sync_response(const char *response_data) {
+    IOTC_DEBUG("%s: response_data is %ld bytes in length\n", __func__, strlen(response_data));
+
     cJSON *tmp_value = NULL;
     IotclSyncResponse *response = (IotclSyncResponse *) calloc(1, sizeof(IotclSyncResponse));
     if (NULL == response) {
+        IOTC_ERROR("calloc failed\n");
         return NULL;
     }
 
     cJSON *sync_json_root = cJSON_Parse(response_data);
     if (!sync_json_root) {
         response->ds = IOTCL_SR_PARSING_ERROR;
+        IOTC_ERROR("cJSON_Parse failed\n");
         return response;
     }
+
     cJSON *sync_res_json = cJSON_GetObjectItemCaseSensitive(sync_json_root, "d");
     if (!sync_res_json) {
         cJSON_Delete(sync_json_root);
         response->ds = IOTCL_SR_PARSING_ERROR;
+        IOTC_ERROR("missing \"d\"\n");
         return response;
     }
     tmp_value = cJSON_GetObjectItem(sync_res_json, "ds");
     if (!tmp_value) {
         response->ds = IOTCL_SR_PARSING_ERROR;
+        IOTC_ERROR("missing \"ds\"\n");
     } else {
         response->ds = cJSON_GetNumberValue(tmp_value);
     }
@@ -130,14 +150,17 @@ IotclSyncResponse *iotcl_discovery_parse_sync_response(const char *response_data
         response->dtg = safe_get_string_and_strdup(sync_res_json, "dtg");
         tmp_value = cJSON_GetObjectItem(sync_res_json, "ee");
         if (!tmp_value) {
+            IOTC_ERROR("missing \"ee\"\n");
             response->ee = -1;
         }
         tmp_value = cJSON_GetObjectItem(sync_res_json, "rc");
         if (!tmp_value) {
+            IOTC_ERROR("missing \"rc\"\n");
             response->rc = -1;
         }
         tmp_value = cJSON_GetObjectItem(sync_res_json, "at");
         if (!tmp_value) {
+            IOTC_ERROR("missing \"at\"\n");
             response->at = -1;
         }
         cJSON *p = cJSON_GetObjectItemCaseSensitive(sync_res_json, "p");
@@ -160,6 +183,7 @@ IotclSyncResponse *iotcl_discovery_parse_sync_response(const char *response_data
                     !response->broker.pub_topic
                     ) {
                 // Assume parsing eror, but it could alo be (unlikely) allocation error
+                IOTC_ERROR("missing lots of reasons\n");
                 response->ds = IOTCL_SR_PARSING_ERROR;
             }
         } else {
