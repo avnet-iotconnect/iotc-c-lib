@@ -62,9 +62,19 @@ IotclDiscoveryResponse *iotcl_discovery_parse_discovery_response(const char *res
     }
 
     cJSON *base_url_cjson = cJSON_GetObjectItem(json_root, "baseUrl");
+    cJSON *bu_cjson = cJSON_GetObjectItem(json_root, "bu");
     if (!base_url_cjson) {
-        cJSON_Delete(json_root);
-        return NULL;
+        if (!bu_cjson) {
+            cJSON_Delete(json_root);
+            return NULL;
+        }
+
+        base_url_cjson = bu_cjson;
+    } else {
+        if (bu_cjson) {
+            cJSON_Delete(json_root);
+            return NULL;
+        }
     }
 
     IotclDiscoveryResponse *response = (IotclDiscoveryResponse *) calloc(1, sizeof(IotclDiscoveryResponse));
