@@ -6,6 +6,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <string.h>
 
@@ -14,6 +15,8 @@
 #include "iotconnect_discovery.h"
 
 static char *safe_get_string_and_strdup(cJSON *cjson, const char *value_name) {
+    printf("%s ->", __func__);
+
     cJSON *value = cJSON_GetObjectItem(cjson, value_name);
     if (!value) {
         return NULL;
@@ -26,8 +29,9 @@ static char *safe_get_string_and_strdup(cJSON *cjson, const char *value_name) {
 }
 
 static bool split_url(IotclDiscoveryResponse *response) {
-    size_t base_url_len = strlen(response->url);
+    printf("%s ->", __func__);
 
+    size_t base_url_len = strlen(response->url);
 
     // mutable version that will allow us to modify the url string
     char *base_url_copy = iotcl_strdup(response->url);
@@ -56,8 +60,11 @@ static bool split_url(IotclDiscoveryResponse *response) {
 }
 
 IotclDiscoveryResponse *iotcl_discovery_parse_discovery_response(const char *response_data) {
+    printf("%s ->", __func__);
+
     cJSON *json_root = cJSON_Parse(response_data);
     if (!json_root) {
+        printf("%s: !json_root", __func__);
         return NULL;
     }
 
@@ -65,13 +72,19 @@ IotclDiscoveryResponse *iotcl_discovery_parse_discovery_response(const char *res
     cJSON *bu_cjson = cJSON_GetObjectItem(json_root, "bu");
     if (!base_url_cjson) {
         if (!bu_cjson) {
+            // neither exist
+            printf("%s: !base_url_cjson && !bu_cjson", __func__);
             cJSON_Delete(json_root);
             return NULL;
         }
 
+        // swap
         base_url_cjson = bu_cjson;
+        bu_cjson = NULL;
     } else {
         if (bu_cjson) {
+            // both exist?
+            printf("%s: base_url_cjson && bu_cjson ???", __func__);
             cJSON_Delete(json_root);
             return NULL;
         }
@@ -79,26 +92,35 @@ IotclDiscoveryResponse *iotcl_discovery_parse_discovery_response(const char *res
 
     IotclDiscoveryResponse *response = (IotclDiscoveryResponse *) calloc(1, sizeof(IotclDiscoveryResponse));
     if (!response) {
+        printf("%s: !response", __func__);
         goto cleanup;
     }
 
     { // separate the declaration into a block to allow jump without warnings
         char *jsonBaseUrl = base_url_cjson->valuestring;
         if (!jsonBaseUrl) {
+            printf("%s: !jsonBaseUrl", __func__);
             goto cleanup;
         }
 
         response->url = iotcl_strdup(jsonBaseUrl);
         if (split_url(response)) {
+            printf("%s: split_url ok", __func__);
             cJSON_Delete(json_root);
             return response;
         } // else cleanup and return null
 
+        printf("%s: split_url failed", __func__);
     }
 
     cleanup:
+    printf("%s: failed", __func__);
+
     cJSON_Delete(json_root);
     iotcl_discovery_free_discovery_response(response);
+
+    printf("%s <-", __func__);
+
     return NULL;
 }
 
