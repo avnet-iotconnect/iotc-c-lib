@@ -10,11 +10,15 @@
 
 #include "iotconnect_common.h"
 #include "iotconnect_lib.h"
+#include <stdio.h>
 
 static IotclConfig config;
 static bool config_is_valid = false;
 
+// for iotconnect azure
 bool iotcl_init(IotclConfig *c) {
+    printf("%s\n", __func__);
+
     iotcl_deinit();
     if (
             !c || !c->device.env || !c->device.cpid || !c->device.duid ||
@@ -32,6 +36,31 @@ bool iotcl_init(IotclConfig *c) {
     if (!config.device.duid || !config.device.cpid || !config.device.env) {
         // allocation failure
         IOTCL_LOG ("IotConnectLib_Configure: malloc failure" IOTCL_NL);
+        iotcl_deinit();
+        return false;
+    }
+    config_is_valid = true;
+    return true;
+}
+
+// for iotconnect aws
+bool iotcl_init_v2(IotclConfig *c) {
+    printf("%s\n", __func__);
+
+    iotcl_deinit();
+    if (!c || !c->device.duid || 0 == strlen(c->device.duid) || !c->telemetry.cd || 0 == strlen(c->telemetry.cd)) {
+        printf ("IotConnectLib_Configure: configuration parameters missing\n" );
+        return false;
+    }
+    if (1 /* dash, separator */  + strlen(c->device.duid) > MAX_DEVICE_COMBINED_NAME) {
+        printf ("IotConnectLib_Configure: combined name exceeded maximum value\n" );
+        return false;
+    }
+    memcpy(&config, c, sizeof(config));
+
+    if (!config.device.duid || !config.telemetry.cd) {
+        // allocation failure
+        printf ("IotConnectLib_Configure: malloc failure\n" );
         iotcl_deinit();
         return false;
     }
