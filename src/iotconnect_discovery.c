@@ -14,9 +14,18 @@
 #include "iotconnect_common.h"
 #include "iotconnect_discovery.h"
 
-static char *safe_get_string_and_strdup(cJSON *cjson, const char *value_name) {
-    printf("%s ->", __func__);
+static int safe_get_integer(cJSON *cjson, const char *value_name, int *value) {
+    printf("%s: parsing \"%s\"\n", __func__, value_name);
+    cJSON *tmp_value = cJSON_GetObjectItem(cjson, value_name);
+    if (!tmp_value) {
+        return -1;
+    }
+    *value = cJSON_GetNumberValue(tmp_value);
+    return 0;
+}
 
+static char *safe_get_string_and_strdup(cJSON *cjson, const char *value_name) {
+    printf("%s: parsing \"%s\"\n", __func__, value_name);
     cJSON *value = cJSON_GetObjectItem(cjson, value_name);
     if (!value) {
         return NULL;
@@ -25,11 +34,14 @@ static char *safe_get_string_and_strdup(cJSON *cjson, const char *value_name) {
     if (!str_value) {
         return NULL;
     }
+
+    printf("%s -> %s = %s\n", __func__, value_name, str_value);
+
     return iotcl_strdup(str_value);
 }
 
 static bool split_url(IotclDiscoveryResponse *response) {
-    printf("%s ->", __func__);
+    printf("%s ->\n", __func__);
 
     size_t base_url_len = strlen(response->url);
 
@@ -60,20 +72,27 @@ static bool split_url(IotclDiscoveryResponse *response) {
 }
 
 IotclDiscoveryResponse *iotcl_discovery_parse_discovery_response(const char *response_data) {
-    printf("%s ->", __func__);
+    printf("%s ->\n", __func__);
 
     cJSON *json_root = cJSON_Parse(response_data);
     if (!json_root) {
-        printf("%s: !json_root", __func__);
+        printf("%s: !json_root\n", __func__);
         return NULL;
     }
 
     cJSON *base_url_cjson = cJSON_GetObjectItem(json_root, "baseUrl");
-    cJSON *bu_cjson = cJSON_GetObjectItem(json_root, "bu");
     if (!base_url_cjson) {
+        cJSON *d_cjson = cJSON_GetObjectItem(json_root, "d");
+        if (!d_cjson) {
+            // neither exist
+            printf("%s: !d_cjson\n", __func__);
+            cJSON_Delete(json_root);
+            return NULL;
+        }
+        cJSON *bu_cjson = cJSON_GetObjectItem(d_cjson, "bu");
         if (!bu_cjson) {
             // neither exist
-            printf("%s: !base_url_cjson && !bu_cjson", __func__);
+            printf("%s: !base_url_cjson && !bu_cjson\n", __func__);
             cJSON_Delete(json_root);
             return NULL;
         }
@@ -81,45 +100,38 @@ IotclDiscoveryResponse *iotcl_discovery_parse_discovery_response(const char *res
         // swap
         base_url_cjson = bu_cjson;
         bu_cjson = NULL;
-    } else {
-        if (bu_cjson) {
-            // both exist?
-            printf("%s: base_url_cjson && bu_cjson ???", __func__);
-            cJSON_Delete(json_root);
-            return NULL;
-        }
-    }
+    } 
 
     IotclDiscoveryResponse *response = (IotclDiscoveryResponse *) calloc(1, sizeof(IotclDiscoveryResponse));
     if (!response) {
-        printf("%s: !response", __func__);
+        printf("%s: !response\n", __func__);
         goto cleanup;
     }
 
     { // separate the declaration into a block to allow jump without warnings
         char *jsonBaseUrl = base_url_cjson->valuestring;
         if (!jsonBaseUrl) {
-            printf("%s: !jsonBaseUrl", __func__);
+            printf("%s: !jsonBaseUrl\n", __func__);
             goto cleanup;
         }
 
         response->url = iotcl_strdup(jsonBaseUrl);
         if (split_url(response)) {
-            printf("%s: split_url ok", __func__);
+            printf("%s: split_url ok\n", __func__);
             cJSON_Delete(json_root);
             return response;
         } // else cleanup and return null
 
-        printf("%s: split_url failed", __func__);
+        printf("%s: split_url failed\n", __func__);
     }
 
     cleanup:
-    printf("%s: failed", __func__);
+    printf("%s: failed\n", __func__);
 
     cJSON_Delete(json_root);
     iotcl_discovery_free_discovery_response(response);
 
-    printf("%s <-", __func__);
+    printf("%s <-\n", __func__);
 
     return NULL;
 }
@@ -133,104 +145,114 @@ void iotcl_discovery_free_discovery_response(IotclDiscoveryResponse *response) {
     }
 }
 
-IotclSyncResponse *iotcl_discovery_parse_sync_response(const char *response_data) {
-    cJSON *tmp_value = NULL;
-    IotclSyncResponse *response = (IotclSyncResponse *) calloc(1, sizeof(IotclSyncResponse));
+int iotcl_discovery_parse_sync_response(const char *response_data, IotclSyncResponse **presponse)
+{
+    IotclSyncResponse *response = NULL;
+    cJSON *sync_json_root = NULL;
+    *presponse = NULL;
+
+    response = (IotclSyncResponse *) calloc(1, sizeof(IotclSyncResponse));
     if (NULL == response) {
-        return NULL;
+        printf("%s: NULL == response\n", __func__);
+        goto parsing_error;
     }
 
-    cJSON *sync_json_root = cJSON_Parse(response_data);
+    sync_json_root = cJSON_Parse(response_data);
     if (!sync_json_root) {
-        response->ds = IOTCL_SR_PARSING_ERROR;
-        return response;
+        printf("%s: !sync_json_root\n", __func__);
+        goto parsing_error;
     }
     cJSON *sync_res_json = cJSON_GetObjectItemCaseSensitive(sync_json_root, "d");
     if (!sync_res_json) {
-        cJSON_Delete(sync_json_root);
-        response->ds = IOTCL_SR_PARSING_ERROR;
-        return response;
+        printf("%s: !sync_res_json\n", __func__);
+        goto parsing_error;
     }
-    tmp_value = cJSON_GetObjectItem(sync_res_json, "ds");
-    if (!tmp_value) {
-        response->ds = IOTCL_SR_PARSING_ERROR;
-    } else {
-        response->ds = cJSON_GetNumberValue(tmp_value);
+
+    if(safe_get_integer(sync_res_json, "ec", &response->ec) != 0) {
+        goto parsing_error;
     }
-    if (response->ds == IOTCL_SR_OK) {
-        response->cpid = safe_get_string_and_strdup(sync_res_json, "cpId");
-        response->dtg = safe_get_string_and_strdup(sync_res_json, "dtg");
-        tmp_value = cJSON_GetObjectItem(sync_res_json, "ee");
-        if (!tmp_value) {
-            response->ee = -1;
-        }
-        tmp_value = cJSON_GetObjectItem(sync_res_json, "rc");
-        if (!tmp_value) {
-            response->rc = -1;
-        }
-        tmp_value = cJSON_GetObjectItem(sync_res_json, "at");
-        if (!tmp_value) {
-            response->at = -1;
-        }
-        cJSON *p = cJSON_GetObjectItemCaseSensitive(sync_res_json, "p");
-        if (p) {
-            response->broker.name = safe_get_string_and_strdup(p, "n");
-            response->broker.client_id = safe_get_string_and_strdup(p, "id");
-            response->broker.host = safe_get_string_and_strdup(p, "h");
-            response->broker.user_name = safe_get_string_and_strdup(p, "un");
-            response->broker.pass = safe_get_string_and_strdup(p, "pwd");
-            response->broker.sub_topic = safe_get_string_and_strdup(p, "sub");
-            response->broker.pub_topic = safe_get_string_and_strdup(p, "pub");
-            if (
-                    !response->cpid ||
-                    !response->dtg ||
-                    !response->broker.host ||
-                    !response->broker.client_id ||
-                    !response->broker.user_name ||
-                    // !response->broker.pass || << password may actually be null or empty
-                    !response->broker.sub_topic ||
-                    !response->broker.pub_topic
-                    ) {
-                // Assume parsing eror, but it could alo be (unlikely) allocation error
-                response->ds = IOTCL_SR_PARSING_ERROR;
-            }
-        } else {
-            response->ds = IOTCL_SR_PARSING_ERROR;
-        }
-    } else {
-        switch (response->ds) {
-            case IOTCL_SR_DEVICE_NOT_REGISTERED:
-            case IOTCL_SR_UNKNOWN_DEVICE_STATUS:
-            case IOTCL_SR_AUTO_REGISTER:
-            case IOTCL_SR_DEVICE_NOT_FOUND:
-            case IOTCL_SR_DEVICE_INACTIVE:
-            case IOTCL_SR_DEVICE_MOVED:
-            case IOTCL_SR_CPID_NOT_FOUND:
-                // all fall through
-                break;
-            default:
-                response->ds = IOTCL_SR_UNKNOWN_DEVICE_STATUS;
-                break;
-        }
+
+#if 0
+    switch (response->ec) {
+        case IOTCL_SR_OK:
+        case IOTCL_SR_DEVICE_NOT_REGISTERED:
+        case IOTCL_SR_UNKNOWN_DEVICE_STATUS:
+        case IOTCL_SR_AUTO_REGISTER:
+        case IOTCL_SR_DEVICE_NOT_FOUND:
+        case IOTCL_SR_DEVICE_INACTIVE:
+        case IOTCL_SR_DEVICE_MOVED:
+        case IOTCL_SR_CPID_NOT_FOUND:
+            // all fall through
+            break;
+        default:
+            response->ds = IOTCL_SR_UNKNOWN_DEVICE_STATUS;
+            break;
     }
+#endif
+
+    if(safe_get_integer(sync_res_json, "ct", &response->ct) != 0) {
+        goto parsing_error;
+    }
+
+    cJSON *meta = cJSON_GetObjectItemCaseSensitive(sync_res_json, "meta");
+    if (!meta) {
+            goto parsing_error;
+    }
+    if(safe_get_integer(meta, "at", &response->meta.at) != 0) {
+        goto parsing_error;
+    }
+    response->meta.cd = safe_get_string_and_strdup(meta, "cd");
+
+    cJSON *p = cJSON_GetObjectItemCaseSensitive(sync_res_json, "p");
+    if (!p) {
+            goto parsing_error;
+    }
+    response->broker.name = safe_get_string_and_strdup(p, "n");
+    response->broker.client_id = safe_get_string_and_strdup(p, "id");
+    response->broker.host = safe_get_string_and_strdup(p, "h");
+    response->broker.user_name = safe_get_string_and_strdup(p, "un");
+    response->broker.pass = safe_get_string_and_strdup(p, "pwd");
+    // Note: !response->broker.pass || << password may actually be null or empty
+    if ( !response->meta.cd || !response->broker.host || !response->broker.client_id || !response->broker.user_name ) {
+            goto parsing_error;
+    }
+    cJSON *topics = cJSON_GetObjectItemCaseSensitive(p, "topics");
+    if (!topics) {
+            goto parsing_error;
+    }
+    response->broker.topics.sub_topic = safe_get_string_and_strdup(topics, "c2d");
+    response->broker.topics.pub_topic = safe_get_string_and_strdup(topics, "rpt");
+    if ( !response->broker.topics.sub_topic || !response->broker.topics.pub_topic) {
+            goto parsing_error;
+    }
+
     // we have duplicated strings, so we can now free the result
     cJSON_Delete(sync_json_root);
-    return response;
+    *presponse = response;
+
+    return 0;
+
+parsing_error:
+    // Assume parsing eror, but it could alo be (unlikely) allocation error
+    if(sync_json_root) {
+        cJSON_Delete(sync_json_root);
+    }
+    iotcl_discovery_free_sync_response(response);
+    return -1;
 }
 
 void iotcl_discovery_free_sync_response(IotclSyncResponse *response) {
     if (!response) {
         return;
     }
-    free(response->cpid);
-    free(response->dtg);
+    free(response->meta.cd);
     free(response->broker.host);
     free(response->broker.client_id);
     free(response->broker.user_name);
     free(response->broker.pass);
     free(response->broker.name);
-    free(response->broker.sub_topic);
-    free(response->broker.pub_topic);
+    free(response->broker.topics.sub_topic);
+    free(response->broker.topics.pub_topic);
     free(response);
 }
 

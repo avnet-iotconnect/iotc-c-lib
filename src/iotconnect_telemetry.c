@@ -106,7 +106,7 @@ IotclMessageHandle iotcl_telemetry_create(void) {
     cJSON *sdk_array = NULL;
     IotclConfig *config = iotcl_get_config();
     if (!config) return NULL;
-    if (!config->telemetry.dtg) return NULL;
+    if (!config->telemetry.cd) return NULL;
     struct IotclMessageHandleTag *msg =
             (struct IotclMessageHandleTag *) calloc(sizeof(struct IotclMessageHandleTag), 1);
 
@@ -117,7 +117,7 @@ IotclMessageHandle iotcl_telemetry_create(void) {
     if (!msg->root_value) goto cleanup;
 
     if (!cJSON_AddStringToObject(msg->root_value, "cpid", config->device.cpid)) goto cleanup_value;
-    if (!cJSON_AddStringToObject(msg->root_value, "dtg", config->telemetry.dtg)) goto cleanup_value;
+    if (!cJSON_AddStringToObject(msg->root_value, "ct", config->telemetry.cd)) goto cleanup_value;
     if (!cJSON_AddNumberToObject(msg->root_value, "mt", 0)) goto cleanup_value; // telemetry message type (zero)
     sdk_array = cJSON_AddObjectToObject(msg->root_value, "sdk");
     if (!sdk_array) goto cleanup_value;

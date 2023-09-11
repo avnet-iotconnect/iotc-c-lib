@@ -38,22 +38,31 @@ typedef struct IotclDiscoveryResponse {
     char *path; // parsed out base ULR request path
 } IotclDiscoveryResponse;
 
+typedef struct IotclSyncResponseProtocolTopics {
+    char *pub_topic;
+    char *sub_topic;
+} IotclSyncResponseProtocolTopics;
+
+typedef struct IotclSyncResponseProtocol {
+    char *client_id;
+    char *name;
+    char *host;
+    char *user_name;
+    char *pass;
+    IotclSyncResponseProtocolTopics topics;
+} IotclSyncResponseProtocol;
+
+typedef struct IotclSyncResponseMeta {
+    int at; // validated authorization type from the cloud
+    char *cd; // validated authorization type from the cloud
+} IotclSyncResponseMeta;
+
 typedef struct IotclSyncResponse {
     IotclSyncResult ds;
-    char *cpid; // validated CPID from the cloud
-    char *dtg;
-    int ee; // reserved for future use
-    int rc; // reserved for future use
-    int at; // reserved for future use
-    struct protocol {
-        char *client_id;
-        char *name;
-        char *host;
-        char *user_name;
-        char *pass;
-        char *pub_topic;
-        char *sub_topic;
-    } broker;
+    int ec;
+    int ct;
+    IotclSyncResponseMeta meta;
+    IotclSyncResponseProtocol broker;
 } IotclSyncResponse;
 
 // You must free the response when done
@@ -64,9 +73,10 @@ void iotcl_discovery_free_discovery_response(IotclDiscoveryResponse *response);
 
 // This function returns NULL in case of allocation failure
 // The user mast check the ds value for "OK". Corresponding error should be handled/reported and the response should be freed
-IotclSyncResponse *iotcl_discovery_parse_sync_response(const char *response_data);
+int iotcl_discovery_parse_sync_response(const char *response_data, IotclSyncResponse **presponse);
 
 void iotcl_discovery_free_sync_response(IotclSyncResponse *response);
+
 
 #ifdef __cplusplus
 }

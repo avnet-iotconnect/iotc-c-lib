@@ -16,8 +16,7 @@ extern "C" {
 
 typedef struct {
     // Can be copied at the device page. Can be obtained via REST Sync call.
-    // Device template GUID required to send telemetry data.
-    const char *dtg;
+    const char *cd;
 } IotclTelemetryConfig;
 
 
