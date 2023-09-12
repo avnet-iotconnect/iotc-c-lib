@@ -9,6 +9,7 @@
 
 
 #include <time.h>
+#include "cJSON.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,6 +25,10 @@ const char *iotcl_iso_timestamp_now(void);
 
 // Internal function
 void iotcl_oom_error(void);
+
+int safe_get_integer(cJSON *cjson, const char *value_name, int *value);
+int get_numeric_value_or_default(cJSON *cjson, const char *value_name, int default_value);
+char *safe_get_string_and_strdup(cJSON *cjson, const char *value_name);
 
 #ifdef __cplusplus
 }

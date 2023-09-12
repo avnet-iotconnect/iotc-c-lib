@@ -13,25 +13,6 @@
 #include "iotconnect_common.h"
 #include "iotconnect_device_identity.h"
 
-static int get_numeric_value_or_default(cJSON *cjson, const char *value_name, int default_value) {
-	cJSON* tmp_value = cJSON_GetObjectItem(cjson, value_name);
-	if (!tmp_value || !cJSON_IsNumber(tmp_value)) {
-		return default_value;
-	}
-	return cJSON_GetNumberValue(tmp_value);
-}
-static char *safe_get_string_and_strdup(cJSON *cjson, const char *value_name) {
-    cJSON *value = cJSON_GetObjectItem(cjson, value_name);
-    if (!value) {
-        return NULL;
-    }
-    const char *str_value = cJSON_GetStringValue(value);
-    if (!str_value) {
-        return NULL;
-    }
-    return iotcl_strdup(str_value);
-}
-
 const char * iotcl_ddim_auth_request_create_serialized_string(IotclDdimAuthRequest* request) {
 	const char* ret = NULL;
     cJSON *request_object = cJSON_CreateObject();

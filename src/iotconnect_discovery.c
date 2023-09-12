@@ -14,32 +14,6 @@
 #include "iotconnect_common.h"
 #include "iotconnect_discovery.h"
 
-static int safe_get_integer(cJSON *cjson, const char *value_name, int *value) {
-    printf("%s: parsing \"%s\"\n", __func__, value_name);
-    cJSON *tmp_value = cJSON_GetObjectItem(cjson, value_name);
-    if (!tmp_value) {
-        return -1;
-    }
-    *value = cJSON_GetNumberValue(tmp_value);
-    return 0;
-}
-
-static char *safe_get_string_and_strdup(cJSON *cjson, const char *value_name) {
-    printf("%s: parsing \"%s\"\n", __func__, value_name);
-    cJSON *value = cJSON_GetObjectItem(cjson, value_name);
-    if (!value) {
-        return NULL;
-    }
-    const char *str_value = cJSON_GetStringValue(value);
-    if (!str_value) {
-        return NULL;
-    }
-
-    printf("%s -> %s = %s\n", __func__, value_name, str_value);
-
-    return iotcl_strdup(str_value);
-}
-
 static bool split_url(IotclDiscoveryResponse *response) {
     printf("%s ->\n", __func__);
 

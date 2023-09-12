@@ -9,18 +9,6 @@
 #include "iotconnect_common.h"
 #include "iotconnect_discovery_v3.h"
 
-static char *safe_get_string_and_strdup(cJSON *cjson, const char *value_name) {
-    cJSON *value = cJSON_GetObjectItem(cjson, value_name);
-    if (!value) {
-        return NULL;
-    }
-    const char *str_value = cJSON_GetStringValue(value);
-    if (!str_value) {
-        return NULL;
-    }
-    return iotcl_strdup(str_value);
-}
-
 IotclDiscoveryV3Response * iotcl_parse_discovery_v3_response(const char* response_data) {
 	IotclDiscoveryV3Response *response = (IotclDiscoveryV3Response *) calloc(1, sizeof(IotclDiscoveryV3Response));
     if (NULL == response) {

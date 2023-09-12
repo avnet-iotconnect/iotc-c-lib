@@ -94,6 +94,7 @@ bool iotcl_process_event(const char *event) {
        return false;
     }
 
+#if 0
     { // scope out the on-the fly varialble declarations for cleanup jump
         // root object should only have cmdType
         cJSON *j_type = cJSON_GetObjectItemCaseSensitive(root, "cmdType");
@@ -144,6 +145,29 @@ bool iotcl_process_event(const char *event) {
         // for purposes of replying with an ack once another process (perhaps in another thread) completes.
         return iotc_process_callback(eventData);
     }
+#else
+    //const char *version = safe_get_string_and_strdup(root, "v");
+    struct IotclEventDataTag *eventData = (struct IotclEventDataTag *) calloc(sizeof(struct IotclEventDataTag), 1);
+    if (NULL == eventData) {
+        goto cleanup;
+    }
+
+    int value;
+    if(safe_get_integer(root, "ct", &value) != 0) {
+        goto cleanup;
+    }
+    IotConnectEventType type = (IotConnectEventType) value;
+
+    if (type < DEVICE_COMMAND) {
+            goto cleanup;
+    }
+
+    eventData->root = root;
+    eventData->data = root;
+    eventData->type = type;
+
+    return iotc_process_callback(eventData);
+#endif
 
     cleanup:
 
@@ -152,12 +176,7 @@ bool iotcl_process_event(const char *event) {
 }
 
 char *iotcl_clone_command(IotclEventData data) {
-    cJSON *command = cJSON_GetObjectItemCaseSensitive(data->data, "command");
-    if (NULL == command || !is_valid_string(command)) {
-        return NULL;
-    }
-
-    return iotcl_strdup(command->valuestring);
+    return safe_get_string_and_strdup(data->data, "cmd");
 }
 
 char *iotcl_clone_download_url(IotclEventData data, size_t index) {
