@@ -5,7 +5,6 @@
  */
 #include <stdlib.h>
 #include <string.h>
-
 #include "cJSON.h"
 #include "iotconnect_common.h"
 #include "iotconnect_lib.h"
@@ -54,7 +53,7 @@ static int to_ack_status(bool success, IotConnectEventType type) {
 
 
 static bool iotc_process_callback(struct IotclEventDataTag *eventData) {
-    if (!eventData) return false;
+	if (!eventData) return false;
 
     IotclConfig *config = iotcl_get_config();
     if (!config) return false;
@@ -91,68 +90,57 @@ bool iotcl_process_event(const char *event) {
     cJSON *root = cJSON_Parse(event);
 
     if (!root) {
-       return false;
+        return false;
     }
 
     { // scope out the on-the fly varialble declarations for cleanup jump
-        // root object should only have cmdType
-        cJSON *j_type = cJSON_GetObjectItemCaseSensitive(root, "cmdType");
-        if (!is_valid_string(j_type)) goto cleanup;
 
-        cJSON *j_ack_id = NULL;
-        cJSON *data = NULL; // data should have ackId
-        if (!is_valid_string(j_ack_id)) {
-            data = cJSON_GetObjectItemCaseSensitive(root, "data");
-            if (!data) goto cleanup;
-            j_ack_id = cJSON_GetObjectItemCaseSensitive(data, "ackId");
-            if (!is_valid_string(j_ack_id)) goto cleanup;
-        }
-
-        if (4 != strlen(j_type->valuestring)) {
-            // Don't know how to parse it then...
+        cJSON *j_type = cJSON_GetObjectItemCaseSensitive(root, "ct");
+        if (!cJSON_IsNumber(j_type)) {
             goto cleanup;
         }
 
-        IotConnectEventType type = (IotConnectEventType) strtol(&j_type->valuestring[2], NULL, 16);
+        IotConnectEventType type = j_type->valueint + 1;
+
+        cJSON *j_ack_id;
+        j_ack_id = cJSON_GetObjectItemCaseSensitive(root, "ack");
 
         if (type < DEVICE_COMMAND) {
             goto cleanup;
         }
 
-        // In case we have a supported command. Do some checks before allowing further processing of acks
-        // NOTE: "i" in cpId is lower case, but per spec it's supposed to be in upper case
-        if (type == DEVICE_COMMAND || type == DEVICE_OTA) {
-            if (
-                    !is_valid_string(cJSON_GetObjectItem(data, "cpid"))
-                    || !is_valid_string(cJSON_GetObjectItemCaseSensitive(data, "uniqueId"))
-                    ) {
+        if (type == DEVICE_OTA) {
+            if (!is_valid_string(j_ack_id)) {
                 goto cleanup;
             }
         }
 
         struct IotclEventDataTag *eventData = (struct IotclEventDataTag *) calloc(
                 sizeof(struct IotclEventDataTag), 1);
-        if (NULL == eventData) goto cleanup;
+
+        if (NULL == eventData) {
+            goto cleanup;
+        }
 
         eventData->root = root;
-        eventData->data = data;
+        eventData->data = root;
         eventData->type = type;
 
         // eventData and root (via eventData->root) will be freed when the user calls
         // iotcl_destroy_event(). The user is responsible to free this data inside the callback,
         // once they are done with it. This is done so that the user can choose to keep the event data
         // for purposes of replying with an ack once another process (perhaps in another thread) completes.
+
         return iotc_process_callback(eventData);
     }
 
     cleanup:
-
     cJSON_Delete(root);
     return status;
 }
 
 char *iotcl_clone_command(IotclEventData data) {
-    cJSON *command = cJSON_GetObjectItemCaseSensitive(data->data, "command");
+    cJSON *command = cJSON_GetObjectItemCaseSensitive(data->root, "cmd");
     if (NULL == command || !is_valid_string(command)) {
         return NULL;
     }
@@ -179,20 +167,25 @@ char *iotcl_clone_download_url(IotclEventData data, size_t index) {
     return NULL;
 }
 
-
 char *iotcl_clone_sw_version(IotclEventData data) {
     cJSON *ver = cJSON_GetObjectItemCaseSensitive(data->data, "ver");
+    if (!cJSON_IsObject(ver)) {
+        ver = data->data; // AWS and 2.1 we presume...
+    }
     if (cJSON_IsObject(ver)) {
-        cJSON *sw = cJSON_GetObjectItem(ver, "sw");
-        if (is_valid_string(sw)) {
-            return iotcl_strdup(sw->valuestring);
-        }
+		cJSON *sw = cJSON_GetObjectItem(ver, "sw");
+		if (is_valid_string(sw)) {
+			return iotcl_strdup(sw->valuestring);
+		}
     }
     return NULL;
 }
 
 char *iotcl_clone_hw_version(IotclEventData data) {
     cJSON *ver = cJSON_GetObjectItemCaseSensitive(data->data, "ver");
+    if (!cJSON_IsObject(ver)) {
+        ver = data->data; // AWS and 2.1 we presume...
+    }
     if (cJSON_IsObject(ver)) {
         cJSON *sw = cJSON_GetObjectItem(ver, "hw");
         if (is_valid_string(sw)) {
@@ -276,9 +269,18 @@ char *iotcl_create_ack_string_and_destroy_event(
         bool success,
         const char *message
 ) {
+    cJSON *j_ack_id;
+
     if (!data) return NULL;
     // already checked that ack ID is valid in the messages
-    char *ack_id = cJSON_GetObjectItemCaseSensitive(data->data, "ackId")->valuestring;
+
+    if(!data->root) return NULL;
+
+	j_ack_id = cJSON_GetObjectItemCaseSensitive(data->root, "ack");
+
+	if (!j_ack_id) return NULL;
+
+    char *ack_id = j_ack_id->valuestring;
     char *ret = create_ack(success, message, data->type, ack_id);
     iotcl_destroy_event(data);
     return ret;
