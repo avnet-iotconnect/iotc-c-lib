@@ -5,7 +5,6 @@
  */
 #include <stdlib.h>
 #include <string.h>
-
 #include "cJSON.h"
 #include "iotconnect_common.h"
 #include "iotconnect_lib.h"
@@ -54,7 +53,7 @@ static int to_ack_status(bool success, IotConnectEventType type) {
 
 
 static bool iotc_process_callback(struct IotclEventDataTag *eventData) {
-    if (!eventData) return false;
+	if (!eventData) return false;
 
     IotclConfig *config = iotcl_get_config();
     if (!config) return false;
@@ -65,7 +64,7 @@ static bool iotc_process_callback(struct IotclEventDataTag *eventData) {
     switch (eventData->type) {
         case DEVICE_COMMAND:
             if (config->event_functions.cmd_cb) {
-                config->event_functions.cmd_cb(eventData);
+            	config->event_functions.cmd_cb(eventData);
             }
             break;
         case DEVICE_OTA:
@@ -86,6 +85,63 @@ static inline bool is_valid_string(const cJSON *json) {
     return (NULL != json && cJSON_IsString(json) && json->valuestring != NULL);
 }
 
+#if 1
+bool iotcl_process_event(const char *event) {
+    bool status = false;
+    cJSON *root = cJSON_Parse(event);
+
+    if (!root) {
+    	return false;
+    }
+
+    { // scope out the on-the fly varialble declarations for cleanup jump
+
+    	cJSON *j_type = cJSON_GetObjectItemCaseSensitive(root, "ct");
+        if (!cJSON_IsNumber(j_type)) {
+        	goto cleanup;
+        }
+
+        IotConnectEventType type = j_type->valueint + 1;
+
+        cJSON *j_ack_id;
+		j_ack_id = cJSON_GetObjectItemCaseSensitive(root, "ack");
+
+        if (type < DEVICE_COMMAND) {
+            goto cleanup;
+        }
+
+        if (type == DEVICE_OTA) {
+        	if (!is_valid_string(j_ack_id)) {
+            	goto cleanup;
+        	}
+        }
+
+        struct IotclEventDataTag *eventData = (struct IotclEventDataTag *) calloc(
+                sizeof(struct IotclEventDataTag), 1);
+
+        if (NULL == eventData) {
+        	goto cleanup;
+        }
+
+        eventData->root = root;
+        eventData->data = NULL;
+        eventData->type = type;
+
+        // eventData and root (via eventData->root) will be freed when the user calls
+        // iotcl_destroy_event(). The user is responsible to free this data inside the callback,
+        // once they are done with it. This is done so that the user can choose to keep the event data
+        // for purposes of replying with an ack once another process (perhaps in another thread) completes.
+
+        return iotc_process_callback(eventData);
+    }
+
+    cleanup:
+    cJSON_Delete(root);
+    return status;
+}
+
+
+#else
 bool iotcl_process_event(const char *event) {
     bool status = false;
     cJSON *root = cJSON_Parse(event);
@@ -150,6 +206,7 @@ bool iotcl_process_event(const char *event) {
     cJSON_Delete(root);
     return status;
 }
+#endif
 
 char *iotcl_clone_command(IotclEventData data) {
     cJSON *command = cJSON_GetObjectItemCaseSensitive(data->data, "command");
@@ -232,6 +289,8 @@ static char *create_ack(
 
     // message type 5 in response is the command response. Type 11 is OTA response.
     if (!cJSON_AddNumberToObject(ack_json, "mt", message_type == DEVICE_COMMAND ? 5 : 11)) goto cleanup;
+
+    // FIXME: Is it "t" or "dt" ?
     if (!cJSON_AddStringToObject(ack_json, "t", iotcl_iso_timestamp_now())) goto cleanup;
 
     if (!cJSON_AddStringToObject(ack_json, "uniqueId", config->device.duid)) goto cleanup;
@@ -271,6 +330,30 @@ static char *create_ack(
     return result;
 }
 
+#if 1
+char *iotcl_create_ack_string_and_destroy_event(
+        IotclEventData data,
+        bool success,
+        const char *message
+) {
+	cJSON *j_ack_id;
+
+    if (!data) return NULL;
+    // already checked that ack ID is valid in the messages
+
+    if(!data->root) return NULL;
+
+	j_ack_id = cJSON_GetObjectItemCaseSensitive(data->root, "ack");
+
+	if (!j_ack_id) return NULL;
+
+    char *ack_id = j_ack_id->valuestring;
+    char *ret = create_ack(success, message, data->type, ack_id);
+    iotcl_destroy_event(data);
+    return ret;
+}
+
+#else
 char *iotcl_create_ack_string_and_destroy_event(
         IotclEventData data,
         bool success,
@@ -283,6 +366,7 @@ char *iotcl_create_ack_string_and_destroy_event(
     iotcl_destroy_event(data);
     return ret;
 }
+#endif
 
 char *iotcl_create_ota_ack_response(
         const char *ota_ack_id,
