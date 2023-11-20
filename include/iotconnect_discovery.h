@@ -75,7 +75,7 @@ typedef struct IotclDiscoveryResponse {
 typedef struct IotclSyncResponse {
     IotclSyncResult ds;
     char *cpid; // validated CPID from the cloud
-    char *dtg;
+    char *cd;
     int ee; // reserved for future use
     int rc; // reserved for future use
     int at; // reserved for future use
@@ -83,6 +83,7 @@ typedef struct IotclSyncResponse {
         char *client_id;
         char *name;
         char *host;
+        int port;
         char *user_name;
         char *pass;
         char *pub_topic;
