@@ -3,6 +3,8 @@
 This is a C library intended generally for embedded systems which abstracts IoTConnect MQTT protocol messages
 and the discovery HTTP protocol.
 
+This library is distributed under the [MIT License](LICENSE.md).
+
 This library not an SDK. As each embedded platform/os generally has its own MQTT and HTTP 
 implementation, the library does not have direct dependencies on any specific one. 
 

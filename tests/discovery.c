@@ -1,3 +1,8 @@
+/* SPDX-License-Identifier: MIT
+ * Copyright (C) 2020 Avnet
+ * Authors: Nikola Markovic <nikola.markovic@avnet.com> et al.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
