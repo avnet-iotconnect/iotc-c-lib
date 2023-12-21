@@ -1,7 +1,5 @@
-
-/* Copyright (C) 2020 Avnet - All Rights Reserved
- * Unauthorized copying of this file, via any medium is strictly prohibited
- * Proprietary and confidential
+/* SPDX-License-Identifier: MIT
+ * Copyright (C) 2020 Avnet
  * Authors: Nikola Markovic <nikola.markovic@avnet.com> et al.
  */
 
