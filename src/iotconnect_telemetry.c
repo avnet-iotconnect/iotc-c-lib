@@ -25,15 +25,21 @@ struct IotclMessageHandleTag {
 };
 
 cJSON *json_object_dotset_locate(cJSON *search_object, char **leaf_name, const char *path) {
+    *leaf_name = NULL;
+
     static const char *DELIM = ".";
     char *mutable_path = iotcl_strdup(path);
+    if (NULL == mutable_path) {
+        return NULL;
+    }
+
     char *token = strtok(mutable_path, DELIM);
-    *leaf_name = NULL;
     if (NULL == token) {
         // PANIC. Should not happen
         free(mutable_path);
         return NULL;
     }
+
     cJSON *target_object = search_object;
     do {
         free(*leaf_name);
@@ -54,7 +60,9 @@ cJSON *json_object_dotset_locate(cJSON *search_object, char **leaf_name, const c
 
             // NOTE: The user should clean up the search object if we return
             // That should free all added objects, so this should be safe to do
-            if (!parent_object) goto cleanup;
+            if (!parent_object) {
+                goto cleanup;
+            }
 
             target_object = parent_object;
         }
@@ -63,39 +71,57 @@ cJSON *json_object_dotset_locate(cJSON *search_object, char **leaf_name, const c
     free(mutable_path);
     return target_object;
 
-    cleanup:
+cleanup:
     free(mutable_path);
     return NULL;
 }
 
 static cJSON *setup_telemetry_object(IotclMessageHandle message) {
     IotclConfig *config = iotcl_get_config();
-    if (!config) return NULL;
-    if (!message) return NULL;
+    if (!config) {
+        return NULL;
+    }
+    if (!message) {
+        return NULL;
+    }
 
     cJSON *telemetry_object = cJSON_CreateObject();
-    if (!telemetry_object) return NULL;
-    if (!cJSON_AddStringToObject(telemetry_object, "id", config->device.duid)) goto cleanup_to;
-    if (!cJSON_AddStringToObject(telemetry_object, "tg", "")) goto cleanup_to;
+    if (!telemetry_object) {
+        return NULL;
+    }
+    if (!cJSON_AddStringToObject(telemetry_object, "id", config->device.duid)) {
+        goto cleanup_to;
+    }
+    if (!cJSON_AddStringToObject(telemetry_object, "tg", "")) {
+        goto cleanup_to;
+    }
     cJSON *data_array = cJSON_AddArrayToObject(telemetry_object, "d");
-    if (!data_array) goto cleanup_to;
-    if (!cJSON_AddItemToArray(message->telemetry_data_array, telemetry_object)) goto cleanup_da;
+    if (!data_array) {
+        goto cleanup_to;
+    }
+    if (!cJSON_AddItemToArray(message->telemetry_data_array, telemetry_object)) {
+        goto cleanup_da;
+    }
 
     // setup the actual telemetry object to be used in subsequent calls
     message->current_telemetry_object = cJSON_CreateObject();
-    if (!message->current_telemetry_object) goto cleanup_da;
+    if (!message->current_telemetry_object) {
+        goto cleanup_da;
+    }
 
-    if (!cJSON_AddItemToArray(data_array, message->current_telemetry_object)) goto cleanup_cto;
+    if (!cJSON_AddItemToArray(data_array, message->current_telemetry_object)) {
+        goto cleanup_cto;
+    }
 
     return telemetry_object; // object inside the "d" array of the the root object
 
-    cleanup_cto:
+cleanup_cto:
     cJSON_free(message->current_telemetry_object);
 
-    cleanup_da:
+cleanup_da:
     cJSON_free(data_array);
 
-    cleanup_to:
+cleanup_to:
     cJSON_free(telemetry_object);
 
     return NULL;
@@ -104,51 +130,79 @@ static cJSON *setup_telemetry_object(IotclMessageHandle message) {
 IotclMessageHandle iotcl_telemetry_create(void) {
     cJSON *sdk_array = NULL;
     IotclConfig *config = iotcl_get_config();
-    if (!config) return NULL;
-    if (!config->telemetry.dtg) return NULL;
+    if (!config) {
+        return NULL;
+    }
+    if (!config->telemetry.dtg) {
+        return NULL;
+    }
+
     struct IotclMessageHandleTag *msg =
             (struct IotclMessageHandleTag *) calloc(sizeof(struct IotclMessageHandleTag), 1);
-
-    if (!msg) return NULL;
+    if (!msg) {
+        return NULL;
+    }
 
     msg->root_value = cJSON_CreateObject();
+    if (!msg->root_value) {
+        goto cleanup;
+    }
 
-    if (!msg->root_value) goto cleanup;
-
-    if (!cJSON_AddStringToObject(msg->root_value, "cpid", config->device.cpid)) goto cleanup_value;
-    if (!cJSON_AddStringToObject(msg->root_value, "dtg", config->telemetry.dtg)) goto cleanup_value;
-    if (!cJSON_AddNumberToObject(msg->root_value, "mt", 0)) goto cleanup_value; // telemetry message type (zero)
+    if (!cJSON_AddStringToObject(msg->root_value, "cpid", config->device.cpid)) {
+        goto cleanup_value;
+    }
+    if (!cJSON_AddStringToObject(msg->root_value, "dtg", config->telemetry.dtg)) {
+        goto cleanup_value;
+    }
+    if (!cJSON_AddNumberToObject(msg->root_value, "mt", 0)) {
+        goto cleanup_value; // telemetry message type (zero)
+    }
     sdk_array = cJSON_AddObjectToObject(msg->root_value, "sdk");
-    if (!sdk_array) goto cleanup_value;
-    if (!cJSON_AddStringToObject(sdk_array, "l", CONFIG_IOTCONNECT_SDK_NAME)) goto cleanup_array;
-    if (!cJSON_AddStringToObject(sdk_array, "v", CONFIG_IOTCONNECT_SDK_VERSION)) goto cleanup_array;
-    if (!cJSON_AddStringToObject(sdk_array, "e", config->device.env)) goto cleanup_array;
+    if (!sdk_array) {
+        goto cleanup_value;
+    }
+    if (!cJSON_AddStringToObject(sdk_array, "l", CONFIG_IOTCONNECT_SDK_NAME)) {
+        goto cleanup_array;
+    }
+    if (!cJSON_AddStringToObject(sdk_array, "v", CONFIG_IOTCONNECT_SDK_VERSION)) {
+        goto cleanup_array;
+    }
+    if (!cJSON_AddStringToObject(sdk_array, "e", config->device.env)) {
+        goto cleanup_array;
+    }
 
     msg->telemetry_data_array = cJSON_AddArrayToObject(msg->root_value, "d");
 
-    if (!msg->telemetry_data_array) goto cleanup_array;
+    if (!msg->telemetry_data_array) {
+        goto cleanup_array;
+    }
 
     return msg;
 
-    cleanup_array:
-    cJSON_free(sdk_array);
+cleanup_array:
+    cJSON_Delete(sdk_array);
 
-    cleanup_value:
-    cJSON_free(msg->root_value);
+cleanup_value:
+    cJSON_Delete(msg->root_value);
 
-    cleanup:
-    cJSON_free(msg);
+cleanup:
+    free(msg);
     return NULL;
 }
 
 bool iotcl_telemetry_add_with_epoch_time(IotclMessageHandle message, time_t time) {
-    if (!message) return false;
+    if (!message) {
+        return false;
+    }
     cJSON *telemetry_object = setup_telemetry_object(message);
-    if (!cJSON_AddNumberToObject(telemetry_object, "ts", time)) {
+    if (!telemetry_object) {
+        return false;
+    }
+    if (!cJSON_AddNumberToObject(telemetry_object, "ts", (double) time)) {
         return false;
     }
     if (!cJSON_HasObjectItem(message->root_value, "ts")) {
-        if (!cJSON_AddNumberToObject(message->root_value, "ts", time)) {
+        if (!cJSON_AddNumberToObject(message->root_value, "ts", (double) time)) {
             return false;
         }
     }
@@ -156,51 +210,75 @@ bool iotcl_telemetry_add_with_epoch_time(IotclMessageHandle message, time_t time
 }
 
 bool iotcl_telemetry_add_with_iso_time(IotclMessageHandle message, const char *time) {
-    if (!message) return false;
+    if (!message) {
+        return false;
+    }
     cJSON *const telemetry_object = setup_telemetry_object(message);
-    if (!telemetry_object) return false;
-    if (!cJSON_AddStringToObject(telemetry_object, "dt", time)) return false;
+    if (!telemetry_object) {
+        return false;
+    }
+    if (!cJSON_AddStringToObject(telemetry_object, "dt", time)) {
+        return false;
+    }
     if (!cJSON_HasObjectItem(message->root_value, "t")) {
-        if (!cJSON_AddStringToObject(message->root_value, "t", time)) return false;
+        if (!cJSON_AddStringToObject(message->root_value, "t", time)) {
+            return false;
+        }
     }
     return true;
 }
 
 bool iotcl_telemetry_set_number(IotclMessageHandle message, const char *path, double value) {
-    if (!message) return false;
+    if (!message) {
+        return false;
+    }
     if (NULL == message->current_telemetry_object) {
-        if (!iotcl_telemetry_add_with_iso_time(message, iotcl_iso_timestamp_now())) return false;
+        if (!iotcl_telemetry_add_with_iso_time(message, iotcl_iso_timestamp_now())) {
+            return false;
+        }
     }
     char *leaf_name = NULL;
     cJSON *target = json_object_dotset_locate(message->current_telemetry_object, &leaf_name, path);
-    if (!target) goto cleanup; // out of memory
+    if (!target) {
+        goto cleanup; // out of memory
+    }
 
-    if (!cJSON_AddNumberToObject(target, leaf_name, value)) goto cleanup_tgt;
+    if (!cJSON_AddNumberToObject(target, leaf_name, value)) {
+        goto cleanup_tgt;
+    }
     free(leaf_name);
     return true;
 
-    cleanup_tgt:
+cleanup_tgt:
     cJSON_free(target);
 
-    cleanup:
+cleanup:
     free(leaf_name);
     return false;
 }
 
 bool iotcl_telemetry_set_bool(IotclMessageHandle message, const char *path, bool value) {
-    if (!message) return false;
+    if (!message) {
+        return false;
+    }
     if (NULL == message->current_telemetry_object) {
-        if (!iotcl_telemetry_add_with_iso_time(message, iotcl_iso_timestamp_now())) return false;
+        if (!iotcl_telemetry_add_with_iso_time(message, iotcl_iso_timestamp_now())) {
+            return false;
+        }
     }
     char *leaf_name = NULL;
     cJSON *target = json_object_dotset_locate(message->current_telemetry_object, &leaf_name, path);
-    if (!target) goto cleanup; // out of memory
+    if (!target) {
+        goto cleanup; // out of memory
+    }
 
-    if (!cJSON_AddBoolToObject(target, leaf_name, value)) goto cleanup_tgt;
+    if (!cJSON_AddBoolToObject(target, leaf_name, value)) {
+        goto cleanup_tgt;
+    }
     free(leaf_name);
     return true;
 
-    cleanup_tgt:
+cleanup_tgt:
     cJSON_free(target);
 
     cleanup:
@@ -209,55 +287,72 @@ bool iotcl_telemetry_set_bool(IotclMessageHandle message, const char *path, bool
 }
 
 bool iotcl_telemetry_set_string(IotclMessageHandle message, const char *path, const char *value) {
-    if (!message) return false;
+    if (!message) {
+        return false;
+    }
     if (NULL == message->current_telemetry_object) {
         iotcl_telemetry_add_with_iso_time(message, iotcl_iso_timestamp_now());
     }
     char *leaf_name = NULL;
     cJSON *const target = json_object_dotset_locate(message->current_telemetry_object, &leaf_name, path);
-    if (!target) goto cleanup; // out of memory
+    if (!target) {
+        goto cleanup; // out of memory
+    }
 
-    if (!cJSON_AddStringToObject(target, leaf_name, value)) goto cleanup_tgt;
+    if (!cJSON_AddStringToObject(target, leaf_name, value)) {
+        goto cleanup_tgt;
+    }
     free(leaf_name);
     return true;
 
-    cleanup_tgt:
+cleanup_tgt:
     cJSON_free(target);
 
-    cleanup:
+cleanup:
     free(leaf_name);
     return false;
 }
 
 bool iotcl_telemetry_set_null(IotclMessageHandle message, const char *path) {
-    if (!message) return false;
+    if (!message) {
+        return false;
+    }
     if (NULL == message->current_telemetry_object) {
         iotcl_telemetry_add_with_iso_time(message, iotcl_iso_timestamp_now());
     }
     char *leaf_name = NULL;
     cJSON *const target = json_object_dotset_locate(message->current_telemetry_object, &leaf_name, path);
-    if (!target) goto cleanup; // out of memory
+    if (!target) {
+        goto cleanup; // out of memory
+    }
 
-    if (!cJSON_AddNullToObject(target, leaf_name)) goto cleanup_tgt;
+    if (!cJSON_AddNullToObject(target, leaf_name)) {
+        goto cleanup_tgt;
+    }
     free(leaf_name);
     return true;
 
-    cleanup_tgt:
+cleanup_tgt:
     cJSON_free(target);
 
-    cleanup:
+cleanup:
     free(leaf_name);
     return false;
 }
 
 const char *iotcl_create_serialized_string(IotclMessageHandle message, bool pretty) {
-    if (!message) return NULL;
-    if (!message->root_value) return NULL;
-    if (pretty) {
-        return cJSON_Print(message->root_value);
-    } else {
-        return cJSON_PrintUnformatted(message->root_value);
+    const char *serialized_string = NULL;
+    if (!message) {
+        return NULL;
     }
+    if (!message->root_value) {
+        return NULL;
+    }
+    serialized_string = (pretty) ? cJSON_Print(message->root_value) : cJSON_PrintUnformatted(message->root_value);
+    if (!serialized_string) {
+        return NULL;
+    }
+    return serialized_string;
 }
 
 void iotcl_destroy_serialized(const char *serialized_string) {
@@ -267,6 +362,6 @@ void iotcl_destroy_serialized(const char *serialized_string) {
 void iotcl_telemetry_destroy(IotclMessageHandle message) {
     if (message) {
         cJSON_Delete(message->root_value);
+        free(message);
     }
-    free(message);
 }

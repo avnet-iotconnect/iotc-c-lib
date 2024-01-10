@@ -21,9 +21,6 @@ const char *iotcl_to_iso_timestamp(time_t timestamp);
 // NOTE: This function is not thread-safe
 const char *iotcl_iso_timestamp_now(void);
 
-// Internal function
-void iotcl_oom_error(void);
-
 #ifdef __cplusplus
 }
 #endif

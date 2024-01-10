@@ -78,6 +78,10 @@ IotclDiscoveryResponse *iotcl_discovery_parse_discovery_response(const char *res
         }
 
         response->url = iotcl_strdup(jsonBaseUrl);
+        if (!response->url) {
+            goto cleanup;
+        }
+
         if (split_url(response)) {
             cJSON_Delete(json_root);
             return response;
