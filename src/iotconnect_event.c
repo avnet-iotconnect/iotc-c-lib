@@ -123,7 +123,7 @@ bool iotcl_process_event(const char *event) {
         }
 
         eventData->root = root;
-        eventData->data = NULL;
+        eventData->data = root;
         eventData->type = type;
 
         // eventData and root (via eventData->root) will be freed when the user calls
@@ -169,17 +169,23 @@ char *iotcl_clone_download_url(IotclEventData data, size_t index) {
 
 char *iotcl_clone_sw_version(IotclEventData data) {
     cJSON *ver = cJSON_GetObjectItemCaseSensitive(data->data, "ver");
+    if (!cJSON_IsObject(ver)) {
+    	ver = data->data; // AWS and 2.1 we presume...
+    }
     if (cJSON_IsObject(ver)) {
-        cJSON *sw = cJSON_GetObjectItem(ver, "sw");
-        if (is_valid_string(sw)) {
-            return iotcl_strdup(sw->valuestring);
-        }
+		cJSON *sw = cJSON_GetObjectItem(ver, "sw");
+		if (is_valid_string(sw)) {
+			return iotcl_strdup(sw->valuestring);
+		}
     }
     return NULL;
 }
 
 char *iotcl_clone_hw_version(IotclEventData data) {
     cJSON *ver = cJSON_GetObjectItemCaseSensitive(data->data, "ver");
+    if (!cJSON_IsObject(ver)) {
+    	ver = data->data; // AWS and 2.1 we presume...
+    }
     if (cJSON_IsObject(ver)) {
         cJSON *sw = cJSON_GetObjectItem(ver, "hw");
         if (is_valid_string(sw)) {
