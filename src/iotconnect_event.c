@@ -293,7 +293,9 @@ const char *iotcl_create_ack_string(
         bool success,
         const char *message
 ) {
-    if (!ack_id) return NULL;
+    if (!ack_id) {
+        return NULL;
+    }
     const char *ret = create_ack(type, ack_id, success, message);
     return ret;
 }

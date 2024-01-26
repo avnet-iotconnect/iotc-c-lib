@@ -25,10 +25,12 @@ struct IotclMessageHandleTag {
 };
 
 cJSON *json_object_dotset_locate(cJSON *search_object, char **leaf_name, const char *path) {
+    static const char *DELIM = ".";
+    char *mutable_path;
+
     *leaf_name = NULL;
 
-    static const char *DELIM = ".";
-    char *mutable_path = iotcl_strdup(path);
+    mutable_path = iotcl_strdup(path);
     if (NULL == mutable_path) {
         return NULL;
     }
