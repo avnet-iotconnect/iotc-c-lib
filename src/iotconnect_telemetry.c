@@ -80,6 +80,7 @@ static cJSON *setup_telemetry_object(IotclMessageHandle message) {
 
     if (!cJSON_AddStringToObject(telemetry_array, "id", config->device.duid)) goto cleanup_to;
     if (!cJSON_AddStringToObject(telemetry_array, "tg", "")) goto cleanup_to;
+
     //add 3rd level d object which has cpu, version, sensor data.
     cJSON *d3_object = cJSON_AddObjectToObject(telemetry_array, "d");  //add "d" object for telemetry data(cpu, version)
     if (!d3_object) goto cleanup_da;
@@ -109,27 +110,26 @@ IotclMessageHandle iotcl_telemetry_create(void) {
 
     IotclConfig *config = iotcl_get_config();
     if (!config) return NULL;
-    if (!config->telemetry.cd) return NULL;
     struct IotclMessageHandleTag *msg =
             (struct IotclMessageHandleTag *) calloc(sizeof(struct IotclMessageHandleTag), 1);
-
     if (!msg) return NULL;
 
     msg->parent = cJSON_CreateObject();    //create a root
 
-    if (!cJSON_AddStringToObject(msg->parent, "cd", config->telemetry.cd)) goto cleanup_root;
     if (!cJSON_AddNumberToObject(msg->parent, "mt", 0)) goto cleanup_root;
 
-//    msg->root_value = root;
-//    if (!msg->root_value) goto cleanup;
+#if 0
+	//create 1st level d object which is msg->root_vlaue
+	msg->root_value = cJSON_AddObjectToObject(msg->parent, "d");
+	if (!msg->root_value) goto cleanup_root;
 
-    //create 1st level d object which is msg->root_vlaue
-    msg->root_value = cJSON_AddObjectToObject(msg->parent, "d");
-    if (!msg->root_value) goto cleanup_root;
-
-    //add 2nd level d array
-    msg->telemetry_data_array = cJSON_AddArrayToObject(msg->root_value, "d"); //create 2nd d_array in 1st d object
-    if (!msg->telemetry_data_array) goto cleanup_msg;
+	//create 2nd d_array in 1st d object
+	msg->telemetry_data_array = cJSON_AddArrayToObject(msg->root_value, "d");
+#else
+	//create 2nd d_array in 1st d object
+	msg->root_value = NULL;
+    msg->telemetry_data_array = cJSON_AddArrayToObject(msg->parent, "d");
+#endif
 
     return msg;
 
@@ -159,7 +159,7 @@ bool iotcl_telemetry_add_with_epoch_time(IotclMessageHandle message, time_t time
 
 bool iotcl_telemetry_add_with_iso_time(IotclMessageHandle message, const char *time) {
     if (!message) return false;
-    if (!cJSON_AddStringToObject(message->root_value, "dt", time)) return false;
+//    if (!cJSON_AddStringToObject(message->root_value, "dt", time)) return false;
 
     cJSON *const telemetry_object = setup_telemetry_object(message);
     if (!telemetry_object) return false;
