@@ -165,7 +165,7 @@ char *iotcl_clone_download_url(IotclEventData data, size_t index) {
         return NULL;
     }
     if ((size_t) cJSON_GetArraySize(urls) > index) {
-        cJSON *url = cJSON_GetArrayItem(urls, index);
+        cJSON *url = cJSON_GetArrayItem(urls, (int) index);
         if (is_valid_string(url)) {
             return iotcl_strdup(url->valuestring);
         } else if (cJSON_IsObject(url)) {
@@ -280,6 +280,23 @@ char *iotcl_create_ack_string_and_destroy_event(
     char *ack_id = cJSON_GetObjectItemCaseSensitive(data->data, "ackId")->valuestring;
     char *ret = create_ack(success, message, data->type, ack_id);
     iotcl_destroy_event(data);
+    return ret;
+}
+
+IotConnectEventType iotcl_get_event_type(IotclEventData data) {
+    return (data) ? data->type : UNKNOWN_EVENT;
+}
+
+char *iotcl_create_ack_string(
+        IotConnectEventType type,
+        const char *ack_id,
+        bool success,
+        const char *message
+) {
+    if (!ack_id) {
+        return NULL;
+    }
+    char *ret = create_ack(type, ack_id, success, message);
     return ret;
 }
 

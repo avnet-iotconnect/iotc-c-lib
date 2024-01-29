@@ -77,6 +77,18 @@ char *iotcl_create_ack_string_and_destroy_event(
         const char *message
 );
 
+// Creates an OTA or a command ack json with optional message (can be NULL).
+// The user is responsible to free the returned string.
+// This function does not free up any resources taken by the message -- use iotcl_destroy_event() directly.
+char *iotcl_create_ack_string(
+        IotConnectEventType type,
+        const char *ack_id,
+        bool success,
+        const char *message
+);
+
+IotConnectEventType iotcl_get_event_type(IotclEventData data);
+
 /*
  Creates an OTA ack json with optional message (can be NULL).
  The user is responsible to free the returned string.

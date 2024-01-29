@@ -34,6 +34,12 @@ typedef struct {
     const char *env;    // Obtained Settings->KeyVault at IoTConnect Web Site
 } IotclDeviceConfig;
 
+typedef struct IotclTelemetryConfig {
+    // Can be copied at the device page. Can be obtained via REST Sync call.
+    // Device template GUID required to send telemetry data.
+    const char *dtg;
+} IotclTelemetryConfig;
+
 typedef struct {
     IotclDeviceConfig device;
     IotclTelemetryConfig telemetry;
