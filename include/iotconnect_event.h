@@ -71,7 +71,7 @@ char *iotcl_clone_ack_id(IotclEventData data);
 // Creates an OTA or a command ack json with optional message (can be NULL).
 // The user is responsible to free the returned string.
 // This function also frees up all resources taken by the message.
-const char *iotcl_create_ack_string_and_destroy_event(
+char *iotcl_create_ack_string_and_destroy_event(
         IotclEventData data,
         bool success,
         const char *message
@@ -80,7 +80,7 @@ const char *iotcl_create_ack_string_and_destroy_event(
 // Creates an OTA or a command ack json with optional message (can be NULL).
 // The user is responsible to free the returned string.
 // This function does not free up any resources taken by the message -- use iotcl_destroy_event() directly.
-const char *iotcl_create_ack_string(
+char *iotcl_create_ack_string(
         IotConnectEventType type,
         const char *ack_id,
         bool success,
@@ -104,7 +104,7 @@ IotConnectEventType iotcl_get_event_type(IotclEventData data);
  o Device sends the ack according to the the above comparison using the stored ack ID.
 
 */
-const char *iotcl_create_ota_ack_response(
+char *iotcl_create_ota_ack_response(
         const char *ota_ack_id,
         bool success,
         const char *message

@@ -209,13 +209,13 @@ char *iotcl_clone_ack_id(IotclEventData data) {
     return NULL;
 }
 
-static const char *create_ack(
+static char *create_ack(
         bool success,
         const char *message,
         IotConnectEventType message_type,
         const char *ack_id) {
 
-    const char *result = NULL;
+    char *result = NULL;
 
     IotclConfig *config = iotcl_get_config();
 
@@ -262,7 +262,7 @@ static const char *create_ack(
         if (!cJSON_AddNumberToObject(ack_data, "st", to_ack_status(success, message_type))) goto cleanup;
     }
 
-    result = (const char *) cJSON_PrintUnformatted(ack_json);
+    result = cJSON_PrintUnformatted(ack_json);
 
     // fall through
     cleanup:
@@ -270,7 +270,7 @@ static const char *create_ack(
     return result;
 }
 
-const char *iotcl_create_ack_string_and_destroy_event(
+char *iotcl_create_ack_string_and_destroy_event(
         IotclEventData data,
         bool success,
         const char *message
@@ -278,7 +278,7 @@ const char *iotcl_create_ack_string_and_destroy_event(
     if (!data) return NULL;
     // already checked that ack ID is valid in the messages
     char *ack_id = cJSON_GetObjectItemCaseSensitive(data->data, "ackId")->valuestring;
-    const char *ret = create_ack(success, message, data->type, ack_id);
+    char *ret = create_ack(success, message, data->type, ack_id);
     iotcl_destroy_event(data);
     return ret;
 }
@@ -287,7 +287,7 @@ IotConnectEventType iotcl_get_event_type(IotclEventData data) {
     return (data) ? data->type : UNKNOWN_EVENT;
 }
 
-const char *iotcl_create_ack_string(
+char *iotcl_create_ack_string(
         IotConnectEventType type,
         const char *ack_id,
         bool success,
@@ -296,16 +296,16 @@ const char *iotcl_create_ack_string(
     if (!ack_id) {
         return NULL;
     }
-    const char *ret = create_ack(type, ack_id, success, message);
+    char *ret = create_ack(type, ack_id, success, message);
     return ret;
 }
 
-const char *iotcl_create_ota_ack_response(
+char *iotcl_create_ota_ack_response(
         const char *ota_ack_id,
         bool success,
         const char *message
 ) {
-    const char *ret = create_ack(success, message, DEVICE_OTA, ota_ack_id);
+    char *ret = create_ack(success, message, DEVICE_OTA, ota_ack_id);
     return ret;
 }
 
