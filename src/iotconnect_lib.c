@@ -43,8 +43,8 @@ bool iotcl_init(IotclConfig *c) {
 // for iotconnect aws
 bool iotcl_init_v2(IotclConfig *c) {
     iotcl_deinit();
-    if (!c || !c->device.duid || 0 == strlen(c->device.duid) || !c->telemetry.cd || 0 == strlen(c->telemetry.cd)) {
-        IOTCL_LOG ("IotConnectLib_Configure: configuration parameters missing" IOTCL_NL);
+    if (!c || !c->device.duid || 0 == strlen(c->device.duid)) {
+        IOTCL_LOG ("IotConnectLib_Configure: configuration duid missing" IOTCL_NL);
         return false;
     }
     if (1 /* dash, separator */  + strlen(c->device.duid) > MAX_DEVICE_COMBINED_NAME) {
@@ -53,7 +53,7 @@ bool iotcl_init_v2(IotclConfig *c) {
     }
     memcpy(&config, c, sizeof(config));
 
-    if (!config.device.duid || !config.telemetry.cd) {
+    if (!config.device.duid) {
         // allocation failure
         IOTCL_LOG ("IotConnectLib_Configure: malloc failure" IOTCL_NL);
         iotcl_deinit();
