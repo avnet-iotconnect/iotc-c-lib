@@ -64,7 +64,7 @@ static bool iotc_process_callback(struct IotclEventDataTag *eventData) {
     switch (eventData->type) {
         case DEVICE_COMMAND:
             if (config->event_functions.cmd_cb) {
-            	config->event_functions.cmd_cb(eventData);
+                config->event_functions.cmd_cb(eventData);
             }
             break;
         case DEVICE_OTA:
@@ -90,36 +90,36 @@ bool iotcl_process_event(const char *event) {
     cJSON *root = cJSON_Parse(event);
 
     if (!root) {
-    	return false;
+        return false;
     }
 
     { // scope out the on-the fly varialble declarations for cleanup jump
 
-    	cJSON *j_type = cJSON_GetObjectItemCaseSensitive(root, "ct");
+        cJSON *j_type = cJSON_GetObjectItemCaseSensitive(root, "ct");
         if (!cJSON_IsNumber(j_type)) {
-        	goto cleanup;
+            goto cleanup;
         }
 
         IotConnectEventType type = j_type->valueint + 1;
 
         cJSON *j_ack_id;
-		j_ack_id = cJSON_GetObjectItemCaseSensitive(root, "ack");
+        j_ack_id = cJSON_GetObjectItemCaseSensitive(root, "ack");
 
         if (type < DEVICE_COMMAND) {
             goto cleanup;
         }
 
         if (type == DEVICE_OTA) {
-        	if (!is_valid_string(j_ack_id)) {
-            	goto cleanup;
-        	}
+            if (!is_valid_string(j_ack_id)) {
+                goto cleanup;
+            }
         }
 
         struct IotclEventDataTag *eventData = (struct IotclEventDataTag *) calloc(
                 sizeof(struct IotclEventDataTag), 1);
 
         if (NULL == eventData) {
-        	goto cleanup;
+            goto cleanup;
         }
 
         eventData->root = root;
@@ -170,7 +170,7 @@ char *iotcl_clone_download_url(IotclEventData data, size_t index) {
 char *iotcl_clone_sw_version(IotclEventData data) {
     cJSON *ver = cJSON_GetObjectItemCaseSensitive(data->data, "ver");
     if (!cJSON_IsObject(ver)) {
-    	ver = data->data; // AWS and 2.1 we presume...
+        ver = data->data; // AWS and 2.1 we presume...
     }
     if (cJSON_IsObject(ver)) {
 		cJSON *sw = cJSON_GetObjectItem(ver, "sw");
@@ -184,7 +184,7 @@ char *iotcl_clone_sw_version(IotclEventData data) {
 char *iotcl_clone_hw_version(IotclEventData data) {
     cJSON *ver = cJSON_GetObjectItemCaseSensitive(data->data, "ver");
     if (!cJSON_IsObject(ver)) {
-    	ver = data->data; // AWS and 2.1 we presume...
+        ver = data->data; // AWS and 2.1 we presume...
     }
     if (cJSON_IsObject(ver)) {
         cJSON *sw = cJSON_GetObjectItem(ver, "hw");
@@ -225,8 +225,6 @@ static char *create_ack(
 
     // message type 5 in response is the command response. Type 11 is OTA response.
     if (!cJSON_AddNumberToObject(ack_json, "mt", message_type == DEVICE_COMMAND ? 5 : 11)) goto cleanup;
-
-    // FIXME: Is it "t" or "dt" ?
     if (!cJSON_AddStringToObject(ack_json, "t", iotcl_iso_timestamp_now())) goto cleanup;
 
     if (!cJSON_AddStringToObject(ack_json, "uniqueId", config->device.duid)) goto cleanup;
@@ -271,7 +269,7 @@ char *iotcl_create_ack_string_and_destroy_event(
         bool success,
         const char *message
 ) {
-	cJSON *j_ack_id;
+    cJSON *j_ack_id;
 
     if (!data) return NULL;
     // already checked that ack ID is valid in the messages

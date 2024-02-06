@@ -159,7 +159,6 @@ bool iotcl_telemetry_add_with_epoch_time(IotclMessageHandle message, time_t time
 
 bool iotcl_telemetry_add_with_iso_time(IotclMessageHandle message, const char *time) {
     if (!message) return false;
-//    if (!cJSON_AddStringToObject(message->root_value, "dt", time)) return false;
 
     cJSON *const telemetry_object = setup_telemetry_object(message);
     if (!telemetry_object) return false;

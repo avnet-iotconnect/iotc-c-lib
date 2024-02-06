@@ -159,23 +159,32 @@ IotclSyncResponse *iotcl_discovery_parse_sync_response(const char *response_data
         cJSON *p = cJSON_GetObjectItemCaseSensitive(sync_res_json, "p");
 
         if (p) {
+
             response->broker.name = safe_get_string_and_strdup(p, "n");
             response->broker.client_id = safe_get_string_and_strdup(p, "id");
             response->broker.host = safe_get_string_and_strdup(p, "h");
             response->broker.user_name = safe_get_string_and_strdup(p, "un");
             response->broker.port = get_numeric_value_or_default(p, "p", 8883);
 
+#if 0
+            response->broker.pass = safe_get_string_and_strdup(p, "pwd");
+
+            cJSON *topics = cJSON_GetObjectItemCaseSensitive(p, "topics");
+
+            response->broker.sub_topic = safe_get_string_and_strdup(topics, "c2d");
+            response->broker.pub_topic = safe_get_string_and_strdup(topics, "rpt");
+#endif
+
             if (
                     !response->cpid ||
                     !response->broker.host ||
                     !response->broker.client_id ||
-                    !response->broker.user_name
 #if 0
-					||
-					// !response->broker.pass || << password may actually be null or empty
-                    !response->broker.sub_topic ||
-                    !response->broker.pub_topic
+					!response->broker.pass ||   // FIXME: password field in discovery response, not sync response.  password may actually be null or empty
+					!response->broker.sub_topic ||
+                    !response->broker.pub_topic ||
 #endif
+					!response->broker.user_name
             ) {
                 // Assume parsing eror, but it could alo be (unlikely) allocation error
                 response->ds = IOTCL_SR_PARSING_ERROR;
@@ -212,8 +221,10 @@ void iotcl_discovery_free_sync_response(IotclSyncResponse *response) {
     free(response->cd);
     free(response->broker.host);
     free(response->broker.client_id);
+
     free(response->broker.user_name);
     free(response->broker.pass);
+
     free(response->broker.name);
     free(response->broker.sub_topic);
     free(response->broker.pub_topic);
