@@ -36,21 +36,25 @@ Table 16 [Possible values for st]
 7 Firmware command executed successfully
 */
 static int to_ack_status(bool success, IotConnectEventType type) {
-    int status = 4; // default is "failure"
-    if (success == true) {
-        switch (type) {
-            case DEVICE_COMMAND:
-                status = 6;
-                break;
-            case DEVICE_OTA:
-                status = 7;
-                break;
-            default:; // Can't do more than assume failure if unknown type is used.
-        }
+    int status;
+
+	switch (type) {
+        case DEVICE_COMMAND:
+            status = success ? 6 : 4;
+            break;
+        case DEVICE_OTA:
+            status = success ? 0 : 1;
+            break;
+        default:; // Can't do more than assume some "status=1" that's probably a failure
+            status = 0;
     }
     return status;
 }
 
+static int get_ack_type(IotConnectEventType type) {
+    // It seems like these match the types with 1 as offset
+    return type - 1;
+}
 
 static bool iotc_process_callback(struct IotclEventDataTag *eventData) {
 	if (!eventData) return false;
@@ -196,7 +200,7 @@ char *iotcl_clone_hw_version(IotclEventData data) {
 }
 
 char *iotcl_clone_ack_id(IotclEventData data) {
-    cJSON *ackid = cJSON_GetObjectItemCaseSensitive(data->data, "ackId");
+    cJSON *ackid = cJSON_GetObjectItemCaseSensitive(data->data, "ack");
     if (is_valid_string(ackid)) {
         return iotcl_strdup(ackid->valuestring);
     }
@@ -222,11 +226,17 @@ static char *create_ack(
     if (ack_json == NULL) {
         return NULL;
     }
-
+#if 0
     // message type 5 in response is the command response. Type 11 is OTA response.
     if (!cJSON_AddNumberToObject(ack_json, "mt", message_type == DEVICE_COMMAND ? 5 : 11)) goto cleanup;
-    if (!cJSON_AddStringToObject(ack_json, "t", iotcl_iso_timestamp_now())) goto cleanup;
+#endif
 
+    // FIXME: Is it "t" or "dt" ?
+    if (NULL != time(NULL)) {
+        if (!cJSON_AddStringToObject(ack_json, "t", iotcl_iso_timestamp_now())) goto cleanup;
+    }
+
+#if 0
     if (!cJSON_AddStringToObject(ack_json, "uniqueId", config->device.duid)) goto cleanup;
     if (!cJSON_AddStringToObject(ack_json, "cpId", config->device.cpid)) goto cleanup;
 
@@ -243,7 +253,7 @@ static char *create_ack(
         if (!cJSON_AddStringToObject(sdk_info, "v", CONFIG_IOTCONNECT_SDK_VERSION)) goto cleanup;
         if (!cJSON_AddStringToObject(sdk_info, "e", config->device.env)) goto cleanup;
     }
-
+#endif
     {
         cJSON *ack_data = cJSON_CreateObject();
         if (NULL == ack_data) goto cleanup;
@@ -251,8 +261,9 @@ static char *create_ack(
             cJSON_Delete(ack_data);
             goto cleanup;
         }
-        if (!cJSON_AddStringToObject(ack_data, "ackId", ack_id)) goto cleanup;
+        if (!cJSON_AddStringToObject(ack_data, "ack", ack_id)) goto cleanup;
         if (!cJSON_AddStringToObject(ack_data, "msg", message ? message : "")) goto cleanup;
+        if (!cJSON_AddNumberToObject(ack_data, "type", get_ack_type(message_type))) goto cleanup;
         if (!cJSON_AddNumberToObject(ack_data, "st", to_ack_status(success, message_type))) goto cleanup;
     }
 
