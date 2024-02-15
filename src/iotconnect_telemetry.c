@@ -87,9 +87,6 @@ static cJSON *setup_telemetry_object(IotclMessageHandle message) {
     //add telemetry object(id, tg, d_object) to "d" array of root.
     if (!cJSON_AddItemToArray(message->telemetry_data_array, telemetry_array)) goto cleanup_cto;
 
-    //setup the actual telemetry object to be used in subsequent calls
-    message->current_telemetry_object = cJSON_CreateObject();
-    if (!message->current_telemetry_object) goto cleanup_cto;
     message->current_telemetry_object = d3_object;
 
     return telemetry_array; // return 2nd level d array
