@@ -11,7 +11,7 @@
 #include "cJSON.h"
 #include "iotcl_util.h"
 #include "iotcl_internal.h"
-#include "iotconnect_discovery.h"
+#include "iotcl_discovery.h"
 
 static bool split_url(IotclDiscoveryResponse *response) {
     size_t base_url_len = strlen(response->url);
