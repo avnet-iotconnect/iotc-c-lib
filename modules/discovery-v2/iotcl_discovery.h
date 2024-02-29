@@ -15,8 +15,6 @@
 extern "C" {
 #endif
 
-#include "iotconnect_lib_config.h"
-
 #ifndef IOTCONNECT_DISCOVERY_HOSTNAME
 #define IOTCONNECT_DISCOVERY_HOSTNAME "discovery.iotconnect.io"
 #endif

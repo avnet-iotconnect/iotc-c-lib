@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "iotconnect_discovery.h"
+#include "iotcl_discovery.h"
 
 #define EXAMPLE_DISCOVERY_RESPONSE \
  "{\"baseUrl\":\"https://avnetagent.iotconnect.io/api/2.0/agent/\",\"logInfo\":\"<logInfo><hostName /><user /><password /><topic /></logInfo>\"}"

@@ -9,20 +9,9 @@
 #include <string.h>
 
 #include "cJSON.h"
-#include "iotconnect_common.h"
+#include "iotcl_util.h"
+#include "iotcl_internal.h"
 #include "iotconnect_discovery.h"
-
-static char *safe_get_string_and_strdup(cJSON *cjson, const char *value_name) {
-    cJSON *value = cJSON_GetObjectItem(cjson, value_name);
-    if (!value) {
-        return NULL;
-    }
-    const char *str_value = cJSON_GetStringValue(value);
-    if (!str_value) {
-        return NULL;
-    }
-    return iotcl_strdup(str_value);
-}
 
 static bool split_url(IotclDiscoveryResponse *response) {
     size_t base_url_len = strlen(response->url);
@@ -129,8 +118,8 @@ IotclSyncResponse *iotcl_discovery_parse_sync_response(const char *response_data
         response->ds = cJSON_GetNumberValue(tmp_value);
     }
     if (response->ds == IOTCL_SR_OK) {
-        response->cpid = safe_get_string_and_strdup(sync_res_json, "cpId");
-        response->dtg = safe_get_string_and_strdup(sync_res_json, "dtg");
+        response->cpid = iotcl_strdup_json_string(sync_res_json, "cpId");
+        response->dtg = iotcl_strdup_json_string(sync_res_json, "dtg");
         tmp_value = cJSON_GetObjectItem(sync_res_json, "ee");
         if (!tmp_value) {
             response->ee = -1;
@@ -145,13 +134,13 @@ IotclSyncResponse *iotcl_discovery_parse_sync_response(const char *response_data
         }
         cJSON *p = cJSON_GetObjectItemCaseSensitive(sync_res_json, "p");
         if (p) {
-            response->broker.name = safe_get_string_and_strdup(p, "n");
-            response->broker.client_id = safe_get_string_and_strdup(p, "id");
-            response->broker.host = safe_get_string_and_strdup(p, "h");
-            response->broker.user_name = safe_get_string_and_strdup(p, "un");
-            response->broker.pass = safe_get_string_and_strdup(p, "pwd");
-            response->broker.sub_topic = safe_get_string_and_strdup(p, "sub");
-            response->broker.pub_topic = safe_get_string_and_strdup(p, "pub");
+            response->broker.name = iotcl_strdup_json_string(p, "n");
+            response->broker.client_id = iotcl_strdup_json_string(p, "id");
+            response->broker.host = iotcl_strdup_json_string(p, "h");
+            response->broker.user_name = iotcl_strdup_json_string(p, "un");
+            response->broker.pass = iotcl_strdup_json_string(p, "pwd");
+            response->broker.sub_topic = iotcl_strdup_json_string(p, "sub");
+            response->broker.pub_topic = iotcl_strdup_json_string(p, "pub");
             if (
                     !response->cpid ||
                     !response->dtg ||

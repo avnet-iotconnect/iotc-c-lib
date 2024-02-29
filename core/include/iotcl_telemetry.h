@@ -3,8 +3,8 @@
  * Authors: Nikola Markovic <nikola.markovic@avnet.com> et al.
  */
 
-#ifndef IOTCONNECT_TELEMETRY_H
-#define IOTCONNECT_TELEMETRY_H
+#ifndef IOTCL_TELEMETRY_H
+#define IOTCL_TELEMETRY_H
 
 #include <stdbool.h>
 #include <time.h>
@@ -13,12 +13,13 @@
 extern "C" {
 #endif
 
+
 typedef struct IotclMessageHandleTag *IotclMessageHandle;
 
 /*
  * Create a message handle given IoTConnect configuration.
- * This handle can be used to add data to the message.
- * The handle cannot be re-used and should be destroyed to free up resources, once the message is sent.
+ * This handle needs to be passed to all function in this module.
+ * The handle needs to be be destroyed to free up resources, once the message is sent.
  */
 IotclMessageHandle iotcl_telemetry_create(void);
 
@@ -28,58 +29,44 @@ IotclMessageHandle iotcl_telemetry_create(void);
 void iotcl_telemetry_destroy(IotclMessageHandle message);
 
 /*
- * Creates a new telemetry data set with a given timestamp in ISO 8601 Date and time UTC format:
- * eg. "2020-03-31T21:18:05.000Z"
- * The user can omit calling this function if single data point would be sent.
- * In that case, the current system timestamp will be used
- * @see iotcl_iso_timestamp_now, iotcl_to_iso_timestamp
+ * Call this optional function to add more than one data set to your message, or use custom timestamps.
+ * Example usage would be a case where the user would want to record temperature measurement every hour of the day,
+ * but wants to send all data sets once per day.
+ * If time is not configured, adding more than one data set would be a questionable thing to do
+ * or application specific, as each data set would be timestamped with server receipt time, which would be the same
+ * for all data sets.
+ * See iotcl_iso_timestamp_now() and iotcl_to_iso_timestamp() in iotcl_util.h.
+ * The iso_timestamp argument is optional. If set to NULL, it will use the current time (if configured).
  */
-bool iotcl_telemetry_add_with_iso_time(IotclMessageHandle message, const char *time);
+int iotcl_telemetry_add_new_data_set(IotclMessageHandle message, const char *iso_timestamp);
 
 /*
- * Creates a new telemetry data set with a given timestamp in unix time format.
- * The user can omit calling this function if single data point would be sent.
- * In that case, the current system timestamp will be used.
- * NOTE: WARNING - IoTConnect may not support epoch timetamps in past or future implementations
- * @see iotcl_iso_timestamp_now, iotcl_to_iso_timestamp
+ * Sets a value in the current data set.
+ * The path argument is the name of the value the user wants to set.
+ * The path argument can be passed in dot notation to set nested values of the IoTConnect OBJECT type values.
+ * fore example "accelerometer.x" or "accelerometer.y" set x and y respectively in the accelerometer object.
+ * Use iotcl_telemetry_set_number to set DOUBLE, INTEGER, LONG and similar IoTConnect data types.
  */
-bool iotcl_telemetry_add_with_epoch_time(IotclMessageHandle message, time_t time);
+int iotcl_telemetry_set_number(IotclMessageHandle message, const char *path, double value);
 
-/*
- * Sets a number value in in the last created data set. Creates one with current time if none were created
- * previously with TelemetryAddWith*Time() call.
- * Path is an (optional) dotted notation that can be used to set values in nested objects.
- */
-bool iotcl_telemetry_set_number(IotclMessageHandle message, const char *path, double value);
+// Use this function to set STRING, DATE, TIME, DATETIME and similar IoTConnect types that use JSON string.
+int iotcl_telemetry_set_string(IotclMessageHandle message, const char *path, const char *value);
 
-/*
- * Sets a string value in in the last created data set. Creates one with current time if none were created
- * previously with TelemetryAddWith*Time() call.
- * Path is an (optional) dotted notation that can be used to set values in nested objects.
- */
-bool iotcl_telemetry_set_string(IotclMessageHandle message, const char *path, const char *value);
+// Use this function to set BOOLEAN IoTConnect type.
+int iotcl_telemetry_set_bool(IotclMessageHandle message, const char *path, bool value);
 
-/*
- * Sets a boolean value in in the last created data set. Creates one with current time if none were created
- * previously with TelemetryAddWith*Time() call.
- * Path is an (optional) dotted notation that can be used to set values in nested objects.
- */
-bool iotcl_telemetry_set_bool(IotclMessageHandle message, const char *path, bool value);
+// Setting a value to null may be desired to indicate that the value is not available.
+int iotcl_telemetry_set_null(IotclMessageHandle message, const char *path);
 
-/*
- * Sets the field value to null in the last created data set. Creates one with current time if none were created
- * previously with TelemetryAddWith*Time() call.
- * Null values can be used to indicate lack of avaialable data to the cloud.
- * Path is an (optional) dotted notation that can be used to set values in nested objects.
- */
-bool iotcl_telemetry_set_null(IotclMessageHandle message, const char *path);
+// Generates a JSON string on the heap that the user can send to the reporting topic
+// The user must call iotcl_telemetry_destroy_serialized_string() when done.
+char *iotcl_telemetry_create_serialized_string(IotclMessageHandle message, bool pretty);
 
-const char *iotcl_create_serialized_string(IotclMessageHandle message, bool pretty);
-
-void iotcl_destroy_serialized(const char *serialized_string);
+// Frees the JSON string created by iotcl_telemetry_create_serialized_string(). Call this once the data is shipped via MQTT.
+void iotcl_telemetry_destroy_serialized_string(char *serialized_string);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* IOTCONNECT_TELEMETRY_H */
+#endif /* IOTCL_TELEMETRY_H */

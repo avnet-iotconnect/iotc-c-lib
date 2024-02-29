@@ -7,4 +7,4 @@
 cmake-build-*
 
 # Any makefiles and project files that end up in the root afte rproejct is pulled
-./*
+./Makefile*

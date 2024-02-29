@@ -7,101 +7,100 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "iotconnect_lib.h"
+#include "iotcl.h"
+#include "iotcl_c2d.h"
+#include "heap_tracker.h"
 
-// test for older version of iotconnect protocol
-static const char *TEST_STR_V1 =
-        "{\"cmdType\":\"0x02\",\"data\":{\"cpid\":\"MyCpid\",\"guid\":\"13bf86a9-f907-4ce9-b8cb-750a34614fcd\",\"uniqueId\":\"MyDeviceId\",\"command\":\"ota https://pociotconnectblobstorage.blob.core.windows.net/firmware/681AEAC1-90F2-4D94-BD24-5D1E76612D9D.txt?sv=2018-03-28&sr=b&sig=sGF8qpwqt0eo4Ve66XIl8WksGSzkObQP%2BbMb4Rz1coc%3D&se=2020-05-27T17%3A32%3A34Z&sp=r\",\"ack\":false,\"ackId\":\"8a4510e3-1f87-452a-9763-05647fdc3f0e\",\"cmdType\":\"0x02\",\"ver\":{\"sw\":\"0.1\",\"hw\":\"1.0\"},\"urls\":[\"https://pociotconnectblobstorage.blob.core.windows.net/firmware/681AEAC1-90F2-4D94-BD24-5D1E76612D9D.txt?sv=2018-03-28&sr=b&sig=sGF8qpwqt0eo4Ve66XIl8WksGSzkObQP%2BbMb4Rz1coc%3D&se=2020-05-27T17%3A32%3A34Z&sp=r\"]}}";
-// test for newer version of iotconnect protocol
-static const char *TEST_STR_V2 =
-        "{\"cmdType\":\"0x02\",\"data\":{\"cpid\":\"MyCpid\",\"guid\":\"6ac6e586-68f1-40be-9d52-c11e75367f60\",\"uniqueId\":\"MyDeviceId\",\"command\":\"ota\",\"ack\":false,\"ackId\":\"7bd13714-dc07-44ea-99f2-c606f8cf2d2a\",\"cmdType\":\"0x02\",\"ver\":{\"sw\":\"0.2\",\"hw\":\"0.1\"},\"urls\":[{\"url\":\"https://forlifeblobstorage.blob.core.windows.net/firmware/4B82F95B-5B0F-408F-BDAF-A7A7C2F027AF.sfb?sv=2018-03-28&sr=b&sig=gQqmSF8Fs9tYolrzE4n%2Fj9NBdSq7%2BFCN89wZYVnFN6U%3D&se=2020-06-30T20%3A08%3A53Z&sp=r\"}]}}";
+static const char *const TEST_STR_COMMAND = "{\"v\":\"2.1\",\"ct\":0,\"cmd\":\"set-led-green off\",\"ack\":\"4d99ed07-0ea0-43c6-97ba-53780faddc5c\"}";
+static const char *const TEST_STR_OTA = "{\"v\":\"2.1\",\"ct\":1,\"cmd\":\"ota\",\"ack\":\"c6c90df6-d27f-44e5-8eb0-e278dc73ad4f\",\"sw\":\"1.5\",\"hw\":\"1\",\"urls\":[{\"url\":\"https://iotc-260030673750.s3.amazonaws.com/584af730-2854-4a77-8f3b-ca1696401e08/firmware/415443e4-8bad-4375-a124-9734d6cc7fdc/64b18fa3-3aa2-43bc-b65b-71371aca72cb.bin?AWSAccessKeyId=ASIATZCYJGNLASDPEL4H&Expires=1706815818&x-amz-security-token=FwoGZXIvYXdzEJT%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDP0cBexs1rTHqcBxZyKuASD9RoOOeHUIC0pN4AsL%2FA1aXOkEJwSvdI317PwQuKZF%2FRqnBUM3Fxqie7qVtaWIOaWrYXXW9BlJrlZyxJbEsrZ0TWtYB%2FJUqPT300Ioe7Z3E8bswpVFe%2FVw4HscmKDNcHiF54e1ldDRQisiuNiCA4SgCXHMMXvj4%2FFZ1CvlDj2IK3I1m%2FsF9BIoq12q4%2FvgHhb4IG5jG6GtSALb0r5OpcaC0Epy3lXvEj6P5%2BoxqSj91O%2BtBjIti7EkqDYqK%2BI4QAJbPDb2YbpDbXR35ZkihiRXQ6uAWpCuX0Af%2Buw4%2BGIOcd8c&Signature=X1ecCh7I9zojlj%2BCjtwAHhzl9Rg%3D\",\"fileName\":\"my_firmware.bin\"}]}";
 
-void on_event(IotclEventData data, IotConnectEventType type) {
-    (void) data;
-    printf("Got event type %d\n", type);
+static void my_transport_send(const char *topic, size_t topic_len, const char *json_str) {
+    (void) topic_len;
+    printf("Sending on topic %s:\n%s\n", topic, json_str);
 }
 
-void on_cmd(IotclEventData data) {
-    const char *command = iotcl_clone_command(data);
-    if (NULL != command) {
-        printf("Command is: %s\n", command);
-        free((void *) command);
+static void on_cmd(IotclC2dEventData data) {
+    const char *ack_id = iotcl_c2d_get_ack_id(
+            data); // we are sending command with "Require Acknowledgement" option in IoTConnect
+    const char *command = iotcl_c2d_get_command(data);
+    if (!ack_id || !command) {
+        return; // by default, the library will print the error in the log if there was an OOM
     }
-    const char *ack = iotcl_create_ack_string_and_destroy_event(data, true, NULL);
-    if (NULL != ack) {
-        printf("Sent CMD ack: %s\n", ack);
-        free((void *) ack);
-    } else {
-        printf("Error while creating the ack JSON");
-    }
+    printf("Ack ID:  %s\n", ack_id);
+    printf("Command: %s\n", command);
 
+    iotcl_mqtt_send_cmd_ack(ack_id, IOTCL_C2D_EVT_CMD_SUCCESS_WITH_ACK, NULL);
+
+    // generate a failure too
+    iotcl_mqtt_send_cmd_ack(ack_id, IOTCL_C2D_EVT_CMD_FAILED, "Test generated failure");
 }
 
-void on_ota(IotclEventData data) {
-    const char *url = iotcl_clone_download_url(data, 0);
-    if (NULL != url) {
-        printf("Download URL is: %s\n", url);
-        free((void *) url);
+static void on_ota(IotclC2dEventData data) {
+    const char *ack_id = iotcl_c2d_get_ack_id(data);
+    const char *url = iotcl_c2d_get_ota_url(data, 0);
+    const char *hostname = iotcl_c2d_get_ota_url_hostname(data, 0);
+    const char *resource = iotcl_c2d_get_ota_url_resource(data, 0);
+    const char *filename = iotcl_c2d_get_ota_original_filename(data, 0);
+    const char *sw_ver = iotcl_c2d_get_ota_sw_version(data);
+    const char *hw_ver = iotcl_c2d_get_ota_hw_version(data);
+    if (!url || !hostname || !resource || !sw_ver || !hw_ver) {
+        return; // by default, the library will print the error in the log if there was an OOM or a any kind of error
     }
-    const char *command = iotcl_clone_command(data);
-    if (NULL != command) {
-        printf("Command is: %s\n", command);
-        free((void *) command);
-    }
-    const char *sw_ver = iotcl_clone_sw_version(data);
-    if (NULL != sw_ver) {
-        printf("SW Version is: %s\n", sw_ver);
-        free((void *) sw_ver);
-    }
-    const char *hw_ver = iotcl_clone_hw_version(data);
-    if (NULL != hw_ver) {
-        printf("HW Version is: %s\n", hw_ver);
-        free((void *) hw_ver);
-    }
-    const char *ack = iotcl_create_ack_string_and_destroy_event(data, true, NULL);
-    if (NULL != ack) {
-        printf("Sent OTA ack: %s\n", ack);
-        free((void *) ack);
-    }
+    printf("\n\nNumber of OTA URLs: %d\n", iotcl_c2d_get_ota_url_count(data));
+    printf("Ack ID:     %s\n", ack_id);
+    printf("URL:        %s\n", url);
+    printf("hostname:   %s\n", hostname);
+    printf("resource:   %s\n", resource);
+    printf("filename:   %s\n", filename);
+    printf("SW version: %s\n", sw_ver);
+    printf("HW version: %s\n", hw_ver);
+
+    iotcl_mqtt_send_ota_ack(ack_id, IOTCL_C2D_EVT_OTA_SUCCESS, NULL);
+
+    // try generating a failure
+    iotcl_mqtt_send_ota_ack(ack_id, IOTCL_C2D_EVT_OTA_DOWNLOAD_FAILED, NULL);
 }
 
+static void c2d_test(void) {
+    IotclClientConfig config;
 
-/* Test output:
-Got event type 2
-Download URL is: https://pociotconnectblobstorage.blob.core.windows.net/firmware/681AEAC1-90F2-4D94-BD24-5D1E76612D9D.txt?sv=2018-03-28&sr=b&sig=sGF8qpwqt0eo4Ve66XIl8WksGSzkObQP%2BbMb4Rz1coc%3D&se=2020-05-27T17%3A32%3A34Z&sp=r
-Command is: ota https://pociotconnectblobstorage.blob.core.windows.net/firmware/681AEAC1-90F2-4D94-BD24-5D1E76612D9D.txt?sv=2018-03-28&sr=b&sig=sGF8qpwqt0eo4Ve66XIl8WksGSzkObQP%2BbMb4Rz1coc%3D&se=2020-05-27T17%3A32%3A34Z&sp=r
-SW Version is: 0.1
-Sent OTA ack: {"mt":11,"t":"2020-07-29T18:15:58.000Z","uniqueId":"my-device-id","cpId":"MyCpid","sdk":{"l":"M_C","v":"2.0","e":"avnetpoc"},"d":{"ackId":"8a4510e3-1f87-452a-9763-05647fdc3f0e","msg":"","st":7}}
+    iotcl_init_client_config(&config);
+    config.device.instance_type = IOTCL_DCT_AWS_SHARED;
+    config.device.duid = "mydevice";
+    config.device.cpid = "MYCPID";
+    config.mqtt_send_cb = my_transport_send;
+    config.events.cmd_cb = on_cmd;
+    config.events.ota_cb = on_ota;
+    iotcl_init_and_print_config(&config);
 
-Got event type 2
-Download URL is: https://forlifeblobstorage.blob.core.windows.net/firmware/4B82F95B-5B0F-408F-BDAF-A7A7C2F027AF.sfb?sv=2018-03-28&sr=b&sig=gQqmSF8Fs9tYolrzE4n%2Fj9NBdSq7%2BFCN89wZYVnFN6U%3D&se=2020-06-30T20%3A08%3A53Z&sp=r
-Command is: ota
-SW Version is: 0.2
-Sent OTA ack: {"mt":11,"t":"2020-07-29T18:15:58.000Z","uniqueId":"my-device-id","cpId":"MyCpid","sdk":{"l":"M_C","v":"2.0","e":"avnetpoc"},"d":{"ackId":"7bd13714-dc07-44ea-99f2-c606f8cf2d2a","msg":"","st":7}}
-*/
-static void test(void) {
-    IotclConfig config;
-    memset(&config, 0, sizeof(config));
-
-    config.device.env = "prod";
-    config.device.cpid = "MyCpid";
-    config.device.duid = "my-device-id";
-
-    config.event_functions.ota_cb = on_ota;
-    config.event_functions.cmd_cb = on_cmd;
-    config.event_functions.msg_cb = on_event;
-
-    iotcl_init(&config);
-
-    if (!iotcl_process_event(TEST_STR_V1)) {
-        printf("Error encountered while processing %s\n", TEST_STR_V1);
+    IotclMqttConfig *mc = iotcl_mqtt_get_config();
+    if (!mc) {
+        // It should never be null because we called iotcl_init() just now.
+        // Called function will print the error.
+        return;
     }
-    if (!iotcl_process_event(TEST_STR_V2)) {
-        printf("Error encountered while processing %s\n", TEST_STR_V2);
-    }
+    iotcl_mqtt_print_config();
+
+    // This would be the expected C2D topic that we supposedly already obtained from mqtt config after configuring,
+    // and we supposedly received the topic from subscription callback on a real MQTT client.
+    // BWe are hardcoding it for the purpose of testing the topic generation.
+    const char *const C2D_TOPIC = "iot/MYCPID-mydevice/cmd";
+    const size_t C2D_TOPIC_LEN = strlen(C2D_TOPIC);
+    iotcl_mqtt_receive(C2D_TOPIC, C2D_TOPIC_LEN, TEST_STR_COMMAND);
+
+    iotcl_mqtt_receive_with_length(C2D_TOPIC, C2D_TOPIC_LEN, (uint8_t *) TEST_STR_OTA,
+                                   strlen(TEST_STR_OTA)); // test _with_length as well...
+    iotcl_deinit();
 }
 
 
 int main(void) {
-    test();
+    ht_reset_config();
+    ht_init();
+    iotcl_configure_dynamic_memory(ht_malloc, ht_free);
+
+    c2d_test();
+
+    ht_print_summary();
 }
+

@@ -6,311 +6,384 @@
 #include <string.h>
 
 #include "cJSON.h"
-#include "iotconnect_common.h"
-#include "iotconnect_lib.h"
+#include "iotcl_log.h"
+#include "iotcl_internal.h"
+#include "iotcl_util.h"
+#include "iotcl.h"
+#include "iotcl_c2d.h"
 
-#define CJSON_ADD_ITEM_HAS_RETURN \
-    (CJSON_VERSION_MAJOR * 10000 + CJSON_VERSION_MINOR * 100 + CJSON_VERSION_PATCH >= 10713)
+#define HTTPS_PREFIX "https://"
 
-#if !CJSON_ADD_ITEM_HAS_RETURN
-#error "cJSON version must be 1.7.13 or newer"
-#endif
+bool is_protocol_version_warning_printed = false;
 
-struct IotclEventDataTag {
-    cJSON *data;
+// Per https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/c2d-messages/#Other
+typedef enum {
+    IOTCL_C2D_ET_DEVICE_COMMAND = 0,
+    IOTCL_C2D_ET_DEVICE_OTA = 1,
+
+    // Other types that are not currently supported:
+    IOTCL_C2D_ET_MODULE_COMMAND = 2,
+    IOTCL_C2D_ET_REFRESH_ATTRIBUTE = 101,
+    IOTCL_C2D_ET_REFRESH_SETTING = 102, // or Twin
+    IOTCL_C2D_ET_REFRESH_EDGE_RULE = 103,
+    IOTCL_C2D_ET_REFRESH_CHILD_DEVICE = 104,
+    IOTCL_C2D_ET_DATA_FREQUENCY_CHANGE = 105,
+    IOTCL_C2D_ET_DEVICE_DELETED = 106,
+    IOTCL_C2D_ET_DEVICE_DISABLED = 107,
+    IOTCL_C2D_ET_DEVICE_RELEASED = 108,
+    IOTCL_C2D_ET_STOP_OPERATION = 109,
+    IOTCL_C2D_ET_START_HEARTBEAT = 110,
+    IOTCL_C2D_ET_STOP_HEARTBEAT = 111,
+} IotclC2dEventType;
+
+struct IotclC2dEventDataTag {
     cJSON *root;
-    IotConnectEventType type;
+    IotclC2dEventType type;
+    char *hostname; // May ore may not be allocated. Temporary storage for parsed hostname string.
 };
 
-/*
-Conversion of boolean to IOT 2.0 specification messages:
-
-For commands:
-Table 15 [Possible values for st]
-4 Command Failed with some reason
-6 Executed successfully
-
-For OTA:
-Table 16 [Possible values for st]
-4 Firmware command Failed with some reason
-7 Firmware command executed successfully
-*/
-static int to_ack_status(bool success, IotConnectEventType type) {
-    int status = 4; // default is "failure"
-    if (success == true) {
-        switch (type) {
-            case DEVICE_COMMAND:
-                status = 6;
-                break;
-            case DEVICE_OTA:
-                status = 7;
-                break;
-            default:; // Can't do more than assume failure if unknown type is used.
-        }
+static int iotcl_c2d_process_callback(struct IotclC2dEventDataTag *event_data) {
+    IotclGlobalConfig *config = iotcl_get_global_config();
+    if (!config->is_valid) {
+        // an error will be printed by the called function
+        return IOTCL_ERR_CONFIG_MISSING;
     }
-    return status;
-}
 
-
-static bool iotc_process_callback(struct IotclEventDataTag *eventData) {
-    if (!eventData) return false;
-
-    IotclConfig *config = iotcl_get_config();
-    if (!config) return false;
-
-    if (config->event_functions.msg_cb) {
-        config->event_functions.msg_cb(eventData, eventData->type);
-    }
-    switch (eventData->type) {
-        case DEVICE_COMMAND:
+    switch (event_data->type) {
+        case IOTCL_C2D_ET_DEVICE_COMMAND:
             if (config->event_functions.cmd_cb) {
-                config->event_functions.cmd_cb(eventData);
+                config->event_functions.cmd_cb(event_data);
             }
             break;
-        case DEVICE_OTA:
+        case IOTCL_C2D_ET_DEVICE_OTA:
             if (config->event_functions.ota_cb) {
-                config->event_functions.ota_cb(eventData);
+                config->event_functions.ota_cb(event_data);
             }
             break;
         default:
+            // should be pre-checked and never happen
             break;
     }
 
-    return true;
+    return IOTCL_SUCCESS;
 }
 
-
-/************************ CJSON IMPLEMENTATION **************************/
-static inline bool is_valid_string(const cJSON *json) {
+static bool is_valid_string(const cJSON *json) {
     return (NULL != json && cJSON_IsString(json) && json->valuestring != NULL);
 }
 
-bool iotcl_process_event(const char *event) {
-    bool status = false;
-    cJSON *root = cJSON_Parse(event);
+static int iotcl_c2d_parse_json(cJSON *root) {
+    int status; // unknown in case someone forgot to set it
 
-    if (!root) {
-       return false;
+    // parse version
+    cJSON *j_v = cJSON_GetObjectItem(root, "v");
+    if (!is_valid_string(j_v)) {
+        status = IOTCL_ERR_PARSING_ERROR;
+        IOTCL_ERROR(status, "Unable to parse protocol version from the message");
+        goto cleanup;
+    }
+    char *version = cJSON_GetStringValue(j_v);
+    if (strcmp(version, "2.1") != 0 && !is_protocol_version_warning_printed) {
+        is_protocol_version_warning_printed = true;
+        IOTCL_ERROR(IOTCL_ERR_PARSING_ERROR, "Encountered potentially unsupported protocol version %s!", version);
     }
 
-    { // scope out the on-the fly varialble declarations for cleanup jump
-        // root object should only have cmdType
-        cJSON *j_type = cJSON_GetObjectItemCaseSensitive(root, "cmdType");
-        if (!is_valid_string(j_type)) goto cleanup;
-
-        cJSON *j_ack_id = NULL;
-        cJSON *data = NULL; // data should have ackId
-        if (!is_valid_string(j_ack_id)) {
-            data = cJSON_GetObjectItemCaseSensitive(root, "data");
-            if (!data) goto cleanup;
-            j_ack_id = cJSON_GetObjectItemCaseSensitive(data, "ackId");
-            if (!is_valid_string(j_ack_id)) goto cleanup;
-        }
-
-        if (4 != strlen(j_type->valuestring)) {
-            // Don't know how to parse it then...
-            goto cleanup;
-        }
-
-        IotConnectEventType type = (IotConnectEventType) strtol(&j_type->valuestring[2], NULL, 16);
-
-        if (type < DEVICE_COMMAND) {
-            goto cleanup;
-        }
-
-        // In case we have a supported command. Do some checks before allowing further processing of acks
-        // NOTE: "i" in cpId is lower case, but per spec it's supposed to be in upper case
-        if (type == DEVICE_COMMAND || type == DEVICE_OTA) {
-            if (
-                    !is_valid_string(cJSON_GetObjectItem(data, "cpid"))
-                    || !is_valid_string(cJSON_GetObjectItemCaseSensitive(data, "uniqueId"))
-                    ) {
-                goto cleanup;
-            }
-        }
-
-        struct IotclEventDataTag *eventData = (struct IotclEventDataTag *) calloc(
-                sizeof(struct IotclEventDataTag), 1);
-        if (NULL == eventData) goto cleanup;
-
-        eventData->root = root;
-        eventData->data = data;
-        eventData->type = type;
-
-        // eventData and root (via eventData->root) will be freed when the user calls
-        // iotcl_destroy_event(). The user is responsible to free this data inside the callback,
-        // once they are done with it. This is done so that the user can choose to keep the event data
-        // for purposes of replying with an ack once another process (perhaps in another thread) completes.
-        return iotc_process_callback(eventData);
+    // parse event type
+    cJSON *j_ct = cJSON_GetObjectItem(root, "ct");
+    if (!j_ct || !cJSON_IsNumber(j_ct)) {
+        status = IOTCL_ERR_PARSING_ERROR;
+        IOTCL_ERROR(status, "Unable to parse message type (\"ct\")");
+        goto cleanup;
     }
+    int type = (int) cJSON_GetNumberValue(j_ct);
+
+    if (type != IOTCL_C2D_ET_DEVICE_COMMAND && type != IOTCL_C2D_ET_DEVICE_OTA) {
+        status = IOTCL_ERR_PARSING_ERROR;
+        IOTCL_WARN(IOTCL_ERR_PARSING_ERROR, "Received unsupported message type %d", type);
+        goto cleanup;
+    }
+
+    struct IotclC2dEventDataTag event_data = {0};
+    event_data.root = root;
+    event_data.type = type;
+
+    root = NULL; // Clear this pointer to avoid a double free in case some other step that can fail is added below
+
+    status = iotcl_c2d_process_callback(&event_data);
+    iotcl_c2d_destroy_event(&event_data);
+    return status;
 
     cleanup:
-
     cJSON_Delete(root);
     return status;
 }
 
-char *iotcl_clone_command(IotclEventData data) {
-    cJSON *command = cJSON_GetObjectItemCaseSensitive(data->data, "command");
-    if (NULL == command || !is_valid_string(command)) {
-        return NULL;
+static const char *iotcl_c2d_get_string_value(cJSON *target_object, bool is_required, const char *name) {
+    const char *ret = cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(target_object, name));
+    if (is_required && !ret) {
+        IOTCL_ERROR(IOTCL_ERR_PARSING_ERROR, "\"%s\" was not found in c2d response", name);
     }
-
-    return iotcl_strdup(command->valuestring);
+    return ret;
 }
 
-char *iotcl_clone_download_url(IotclEventData data, size_t index) {
-    cJSON *urls = cJSON_GetObjectItemCaseSensitive(data->data, "urls");
+static int iotcl_c2d_validate_data_and_type(
+        IotclC2dEventData data,
+        IotclC2dEventType expected_type,
+        const char *what
+) {
+    if (!data) {
+        IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "c2d event data null while attempting to get the \"%s\" value", what);
+        return IOTCL_ERR_MISSING_VALUE;
+    }
+    if (data->type != expected_type) {
+        IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "Incorrect c2d event type %d! Expected %d.", data->type, expected_type);
+        return IOTCL_ERR_BAD_VALUE;
+    }
+    return IOTCL_SUCCESS;
+}
+
+static cJSON *iotcl_c2d_get_ota_url_array_item(IotclC2dEventData data, int index) {
+    if (IOTCL_SUCCESS != iotcl_c2d_validate_data_and_type(data, IOTCL_C2D_ET_DEVICE_OTA, "download URL")) {
+        return NULL;
+    }
+    cJSON *urls = cJSON_GetObjectItemCaseSensitive(data->root, "urls");
     if (NULL == urls || !cJSON_IsArray(urls)) {
+        IOTCL_ERROR(IOTCL_ERR_PARSING_ERROR, "the \"urls\" array is not found in c2d response");
         return NULL;
     }
-    if ((size_t) cJSON_GetArraySize(urls) > index) {
-        cJSON *url = cJSON_GetArrayItem(urls, (int) index);
-        if (is_valid_string(url)) {
-            return iotcl_strdup(url->valuestring);
-        } else if (cJSON_IsObject(url)) {
-            cJSON *url_str = cJSON_GetObjectItem(url, "url");
-            if (is_valid_string(url_str)) {
-                return iotcl_strdup(url_str->valuestring);
-            }
-        }
+    if (index < 0 || cJSON_GetArraySize(urls) > index) {
+        // this URL should never be null...
+        return cJSON_GetArrayItem(urls, (int) index);
+    } else {
+        IOTCL_ERROR(
+                IOTCL_ERR_BAD_VALUE,
+                "Attempting to access the OTA url item at index %d, but there are only %d items in the array",
+                (int) index,
+                cJSON_GetArraySize(urls)
+        );
+        return NULL;
     }
-    return NULL;
 }
 
-
-char *iotcl_clone_sw_version(IotclEventData data) {
-    cJSON *ver = cJSON_GetObjectItemCaseSensitive(data->data, "ver");
-    if (cJSON_IsObject(ver)) {
-        cJSON *sw = cJSON_GetObjectItem(ver, "sw");
-        if (is_valid_string(sw)) {
-            return iotcl_strdup(sw->valuestring);
-        }
-    }
-    return NULL;
-}
-
-char *iotcl_clone_hw_version(IotclEventData data) {
-    cJSON *ver = cJSON_GetObjectItemCaseSensitive(data->data, "ver");
-    if (cJSON_IsObject(ver)) {
-        cJSON *sw = cJSON_GetObjectItem(ver, "hw");
-        if (is_valid_string(sw)) {
-            return iotcl_strdup(sw->valuestring);
-        }
-    }
-    return NULL;
-}
-
-char *iotcl_clone_ack_id(IotclEventData data) {
-    cJSON *ackid = cJSON_GetObjectItemCaseSensitive(data->data, "ackId");
-    if (is_valid_string(ackid)) {
-        return iotcl_strdup(ackid->valuestring);
-    }
-    return NULL;
-}
-
-static char *create_ack(
-        bool success,
-        const char *message,
-        IotConnectEventType message_type,
-        const char *ack_id) {
-
+static char *iotcl_c2d_create_ack(IotclC2dEventType type, const char *ack_id, int status, const char *message) {
     char *result = NULL;
 
-    IotclConfig *config = iotcl_get_config();
-
-    if (!config) {
-        return NULL;
-    }
-
     cJSON *ack_json = cJSON_CreateObject();
+    if (!ack_json) goto cleanup;
+#ifdef IOTCL_C2D_LEGACY_ACK_SUPPORT
+    if (!cJSON_AddStringToObject(ack_json, "t", "2024-00-00T00:00:00.000Z")) goto cleanup;
+#endif
+    cJSON *ack_d = cJSON_AddObjectToObject(ack_json, "d");
+    if (!ack_d) goto cleanup;
 
-    if (ack_json == NULL) {
-        return NULL;
+    if (!cJSON_AddStringToObject(ack_d, "ack", ack_id)) goto cleanup;
+    if (!cJSON_AddNumberToObject(ack_d, "st", status)) goto cleanup;
+    if (!cJSON_AddNumberToObject(ack_d, "type", type)) goto cleanup;
+    if (message && strlen(message) > 0) {
+        if (!cJSON_AddStringToObject(ack_d, "msg", message)) goto cleanup;
     }
-
-    // message type 5 in response is the command response. Type 11 is OTA response.
-    if (!cJSON_AddNumberToObject(ack_json, "mt", message_type == DEVICE_COMMAND ? 5 : 11)) goto cleanup;
-    if (!cJSON_AddStringToObject(ack_json, "t", iotcl_iso_timestamp_now())) goto cleanup;
-
-    if (!cJSON_AddStringToObject(ack_json, "uniqueId", config->device.duid)) goto cleanup;
-    if (!cJSON_AddStringToObject(ack_json, "cpId", config->device.cpid)) goto cleanup;
-
-    {
-        cJSON *sdk_info = cJSON_CreateObject();
-        if (NULL == sdk_info) {
-            return NULL;
-        }
-        if (!cJSON_AddItemToObject(ack_json, "sdk", sdk_info)) {
-            cJSON_Delete(sdk_info);
-            goto cleanup;
-        }
-        if (!cJSON_AddStringToObject(sdk_info, "l", CONFIG_IOTCONNECT_SDK_NAME)) goto cleanup;
-        if (!cJSON_AddStringToObject(sdk_info, "v", CONFIG_IOTCONNECT_SDK_VERSION)) goto cleanup;
-        if (!cJSON_AddStringToObject(sdk_info, "e", config->device.env)) goto cleanup;
-    }
-
-    {
-        cJSON *ack_data = cJSON_CreateObject();
-        if (NULL == ack_data) goto cleanup;
-        if (!cJSON_AddItemToObject(ack_json, "d", ack_data)) {
-            cJSON_Delete(ack_data);
-            goto cleanup;
-        }
-        if (!cJSON_AddStringToObject(ack_data, "ackId", ack_id)) goto cleanup;
-        if (!cJSON_AddStringToObject(ack_data, "msg", message ? message : "")) goto cleanup;
-        if (!cJSON_AddNumberToObject(ack_data, "st", to_ack_status(success, message_type))) goto cleanup;
-    }
-
     result = cJSON_PrintUnformatted(ack_json);
+    if (!result) goto cleanup;
 
-    // fall through
-    cleanup:
     cJSON_Delete(ack_json);
+
     return result;
+
+    cleanup:
+    cJSON_free(result);
+    cJSON_Delete(ack_json);
+
+    IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, "Out of memory while creating the ack JSON!");
+    return NULL;
 }
 
-char *iotcl_create_ack_string_and_destroy_event(
-        IotclEventData data,
-        bool success,
-        const char *message
-) {
-    if (!data) return NULL;
-    // already checked that ack ID is valid in the messages
-    char *ack_id = cJSON_GetObjectItemCaseSensitive(data->data, "ackId")->valuestring;
-    char *ret = create_ack(success, message, data->type, ack_id);
-    iotcl_destroy_event(data);
-    return ret;
+int iotcl_c2d_process_event(const char *str) {
+    cJSON *root = cJSON_Parse(str);
+    if (!root) {
+        IOTCL_ERROR(
+                IOTCL_ERR_PARSING_ERROR,
+                "JSON parsing error or possible out of memory error while parsing: \"%s\"",
+                str
+        );
+        return IOTCL_ERR_PARSING_ERROR;
+    }
+    return iotcl_c2d_parse_json(root);
 }
 
-IotConnectEventType iotcl_get_event_type(IotclEventData data) {
-    return (data) ? data->type : UNKNOWN_EVENT;
+int iotcl_c2d_process_event_with_length(const uint8_t *data, size_t data_len) {
+    cJSON *root = cJSON_ParseWithLength((const char *) data, data_len);
+    if (!root) {
+        IOTCL_ERROR(
+                IOTCL_ERR_PARSING_ERROR,
+                "jSON parsing error or possible out of memory error while parsing: \"%.*s\"",
+                (int) data_len,
+                data
+        );
+        return IOTCL_ERR_PARSING_ERROR;
+    }
+    return iotcl_c2d_parse_json(root);
 }
 
-char *iotcl_create_ack_string(
-        IotConnectEventType type,
-        const char *ack_id,
-        bool success,
-        const char *message
-) {
-    if (!ack_id) {
+const char *iotcl_c2d_get_ota_url(IotclC2dEventData data, int index) {
+    if (IOTCL_SUCCESS != iotcl_c2d_validate_data_and_type(data, IOTCL_C2D_ET_DEVICE_OTA, "OTA URL")) {
         return NULL;
     }
-    char *ret = create_ack(type, ack_id, success, message);
-    return ret;
+    cJSON *url_array_item = iotcl_c2d_get_ota_url_array_item(data, index);
+    if (!url_array_item) {
+        // called function logs the error
+        return NULL;
+    }
+    return iotcl_c2d_get_string_value(url_array_item, true, "url");
 }
 
-char *iotcl_create_ota_ack_response(
-        const char *ota_ack_id,
-        bool success,
-        const char *message
-) {
-    char *ret = create_ack(success, message, DEVICE_OTA, ota_ack_id);
-    return ret;
+const char *iotcl_c2d_get_ota_url_hostname(IotclC2dEventData data, int index) {
+    if (IOTCL_SUCCESS != iotcl_c2d_validate_data_and_type(data, IOTCL_C2D_ET_DEVICE_OTA, "OTA URL hostname")) {
+        return NULL;
+    }
+    // shortcut... we've already done the parsing and allocation
+    if (data->hostname) {
+        return data->hostname;
+    }
+    cJSON *url_array_item = iotcl_c2d_get_ota_url_array_item(data, index);
+    if (!url_array_item) {
+        // called function logs the error
+        return NULL;
+    }
+    const char *url = iotcl_c2d_get_string_value(url_array_item, true, "url");
+    if (!url) {
+        // called function logs the error
+        return NULL;
+    }
+    if (!strstr(url, HTTPS_PREFIX)) {
+        IOTCL_ERROR(IOTCL_ERR_PARSING_ERROR, "The download URL is missing the leading \"https://\"");
+        return NULL;
+    }
+    const char *host_start = &url[strlen(HTTPS_PREFIX)]; // cannot be null because strstr(url, HTTPS_PREFIX) check
+    const char *resource_start = strstr(host_start, "/");
+    if (!resource_start) {
+        IOTCL_ERROR(IOTCL_ERR_PARSING_ERROR, "The download URL does not appear to be correctly formatted");
+        return NULL;
+    }
+    size_t hostname_str_len = resource_start - host_start;
+    char *hostname = iotcl_malloc(hostname_str_len + 1 /* for null terminator */);
+    if (!hostname) {
+        IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, "Out of memory while allocating the OTA hostname string");
+        return NULL;
+    }
+    strncpy(hostname, host_start, hostname_str_len);
+    hostname[hostname_str_len] = '\0'; // just to be sure
+    data->hostname = hostname; // record it so we can free it and shortcut it
+    return hostname;
 }
 
-void iotcl_destroy_event(IotclEventData data) {
+const char *iotcl_c2d_get_ota_url_resource(IotclC2dEventData data, int index) {
+    if (IOTCL_SUCCESS != iotcl_c2d_validate_data_and_type(data, IOTCL_C2D_ET_DEVICE_OTA, "OTA URL resource")) {
+        return NULL;
+    }
+    cJSON *url_array_item = iotcl_c2d_get_ota_url_array_item(data, index);
+    if (!url_array_item) {
+        // called function logs the error
+        return NULL;
+    }
+
+    const char *url = iotcl_c2d_get_string_value(url_array_item, true, "url");
+    if (!url) {
+        // called function logs the error
+        return NULL;
+    }
+    if (!strstr(url, HTTPS_PREFIX)) {
+        IOTCL_ERROR(IOTCL_ERR_PARSING_ERROR, "The download URL is missing the leading \"https://\"");
+        return NULL;
+    }
+    const char *host_start = &url[strlen(HTTPS_PREFIX)];
+    char *resource_start = strstr(host_start, "/");
+    if (!resource_start) {
+        IOTCL_ERROR(IOTCL_ERR_PARSING_ERROR, "The download URL does not appear to be correctly formatted");
+        return NULL;
+    }
+    return resource_start;
+}
+
+const char *iotcl_c2d_get_ota_original_filename(IotclC2dEventData data, int index) {
+    if (IOTCL_SUCCESS != iotcl_c2d_validate_data_and_type(data, IOTCL_C2D_ET_DEVICE_OTA, "OTA original filename")) {
+        return NULL;
+    }
+    cJSON *url_array_item = iotcl_c2d_get_ota_url_array_item(data, index);
+    if (!url_array_item) {
+        // called function logs the error
+        return NULL;
+    }
+    return iotcl_c2d_get_string_value(url_array_item, true, "fileName");
+}
+
+const char *iotcl_c2d_get_command(IotclC2dEventData data) {
+    if (IOTCL_SUCCESS != iotcl_c2d_validate_data_and_type(data, IOTCL_C2D_ET_DEVICE_COMMAND, "command")) {
+        return NULL;
+    }
+    return iotcl_c2d_get_string_value(data->root, true, "cmd");
+}
+
+int iotcl_c2d_get_ota_url_count(IotclC2dEventData data) {
+    if (IOTCL_SUCCESS != iotcl_c2d_validate_data_and_type(data, IOTCL_C2D_ET_DEVICE_OTA, "URL count")) {
+        return 0;
+    }
+    cJSON *urls = cJSON_GetObjectItemCaseSensitive(data->root, "urls");
+    if (NULL == urls || !cJSON_IsArray(urls)) {
+        IOTCL_ERROR(IOTCL_ERR_PARSING_ERROR, "the \"urls\" array is not found in c2d response");
+        return 0;
+    }
+    return cJSON_GetArraySize(urls);
+}
+
+const char *iotcl_c2d_get_ota_sw_version(IotclC2dEventData data) {
+    if (IOTCL_SUCCESS != iotcl_c2d_validate_data_and_type(data, IOTCL_C2D_ET_DEVICE_OTA, "sw version")) {
+        return NULL;
+    }
+    return iotcl_c2d_get_string_value(data->root, true, "sw");
+}
+
+const char *iotcl_c2d_get_ota_hw_version(IotclC2dEventData data) {
+    if (IOTCL_SUCCESS != iotcl_c2d_validate_data_and_type(data, IOTCL_C2D_ET_DEVICE_OTA, "hw version")) {
+        return NULL;
+    }
+    return iotcl_c2d_get_string_value(data->root, true, "hw");
+}
+
+const char *iotcl_c2d_get_ack_id(IotclC2dEventData data) {
+    if (!data) {
+        // a bit of string re-use here at a cost of CPU time and stack
+        IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "c2d event data null while attempting to get the \"%s\" value", "ack ID");
+        return NULL;
+    }
+    return iotcl_c2d_get_string_value(data->root, false, "ack");
+}
+
+
+char *iotcl_c2d_create_cmd_ack_json(const char *ack_id, int cmd_status, const char *message) {
+    if (!ack_id|| 0 == strlen(ack_id)) {
+        IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "iotcl_c2d_create_cmd_ack_json: ack_id is required!");
+        return NULL;
+    }
+    // not checking for possible values status yet until we resolve back end issues
+    return iotcl_c2d_create_ack(IOTCL_C2D_ET_DEVICE_COMMAND, ack_id, cmd_status, message);
+}
+
+char *iotcl_c2d_create_ota_ack_json(const char *ack_id, int ota_status, const char *message) {
+    if (!ack_id || 0 == strlen(ack_id)) {
+        IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "iotcl_c2d_create_ota_ack_json: ack_id is required!");
+        return NULL;
+    }
+    // not checking for possible values status yet until we resolve back end issues
+    return iotcl_c2d_create_ack(IOTCL_C2D_ET_DEVICE_OTA, ack_id, ota_status, message);
+}
+
+void iotcl_c2d_destroy_ack_json(char *ack_json_ptr) {
+    cJSON_free(ack_json_ptr);
+}
+
+void iotcl_c2d_destroy_event(IotclC2dEventData data) {
     cJSON_Delete(data->root);
-    free(data);
+    data->root = NULL;
+    iotcl_free(data->hostname); // in case it was created
+    data->hostname = NULL;
 }
-

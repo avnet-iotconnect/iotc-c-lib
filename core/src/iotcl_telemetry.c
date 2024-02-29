@@ -6,276 +6,297 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
-
-
-#include "iotconnect_common.h"
-#include "iotconnect_lib.h"
-#include "iotconnect_telemetry.h"
-
-
 #include "cJSON.h"
 
-/////////////////////////////////////////////////////////
-// cJSON implementation
+#include "iotcl_util.h"
+#include "iotcl_internal.h"
+#include "iotcl_log.h"
+#include "iotcl.h"
+#include "iotcl_telemetry.h"
 
 struct IotclMessageHandleTag {
-    cJSON *root_value;
-    cJSON *telemetry_data_array;
-    cJSON *current_telemetry_object; // an object inside the "d" array inside the "d" array of the root object
+    cJSON *root_value;       // The root of the message. Only this one needs to be JSON_Delete-d
+    cJSON *data_set_array;   // Convenience: The "d" array of data points.
+    cJSON *current_data_set; // Convenience: Current data set object inside the "d" array containing current data values.
 };
 
-cJSON *json_object_dotset_locate(cJSON *search_object, char **leaf_name, const char *path) {
-    static const char *DELIM = ".";
-    char *mutable_path;
+static int setup_data_set_object(const char *function_name, IotclMessageHandle message, const char *iso_timestamp) {
+    cJSON *current_data_set = NULL;
+    cJSON *array_item = cJSON_CreateObject();
 
-    *leaf_name = NULL;
+    if (!array_item) goto oom_error;
 
-    mutable_path = iotcl_strdup(path);
-    if (NULL == mutable_path) {
-        return NULL;
+    // used if time_fn is configured
+    char time_str_buffer[IOTCL_ISO_TIMESTAMP_STR_LEN + 1] = {0};
+
+    // If the user didn't pass the timestamp and time function is configured
+    if (!iso_timestamp && iotcl_get_global_config()->time_fn) {
+        int status = iotcl_iso_timestamp_now(time_str_buffer, sizeof(time_str_buffer));
+        if (IOTCL_SUCCESS == status) {
+            iso_timestamp = time_str_buffer;
+        } else {
+            // The called function will print the error.
+            return status;
+        }
     }
 
-    char *token = strtok(mutable_path, DELIM);
-    if (NULL == token) {
-        // PANIC. Should not happen
-        free(mutable_path);
-        return NULL;
+    if (iso_timestamp) {
+        if (NULL == cJSON_AddStringToObject(array_item, "dt", iso_timestamp)) {
+            // don't clean up current_data_set to make it worse than it is. At least we can send the measage without "ts".
+            goto oom_error;
+        }
     }
-    cJSON *target_object = search_object;
-    do {
-        free(*leaf_name);
-        *leaf_name = iotcl_strdup(token);
-        if (!*leaf_name) {
-            goto cleanup;
-        }
-        char *last_token = *leaf_name;
-        token = strtok(NULL, DELIM);
-        if (NULL != token) {
-            // we have more and need to create the nested object
-            cJSON *parent_object;
-            if (cJSON_HasObjectItem(target_object, last_token)) {
-                parent_object = cJSON_GetObjectItem(target_object, last_token);
-            } else {
-                parent_object = cJSON_AddObjectToObject(target_object, last_token);
-            }
 
-            // NOTE: The user should clean up the search object if we return
-            // That should free all added objects, so this should be safe to do
-            if (!parent_object) goto cleanup;
+    current_data_set = cJSON_AddObjectToObject(array_item, "d");
+    if (!current_data_set) goto oom_error;
 
-            target_object = parent_object;
-        }
-    } while (token != NULL);
+    // This needs to be the last potential failure to avoid potential double free from deleting the array_item chain
+    if (!cJSON_AddItemToArray(message->data_set_array, array_item)) goto oom_error;
 
-    free(mutable_path);
-    return target_object;
+    // and set this up at last, as it cannot fail
+    message->current_data_set = current_data_set;
 
-    cleanup:
-    free(mutable_path);
-    return NULL;
+    return IOTCL_SUCCESS; // object inside the "d" array of the the root object
+
+    oom_error:
+    cJSON_Delete(array_item);
+    cJSON_Delete(current_data_set);
+    IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, "%s: Out of memory!", function_name);
+    return IOTCL_ERR_OUT_OF_MEMORY;
 }
 
-static cJSON *setup_telemetry_object(IotclMessageHandle message) {
-    IotclConfig *config = iotcl_get_config();
-    if (!config) return NULL;
-    if (!message) return NULL;
+// Common functionality for all set functions.
+// Lazy creates message->current_data_set and sets it up with timestamp (if available).
+// Prints common errors and returns the error if one is encountered.
+static int iotcl_telemetry_set_functions_common(
+        const char *function_name,
+        cJSON **parent_object,
+        const char **leaf_name,
+        IotclMessageHandle message,
+        const char *path
+) {
+    int status;
 
-    cJSON *telemetry_object = cJSON_CreateObject();
-    if (!telemetry_object) return NULL;
-    if (!cJSON_AddStringToObject(telemetry_object, "id", config->device.duid)) goto cleanup_to;
-    if (!cJSON_AddStringToObject(telemetry_object, "tg", "")) goto cleanup_to;
-    cJSON *data_array = cJSON_AddArrayToObject(telemetry_object, "d");
-    if (!data_array) goto cleanup_to;
-    if (!cJSON_AddItemToArray(message->telemetry_data_array, telemetry_object)) goto cleanup_da;
+    *parent_object = NULL;
+    *leaf_name = NULL;
 
-    // setup the actual telemetry object to be used in subsequent calls
-    message->current_telemetry_object = cJSON_CreateObject();
-    if (!message->current_telemetry_object) goto cleanup_da;
+    if (NULL == message) {
+        IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "%s: The message handle argument is required!", function_name);
+        return IOTCL_ERR_MISSING_VALUE;
+    }
 
-    if (!cJSON_AddItemToArray(data_array, message->current_telemetry_object)) goto cleanup_cto;
+    if (NULL == path || 0 == strlen(path)) {
+        IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "%s: The path argument is required!", function_name);
+        return IOTCL_ERR_MISSING_VALUE;
+    }
+    if (NULL == message->current_data_set) {
+        status = setup_data_set_object(function_name, message, NULL);
+        if (status) {
+            // the called function will print the error and clean up
+            return status;
+        }
+    }
 
-    return telemetry_object; // object inside the "d" array of the the root object
+    status = iotcl_cjson_dot_path_locate(
+            message->current_data_set,
+            parent_object,
+            leaf_name,
+            path
+    );
+    if (status) {
+        return status;
+    }
 
-    cleanup_cto:
-    cJSON_free(message->current_telemetry_object);
-
-    cleanup_da:
-    cJSON_free(data_array);
-
-    cleanup_to:
-    cJSON_free(telemetry_object);
-
-    return NULL;
+    return IOTCL_SUCCESS;
 }
 
 IotclMessageHandle iotcl_telemetry_create(void) {
-    cJSON *sdk_array = NULL;
-    IotclConfig *config = iotcl_get_config();
-    if (!config) return NULL;
-    if (!config->telemetry.dtg) return NULL;
-    struct IotclMessageHandleTag *msg =
-            (struct IotclMessageHandleTag *) calloc(sizeof(struct IotclMessageHandleTag), 1);
+    const char * FUNCTION_NAME = "iotcl_telemetry_set_null";
 
-    if (!msg) return NULL;
+    // check early in the call sequence that the config is valid, so it is safe to assume it is configured
+    // in subsequent calls to other iotcl_telemetry_* functions.
+    if (!iotcl_get_global_config()->is_valid) {
+        return NULL; // called function will print the error
+    }
 
-    msg->root_value = cJSON_CreateObject();
+    struct IotclMessageHandleTag *message = iotcl_malloc(sizeof(struct IotclMessageHandleTag))
+    ;
 
-    if (!msg->root_value) goto cleanup;
+    if (!message) {
+        IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, "iotcl_telemetry_create: Out of memory error while allocating message handle!");
+        return NULL;
+    }
+    memset(message, 0, sizeof(struct IotclMessageHandleTag));
 
-    if (!cJSON_AddStringToObject(msg->root_value, "cpid", config->device.cpid)) goto cleanup_value;
-    if (!cJSON_AddStringToObject(msg->root_value, "dtg", config->telemetry.dtg)) goto cleanup_value;
-    if (!cJSON_AddNumberToObject(msg->root_value, "mt", 0)) goto cleanup_value; // telemetry message type (zero)
-    sdk_array = cJSON_AddObjectToObject(msg->root_value, "sdk");
-    if (!sdk_array) goto cleanup_value;
-    if (!cJSON_AddStringToObject(sdk_array, "l", CONFIG_IOTCONNECT_SDK_NAME)) goto cleanup_array;
-    if (!cJSON_AddStringToObject(sdk_array, "v", CONFIG_IOTCONNECT_SDK_VERSION)) goto cleanup_array;
-    if (!cJSON_AddStringToObject(sdk_array, "e", config->device.env)) goto cleanup_array;
+    message->root_value = cJSON_CreateObject();
+    if (!message->root_value) goto cleanup;
 
-    msg->telemetry_data_array = cJSON_AddArrayToObject(msg->root_value, "d");
+    message->data_set_array = cJSON_AddArrayToObject(message->root_value, "d");
+    if (!message->data_set_array) goto cleanup;
 
-    if (!msg->telemetry_data_array) goto cleanup_array;
-
-    return msg;
-
-    cleanup_array:
-    cJSON_Delete(sdk_array);
-
-    cleanup_value:
-    cJSON_Delete(msg->root_value);
+    return message;
 
     cleanup:
-    free(msg);
+    IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, "%s: Out of memory error!", FUNCTION_NAME);
+    cJSON_Delete(message->root_value);
+    message->root_value = NULL;
+    message->data_set_array = NULL;
     return NULL;
 }
 
-bool iotcl_telemetry_add_with_epoch_time(IotclMessageHandle message, time_t time) {
-    if (!message) return false;
-    cJSON *telemetry_object = setup_telemetry_object(message);
-    if (!telemetry_object) {
-        return false;
+int iotcl_telemetry_add_new_data_set(IotclMessageHandle message, const char *iso_timestamp) {
+    const char *FUNCTION_NAME = "iotcl_telemetry_add_new_data_set";
+    if (NULL == message) {
+        IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "%s: The message handle argument is required!", FUNCTION_NAME);
+        return IOTCL_ERR_MISSING_VALUE;
     }
-    if (!cJSON_AddNumberToObject(telemetry_object, "ts", (double) time)) {
-        return false;
+    int status = setup_data_set_object("iotcl_telemetry_add_with_iso_time", message, iso_timestamp);
+    if (status) {
+        // called function should print the error message
+        return status;
     }
-    if (!cJSON_HasObjectItem(message->root_value, "ts")) {
-        if (!cJSON_AddNumberToObject(message->root_value, "ts", (double) time)) {
-            return false;
-        }
-    }
-    return true;
+    return IOTCL_SUCCESS;
 }
 
-bool iotcl_telemetry_add_with_iso_time(IotclMessageHandle message, const char *time) {
-    if (!message) return false;
-    cJSON *const telemetry_object = setup_telemetry_object(message);
-    if (!telemetry_object) return false;
-    if (!cJSON_AddStringToObject(telemetry_object, "dt", time)) return false;
-    if (!cJSON_HasObjectItem(message->root_value, "t")) {
-        if (!cJSON_AddStringToObject(message->root_value, "t", time)) return false;
+int iotcl_telemetry_set_number(IotclMessageHandle message, const char *path, double value) {
+    const char *FUNCTION_NAME = "iotcl_telemetry_set_number";
+
+    if (NULL == message) {
+        IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "%s: The message handle argument is required!", FUNCTION_NAME);
+        return IOTCL_ERR_MISSING_VALUE;
     }
-    return true;
+
+    cJSON *parent_object = NULL;
+    const char *leaf_name = NULL;
+    int status = iotcl_telemetry_set_functions_common(
+            FUNCTION_NAME,
+            &parent_object,
+            &leaf_name,
+            message,
+            path
+    );
+    if (status) {
+        // called function will print the error
+        return status;
+    }
+
+    if (!cJSON_AddNumberToObject(parent_object, leaf_name, value)) {
+        IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, "%s: Out of memory error!", FUNCTION_NAME);
+        return IOTCL_ERR_OUT_OF_MEMORY;
+    }
+
+    return IOTCL_SUCCESS;
 }
 
-bool iotcl_telemetry_set_number(IotclMessageHandle message, const char *path, double value) {
-    if (!message) return false;
-    if (NULL == message->current_telemetry_object) {
-        if (!iotcl_telemetry_add_with_iso_time(message, iotcl_iso_timestamp_now())) return false;
+int iotcl_telemetry_set_string(IotclMessageHandle message, const char *path, const char *value) {
+    const char *FUNCTION_NAME = "iotcl_telemetry_set_string";
+    if (NULL == message) {
+        IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "%s: The message handle argument is required!", FUNCTION_NAME);
+        return IOTCL_ERR_MISSING_VALUE;
     }
-    char *leaf_name = NULL;
-    cJSON *target = json_object_dotset_locate(message->current_telemetry_object, &leaf_name, path);
-    if (!target) goto cleanup; // out of memory
 
-    if (!cJSON_AddNumberToObject(target, leaf_name, value)) goto cleanup_tgt;
-    free(leaf_name);
-    return true;
+    const char *leaf_name = NULL;
+    cJSON *parent_object = NULL;
 
-    cleanup_tgt:
-    cJSON_free(target);
+    int status = iotcl_telemetry_set_functions_common(
+            FUNCTION_NAME,
+            &parent_object,
+            &leaf_name,
+            message,
+            path
+    );
+    if (status) {
+        // called function will print the error
+        return status;
+    }
 
-    cleanup:
-    free(leaf_name);
-    return false;
+    if (!cJSON_AddStringToObject(parent_object, leaf_name, value)) {
+        IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, "%s: Out of memory error!", FUNCTION_NAME);
+        return IOTCL_ERR_OUT_OF_MEMORY;
+    }
+
+    return IOTCL_SUCCESS;
 }
 
-bool iotcl_telemetry_set_bool(IotclMessageHandle message, const char *path, bool value) {
-    if (!message) return false;
-    if (NULL == message->current_telemetry_object) {
-        if (!iotcl_telemetry_add_with_iso_time(message, iotcl_iso_timestamp_now())) return false;
+int iotcl_telemetry_set_bool(IotclMessageHandle message, const char *path, bool value) {
+    const char *FUNCTION_NAME = FUNCTION_NAME;
+    const char *leaf_name = NULL;
+    cJSON *parent_object = NULL;
+    int status = iotcl_telemetry_set_functions_common(
+            "iotcl_telemetry_set_bool",
+            &parent_object,
+            &leaf_name,
+            message,
+            path
+    );
+    if (status) {
+        // called function will print the error
+        return status;
     }
-    char *leaf_name = NULL;
-    cJSON *target = json_object_dotset_locate(message->current_telemetry_object, &leaf_name, path);
-    if (!target) goto cleanup; // out of memory
 
-    if (!cJSON_AddBoolToObject(target, leaf_name, value)) goto cleanup_tgt;
-    free(leaf_name);
-    return true;
+    if (!cJSON_AddBoolToObject(parent_object, leaf_name, value)) {
+        IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, "%s: Out of memory error!", FUNCTION_NAME);
+        return IOTCL_ERR_OUT_OF_MEMORY;
+    }
 
-    cleanup_tgt:
-    cJSON_free(target);
-
-    cleanup:
-    free(leaf_name);
-    return false;
+    return IOTCL_SUCCESS;
 }
 
-bool iotcl_telemetry_set_string(IotclMessageHandle message, const char *path, const char *value) {
-    if (!message) return false;
-    if (NULL == message->current_telemetry_object) {
-        iotcl_telemetry_add_with_iso_time(message, iotcl_iso_timestamp_now());
+
+int iotcl_telemetry_set_null(IotclMessageHandle message, const char *path) {
+    const char *FUNCTION_NAME = "iotcl_telemetry_set_null";
+    const char *leaf_name = NULL;
+    cJSON *parent_object = NULL;
+    int status = iotcl_telemetry_set_functions_common(
+            FUNCTION_NAME,
+            &parent_object,
+            &leaf_name,
+            message,
+            path
+    );
+    if (status) {
+        // called function will print the error
+        return status;
     }
-    char *leaf_name = NULL;
-    cJSON *const target = json_object_dotset_locate(message->current_telemetry_object, &leaf_name, path);
-    if (!target) goto cleanup; // out of memory
 
-    if (!cJSON_AddStringToObject(target, leaf_name, value)) goto cleanup_tgt;
-    free(leaf_name);
-    return true;
+    if (!cJSON_AddNullToObject(parent_object, leaf_name)) {
+        IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, "%s: Out of memory error!", FUNCTION_NAME);
+        return IOTCL_ERR_OUT_OF_MEMORY;
+    }
 
-    cleanup_tgt:
-    cJSON_free(target);
-
-    cleanup:
-    free(leaf_name);
-    return false;
+    return IOTCL_SUCCESS;
 }
 
-bool iotcl_telemetry_set_null(IotclMessageHandle message, const char *path) {
-    if (!message) return false;
-    if (NULL == message->current_telemetry_object) {
-        iotcl_telemetry_add_with_iso_time(message, iotcl_iso_timestamp_now());
+char *iotcl_telemetry_create_serialized_string(IotclMessageHandle message, bool pretty) {
+    const char *FUNCTION_NAME = "iotcl_create_serialized_string";
+
+    if (NULL == message) {
+        IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "%s: The message handle argument is required!", FUNCTION_NAME);
+        return NULL;
     }
-    char *leaf_name = NULL;
-    cJSON *const target = json_object_dotset_locate(message->current_telemetry_object, &leaf_name, path);
-    if (!target) goto cleanup; // out of memory
 
-    if (!cJSON_AddNullToObject(target, leaf_name)) goto cleanup_tgt;
-    free(leaf_name);
-    return true;
+    if (NULL == message->root_value) {
+        IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "%s: The message is empty!", FUNCTION_NAME);
+        return NULL;
+    }
 
-    cleanup_tgt:
-    cJSON_free(target);
+    char *serialized_string = (pretty) ?
+                              cJSON_Print(message->root_value) : cJSON_PrintUnformatted(message->root_value);
 
-    cleanup:
-    free(leaf_name);
-    return false;
-}
-
-const char *iotcl_create_serialized_string(IotclMessageHandle message, bool pretty) {
-    const char *serialized_string = NULL;
-    if (!message) return NULL;
-    if (!message->root_value) return NULL;
-    serialized_string = (pretty) ? cJSON_Print(message->root_value) : cJSON_PrintUnformatted(message->root_value);
-    if (!serialized_string) return NULL;
+    if (!serialized_string) {
+        IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, "%s: Out of memory error!", FUNCTION_NAME);
+        return NULL;
+    }
     return serialized_string;
 }
 
-void iotcl_destroy_serialized(const char *serialized_string) {
-    cJSON_free((char *) serialized_string);
+void iotcl_telemetry_destroy_serialized_string(char *serialized_string) {
+    cJSON_free(serialized_string);
 }
 
 void iotcl_telemetry_destroy(IotclMessageHandle message) {
     if (message) {
         cJSON_Delete(message->root_value);
-        free(message);
+        iotcl_free(message);
     }
 }

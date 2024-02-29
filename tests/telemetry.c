@@ -4,77 +4,61 @@
  */
 
 #include <stdlib.h>
-#include <string.h>
-#include <malloc.h>
+#include <stdio.h>
 
-// Only for malloc leak tracking. User code should NOT include cJSON
-#include <stdlib.h>
-#include <cJSON.h>
+#include "iotcl.h"
+#include "iotcl_util.h"
+#include "iotcl_telemetry.h"
+#include "heap_tracker.h"
 
-#include "iotconnect_lib.h"
-#include "iotconnect_common.h"
-#include "iotconnect_telemetry.h"
+static void my_transport_send(const char *topic, size_t topic_len, const char *json_str) {
+    (void) topic_len;
+    printf("Sending on topic %s:\n%s\n", topic, json_str);
+}
 
-static void test(void) {
-    IotclConfig config;
+static void telemetry_test(bool use_time) {
+    IotclClientConfig config;
 
-    memset(&config, 0, sizeof(config));
-    config.device.cpid = "MyCpid";
-    config.device.duid = "my-device-id";
-    config.device.env = "prod";
-    config.telemetry.dtg = "5a913fef-428b-4a41-9927-6e0f4a1602ba";
-
+    iotcl_init_client_config(&config);
+    config.device.instance_type = IOTCL_DCT_AWS_DEDICATED;
+    config.device.duid = "mydevice";
+    config.mqtt_send_cb = my_transport_send;
+    if (use_time) {
+        config.time_fn = iotcl_default_time;
+    }
+    iotcl_init_and_print_config(&config);
+    iotcl_mqtt_print_config();
     iotcl_init(&config);
 
     IotclMessageHandle msg = iotcl_telemetry_create();
-    // Initial entry will be created with system timestamp
-    // You can call AddWith*Time before making Set* calls in order to add a custom timestamp
 
-    // NOTE: Do not mix epoch and ISO timestamps
-    iotcl_telemetry_set_number(msg, "789", 123);
-    iotcl_telemetry_set_string(msg, "boo.abc.tuv", "prs");
+    //iotcl_telemetry_add_new_data_set(msg, "2024-01-02T03:04.000Z");
+    iotcl_telemetry_set_number(msg, "mytemp", 123);
+    iotcl_telemetry_set_string(msg, "str-prs", "prs");
 
     // Create a new entry with different time and values
-    iotcl_telemetry_add_with_iso_time(msg, iotcl_to_iso_timestamp(123457));
-    iotcl_telemetry_set_number(msg, "boo.bar", 111);
-    iotcl_telemetry_set_string(msg, "123", "456");
-    iotcl_telemetry_set_number(msg, "789", 123.55);
+    iotcl_telemetry_add_new_data_set(msg, NULL);
+    iotcl_telemetry_set_number(msg, "parent.num-111", 111);
+    iotcl_telemetry_set_string(msg, "str-456", "456");
+    iotcl_telemetry_set_number(msg, "num-123,55", 123.55);
 
-    iotcl_telemetry_add_with_iso_time(msg, iotcl_iso_timestamp_now());
+    iotcl_telemetry_add_new_data_set(msg, "2024-01-02T03:04.000Z");
     iotcl_telemetry_set_null(msg, "nulltest");
     iotcl_telemetry_set_bool(msg, "booltest", true);
 
-    const char *str = iotcl_create_serialized_string(msg, true);
+    iotcl_mqtt_send_telemetry(msg, true);
     iotcl_telemetry_destroy(msg);
-    printf("%s\n", str);
-    iotcl_destroy_serialized(str);
-}
 
-static int tracker;
-
-void *p_malloc(size_t size) {
-    tracker++;
-    //printf("---%d---\n", tracker);
-
-    return malloc(size);
-}
-
-void p_free(void *ptr) {
-    if (NULL != ptr) {
-        tracker--;
-    }
-    free(ptr);
+    iotcl_deinit();
 }
 
 int main(void) {
-    printf("---%d---\n", tracker);
+    ht_reset_config();
+    ht_init();
+    iotcl_configure_dynamic_memory(ht_malloc, ht_free);
 
-    cJSON_Hooks hooks;
-    hooks.malloc_fn = p_malloc;
-    hooks.free_fn = p_free;
-    cJSON_InitHooks(&hooks);
+    telemetry_test(true);
+    telemetry_test(false);
 
-    tracker = 0;
-    test();
-    printf("---(%d)---\n", tracker);
+    ht_print_summary();
 }
