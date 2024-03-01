@@ -28,7 +28,6 @@ static void telemetry_test(bool use_time) {
     }
     iotcl_init_and_print_config(&config);
     iotcl_mqtt_print_config();
-    iotcl_init(&config);
 
     IotclMessageHandle msg = iotcl_telemetry_create();
 

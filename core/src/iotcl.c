@@ -328,10 +328,7 @@ int iotcl_mqtt_receive(const char *topic_name, size_t topic_len, const char *str
     if (!iotcl_topics_match_cfg(config.mqtt_config.sub_c2d, topic_name, topic_len)) {
         return IOTCL_ERR_IGNORED;
     }
-    if (!iotcl_is_printable("iotcl_mqtt_receive: str", str, strlen(str))) {
-        return IOTCL_ERR_BAD_VALUE;
-    }
-    return iotcl_c2d_process_event(str);
+    return iotcl_mqtt_receive_c2d(str);
 }
 
 int iotcl_mqtt_receive_with_length(const char *topic_name, size_t topic_len, const uint8_t *data, size_t data_len) {
@@ -345,6 +342,17 @@ int iotcl_mqtt_receive_with_length(const char *topic_name, size_t topic_len, con
     if (!iotcl_topics_match_cfg(config.mqtt_config.sub_c2d, topic_name, topic_len)) {
         return IOTCL_ERR_IGNORED;
     }
+    return iotcl_mqtt_receive_c2d_with_length(data, data_len);
+}
+
+int iotcl_mqtt_receive_c2d(const char *str) {
+    if (!iotcl_is_printable("iotcl_mqtt_receive: str", str, strlen(str))) {
+        return IOTCL_ERR_BAD_VALUE;
+    }
+    return iotcl_c2d_process_event(str);
+}
+
+int iotcl_mqtt_receive_c2d_with_length(const uint8_t *data, size_t data_len) {
     if (!iotcl_is_printable("iotcl_mqtt_receive_with_length: str", (const char *) data, data_len)) {
         return IOTCL_ERR_BAD_VALUE;
     }

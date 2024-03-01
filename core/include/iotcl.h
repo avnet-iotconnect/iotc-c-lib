@@ -243,6 +243,13 @@ int iotcl_mqtt_receive(const char *topic_name, size_t topic_len, const char *str
 
 int iotcl_mqtt_receive_with_length(const char *topic_name, size_t topic_len, const uint8_t *data, size_t data_len);
 
+// If if your client does not pass the topic name or you have dedicated callbacks for each subscribed topic, then use the
+// iotcl_mqtt_receive_c2d* functions. The functions will also validate data to ensure they contain only printable characters.
+int iotcl_mqtt_receive_c2d(const char* str);
+
+int iotcl_mqtt_receive_c2d_with_length(const uint8_t *data, size_t data_len);
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // The user should not generally call this function, but it is provided for convenience, and for internal use,
