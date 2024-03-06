@@ -6,7 +6,7 @@
 #include <ctype.h>
 #include <time.h>
 #include "cJSON.h"
-#include "iotcl_constants.h"
+#include "iotcl_cfg.h"
 #include "iotcl_log.h"
 #include "iotcl_internal.h"
 #include "iotcl_util.h"

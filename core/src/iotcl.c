@@ -44,7 +44,7 @@ void iotcl_free(void *ptr) {
     // do an extra null check to make sure the behavior is defined for NULL
     // in case some odd custom implementation does not handle it.
     if (ptr) {
-        return cfg_free_fn(ptr);
+        cfg_free_fn(ptr);
     }
 }
 
@@ -126,54 +126,69 @@ int iotcl_init(IotclClientConfig *c) {
         if (!p) goto cleanup_print_oom;
     }
     if (is_azure) {
+        // we use snprintf with null to calculate buffer size
         p = config.mqtt_config.username = iotcl_malloc(
-                sizeof(IOTCL_AZURE_USERNAME_FORMAT) // includes null terminator
-                + strlen(config.mqtt_config.host) - 2 // 2 for "%s" in format
-                + strlen(config.mqtt_config.client_id) - 2); // 2 for "%s" in format
+                1 + snprintf(NULL, 0,IOTCL_AZURE_USERNAME_FORMAT,
+                             config.mqtt_config.host,
+                             config.mqtt_config.client_id
+                )
+        );
         if (!p) goto cleanup_print_oom;
         sprintf(p, IOTCL_AZURE_USERNAME_FORMAT, config.mqtt_config.host, config.mqtt_config.client_id);
 
         p = config.mqtt_config.pub_rpt = iotcl_malloc(
-                sizeof(IOTCL_AZURE_PUB_RPT_FORMAT) // includes null terminator
-                + strlen(config.mqtt_config.client_id) - 2 // 2 for "%s" in format
-                + strlen(c->device.cd) - 2); // 2 for "%s" in format
+                1 + snprintf(NULL, 0,IOTCL_AZURE_PUB_RPT_FORMAT,
+                             config.mqtt_config.host,
+                             config.mqtt_config.client_id
+                )
+        );
         if (!p) goto cleanup_print_oom;
         sprintf(p, IOTCL_AZURE_PUB_RPT_FORMAT, config.mqtt_config.client_id, c->device.cd);
         config.mqtt_config.pub_rpt_len = strlen(p);
 
         p = config.mqtt_config.pub_ack = iotcl_malloc(
-                sizeof(IOTCL_AZURE_PUB_ACK_FORMAT) // includes null terminator
-                + strlen(config.mqtt_config.client_id) - 2 // 2 for "%s" in format
-                + strlen(c->device.cd) - 2); // 2 for "%s" in format
+                1 + snprintf(NULL, 0,IOTCL_AZURE_PUB_ACK_FORMAT,
+                             config.mqtt_config.client_id,
+                             c->device.cd
+                )
+        );
         if (!p) goto cleanup_print_oom;
         sprintf(p, IOTCL_AZURE_PUB_ACK_FORMAT, config.mqtt_config.client_id, c->device.cd);
         config.mqtt_config.pub_ack_len = strlen(p);
 
         p = config.mqtt_config.sub_c2d = iotcl_malloc(
-                sizeof(IOTCL_AZURE_SUB_C2D_FORMAT) // includes null terminator
-                + strlen(config.mqtt_config.client_id) - 2); // 2 for "%s" in format
+                1 + snprintf(NULL, 0,IOTCL_AZURE_SUB_C2D_FORMAT,
+                             config.mqtt_config.client_id
+                )
+        );
         if (!p) goto cleanup_print_oom;
         sprintf(p, IOTCL_AZURE_SUB_C2D_FORMAT, config.mqtt_config.client_id);
         config.mqtt_config.sub_c2d_len = strlen(p);
 
     } else {
         p = config.mqtt_config.pub_rpt = iotcl_malloc(
-                sizeof(IOTCL_AWS_PUB_RPT_FORMAT) // includes null terminator
-                + strlen(config.mqtt_config.client_id) - 2); // 2 for "%s" in format
+                1 + snprintf(NULL, 0,IOTCL_AWS_PUB_RPT_FORMAT,
+                             config.mqtt_config.client_id
+                )
+        );
         if (!p) goto cleanup_print_oom;
         sprintf(p, IOTCL_AWS_PUB_RPT_FORMAT, config.mqtt_config.client_id);
         config.mqtt_config.pub_rpt_len = strlen(p);
 
         p = config.mqtt_config.pub_ack = iotcl_malloc(
-                sizeof(IOTCL_AWS_PUB_ACK_FORMAT) // includes null terminator
-                + strlen(config.mqtt_config.client_id) - 2); // 2 for "%s" in format
+                1 + snprintf(NULL, 0,IOTCL_AWS_PUB_ACK_FORMAT,
+                             config.mqtt_config.client_id
+                )
+        );
         if (!p) goto cleanup_print_oom;
         sprintf(p, IOTCL_AWS_PUB_ACK_FORMAT, config.mqtt_config.client_id);
         config.mqtt_config.pub_ack_len = strlen(p);
 
         p = config.mqtt_config.sub_c2d = iotcl_malloc(
-                sizeof(IOTCL_AWS_SUB_C2D_FORMAT) // includes null terminator
-                + strlen(config.mqtt_config.client_id) - 2); // 2 for "%s" in format
+                1 + snprintf(NULL, 0,IOTCL_AWS_SUB_C2D_FORMAT,
+                             config.mqtt_config.client_id
+                )
+        );
         if (!p) goto cleanup_print_oom;
         sprintf(p, IOTCL_AWS_SUB_C2D_FORMAT, config.mqtt_config.client_id);
         config.mqtt_config.sub_c2d_len = strlen(p);
@@ -246,9 +261,9 @@ void iotcl_mqtt_print_config(void) {
     print_value_if_not_null("Client ID", mc->client_id);
     print_value_if_not_null("Username ", mc->username);
     print_value_if_not_null("Host     ", mc->host);
-    print_value_if_not_null("Pub RPT", mc->pub_rpt);
-    print_value_if_not_null("Pub ACK", mc->pub_ack);
-    print_value_if_not_null("Sub C2D", mc->sub_c2d);
+    print_value_if_not_null("Pub RPT  ", mc->pub_rpt);
+    print_value_if_not_null("Pub ACK  ", mc->pub_ack);
+    print_value_if_not_null("Sub C2D  ", mc->sub_c2d);
 }
 
 int iotcl_mqtt_send_telemetry(IotclMessageHandle msg, bool pretty) {

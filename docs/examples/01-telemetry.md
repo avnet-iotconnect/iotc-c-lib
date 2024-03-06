@@ -31,6 +31,31 @@ void iotcl_telemetry_example_entry(void) {
         // In this example we are using an mqtt client that needs periodic polling.
         // polling will trigger the configured on_mqtt_client_topic_data() callback.
         mqtt_client_loop_and_poll();
+        
+        IotclMessageHandle msg = iotcl_telemetry_create();
+        if (!msg) {
+            // ran out of memory, but the library will print the error
+            // Add application-level handling here
+            return;        
+        }
+
+        if (somesensor_is_ready()) {
+            iotcl_telemetry_set_string(msg, "status", "Ready");
+        
+            // DECIMAL, INTEGER and similar types:
+            iotcl_telemetry_set_number(msg, "temperature", somesensor_get_temperature());
+            
+            // Setting OBJECT type values for "accelerometer" object with numeric values
+            iotcl_telemetry_set_number(msg, "accelerometer.x", somesensor_get_accel_x());
+            iotcl_telemetry_set_number(msg, "accelerometer.y", somesensor_get_accel_y());
+            iotcl_telemetry_set_number(msg, "accelerometer.z", somesensor_get_accel_z());
+        } else {
+            iotcl_telemetry_set_string(msg, "status", "Starting");
+        
+            // You can set null to indicate that the value not available so graphs will show a gap
+            iotcl_telemetry_set_null(msg, "temperature", somesensor_get_temperature());
+        }
+
         sleep(1000);
     }
     
@@ -42,3 +67,10 @@ static void my_transport_send(const char *topic, size_t topic_len, const char *j
     mqtt_client_send(topic, topic_len, json_str, strlen(json_str)); 
 }
 ```
+
+
+Depending on your scenario, consider the following variations/extensions to this example that will better fit your needs:
+* Setup the library's device configuration per your own instance setup, rather than IOTCL_DCT_AWS_DEDICATED.
+ or use the discovery module to set up your MQTT config. 
+* The library provides default error handling (printing to logs and optional error hooks),
+so check return values from iotcl_telemetry_set* and library init calls if you wish to add additional error handling.

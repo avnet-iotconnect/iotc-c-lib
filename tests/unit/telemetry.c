@@ -3,7 +3,6 @@
  * Authors: Nikola Markovic <nikola.markovic@avnet.com> et al.
  */
 
-#include <stdlib.h>
 #include <stdio.h>
 
 #include "iotcl.h"

@@ -1,11 +1,22 @@
 /* SPDX-License-Identifier: MIT
- * Copyright (C) 2020 Avnet
+ * Copyright (C) 2024 Avnet
  * Authors: Nikola Markovic <nikola.markovic@avnet.com> et al.
  */
-#ifndef IOTCL_CONSTANTS_H
-#define IOTCL_CONSTANTS_H
+#ifndef IOTCL_CFG_H
+#define IOTCL_CFG_H
+
+// MBEDTLS config file style - include your own to override the config. See iotcl_example_config.h
+#if defined(IOTCL_USER_CONFIG_FILE)
+#include IOTCL_USER_CONFIG_FILE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Error values for function returns and error codes passed to IOTCL_ERROR and similar macros
+// IOTCL_SUCCESS  is used for readability purposes only. The client does not need to compare against IOTCL_SUCCESS.
+// "if (status)" and similar comparisons against zero (being success) are safe constructs to use
 #define IOTCL_SUCCESS               0
 #define IOTCL_ERR_FAILED            1 // Generic Error that doesn't fit into other categories
 #define IOTCL_ERR_BAD_VALUE         2 // A value/argument passed to configuration/function is incorrect
@@ -22,6 +33,14 @@
 // strftime Format and Size of a buffer that can accommodate a string like "YYYY-MM-DDTHH:MM:SS.000Z" (including null).
 #define IOTCL_ISO_TIMESTAMP_FORMAT "%Y-%m-%dT%H:%M:%S.000Z"
 #define IOTCL_ISO_TIMESTAMP_STR_LEN (sizeof("2024-01-02T03:04:05.006Z") - 1)
+
+// ------- STRTOK --------
+// If using pure c99 standard or if your platform doesn't have reentrant strtok (strtok_r)
+// you can route to strtok with a custom function, but ensure that it's called in a thread-safe manner,
+// or add your own custom implementation. See an example in iotcl_config.h in tests/unit/
+#ifndef IOTCL_STRTOK_R
+#define IOTCL_STRTOK_R strtok_r
+#endif
 
 
 // -------  MQTT TOPIC FORMATS AND DEFINES -------
@@ -54,5 +73,8 @@
 // it if it needs to store ACKs in flash to be able to send a success/failure after reboot
 #define IOTCL_MAX_ACK_LENGTH 36
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

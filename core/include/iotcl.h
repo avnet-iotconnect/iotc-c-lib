@@ -88,7 +88,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <time.h>
-#include "iotcl_constants.h"
+#include "iotcl_cfg.h"
 #include "iotcl_c2d.h"
 #include "iotcl_telemetry.h"
 
@@ -111,7 +111,7 @@ typedef time_t (*IotclTimeFunction)(void);
 // via Identity REST API module or other means. In this case, initially all values in this structure will be NULL.
 typedef struct {
     char *client_id;    // Value is "DUID" for all dedicated instances, "CPID-DUID" for shared.
-    char *username;     // For AWS, username will be NULL. It is not required for the MQTT connection.
+    char *username;     // For AWS, username will be NULL. It is not required for the MQTT connection. Ignore this value for AWS Custom config with Identity API.
     char *host;         // Only available in custom configuration (via Identity REST API module or other means).
     char *pub_rpt;      // MQTT topic for reporting (telemetry) publishing.
     char *pub_ack;      // MQTT topic for acknowledgement publishing.
@@ -125,7 +125,7 @@ typedef struct {
 
 // See DEVICE CONFIGURATION GUIDE in the header of this file.
 typedef enum {
-    IOTCL_DCT_UNDEFINED = 0, // not set and will cause an error
+    IOTCL_DCT_UNDEFINED = 0, // was not set and will cause an error
     IOTCL_DCT_AWS_SHARED,
     IOTCL_DCT_AWS_DEDICATED,
     IOTCL_DCT_AZURE_SHARED,
@@ -261,8 +261,6 @@ void *iotcl_malloc(size_t size);
 // or custom configuration memory allocation.
 // This function will redirect to iotcl_configure_dynamic_memory() configured values, if provided.
 void iotcl_free(void *ptr);
-
-
 
 #ifdef __cplusplus
 }

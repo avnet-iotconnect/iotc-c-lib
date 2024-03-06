@@ -4,9 +4,11 @@
  */
 #include <stdlib.h>
 #include <string.h>
+
 #include "cJSON.h"
 #include "iotcl_log.h"
 #include "iotcl_util.h"
+#include "iotcl_cfg.h"
 #include "iotcl_internal.h"
 
 char *iotcl_strdup_json_string(cJSON *cjson, const char *value_name) {
@@ -79,7 +81,7 @@ int iotcl_cjson_dot_path_locate(
         return IOTCL_ERR_OUT_OF_MEMORY;
     }
 
-    char *token = strtok_r(mutable_path, DELIM, &strtok_saveptr);
+    char *token = IOTCL_STRTOK_R(mutable_path, DELIM, &strtok_saveptr);
     char *previous_token;
 
     if (NULL == token) {
@@ -91,7 +93,7 @@ int iotcl_cjson_dot_path_locate(
 
     do {
         previous_token = token;
-        token = strtok_r(NULL, DELIM, &strtok_saveptr);
+        token = IOTCL_STRTOK_R(NULL, DELIM, &strtok_saveptr);
         if (NULL == token) {
             break;
         }

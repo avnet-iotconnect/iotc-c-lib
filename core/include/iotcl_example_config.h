@@ -5,6 +5,10 @@
 #ifndef IOTCL_EXAMPLE_CONFIG_H
 #define IOTCL_EXAMPLE_CONFIG_H
 
+// If using pure c99 standard or if your platform doesn't have reentrant strtok (strtok_r)
+// you can route to strtok with a custom function, but ensure that it's called in a thread-safe manner,
+// or add your own custom implementation
+// #define IOTCL_STRTOK_R strtok_r
 
 // See iotcl.h for more information about silently ignoring messages arriving on unknown topics
 
