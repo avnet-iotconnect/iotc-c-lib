@@ -9,6 +9,7 @@
 // -------  CERTIFICATES STRING PEM DEFINITIONS -------
 // These useful certificate definitions that can be utilized by Mbed TLS and similar libraries
 
+// AWS IoT Core MQTT server CA Certificate
 // https://www.amazontrust.com/repository/AmazonRootCA1.pem
 // Self Signed Amazon Root CA1
 // CN = Amazon Root CA 1,O = Amazon,C = US
@@ -37,6 +38,7 @@
 "rqXRfboQnoZsG4q5WTP468SQvvG5\n"\
 "-----END CERTIFICATE-----\n"
 
+// IoT Core MQTT server CA Certificate
 // https://www.amazontrust.com/repository/AmazonRootCA3.pem
 // Self Signed Amazon Root CA2
 // CN = Amazon Root CA 3,O = Amazon,C = US
@@ -57,6 +59,7 @@
 "YyRIHN8wfdVoOw==\n"\
 "-----END CERTIFICATE-----\n"
 
+// AWS IoT Core MQTT server CA Certificate
 // https://www.amazontrust.com/repository/SFSRootCAG2.pem
 // Starfield Services Root Certificate Authority - G2
 // CN = Starfield Services Root Certificate Authority - G2,O = Starfield Technologies\, Inc.,L = Scottsdale,ST = Arizona,C = US
@@ -89,6 +92,67 @@
 "sSi6\n"\
 "-----END CERTIFICATE-----"
 
+// Azure IoT Hub MQTT server CA Certificate
+// https://cacerts.digicert.com/DigiCertGlobalRootG2.crt.pem
+// DigiCert Global Root G2
+// CN = DigiCert Global Root G2,OU = www.digicert.com,O = DigiCert Inc,C = US
+// Valid to 15 Jan 2038
+// Signature Algorithm: sha256WithRSAEncryption
+// Public Key Algorithm: rsaEncryption (2048 bit)
+#define IOTCL_CERT_DIGICERT_GLOBAL_ROOT_G2 \
+"-----BEGIN CERTIFICATE-----\n"\
+"MIIDjjCCAnagAwIBAgIQAzrx5qcRqaC7KGSxHQn65TANBgkqhkiG9w0BAQsFADBh\n"\
+"MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3\n"\
+"d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBH\n"\
+"MjAeFw0xMzA4MDExMjAwMDBaFw0zODAxMTUxMjAwMDBaMGExCzAJBgNVBAYTAlVT\n"\
+"MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j\n"\
+"b20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IEcyMIIBIjANBgkqhkiG\n"\
+"9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuzfNNNx7a8myaJCtSnX/RrohCgiN9RlUyfuI\n"\
+"2/Ou8jqJkTx65qsGGmvPrC3oXgkkRLpimn7Wo6h+4FR1IAWsULecYxpsMNzaHxmx\n"\
+"1x7e/dfgy5SDN67sH0NO3Xss0r0upS/kqbitOtSZpLYl6ZtrAGCSYP9PIUkY92eQ\n"\
+"q2EGnI/yuum06ZIya7XzV+hdG82MHauVBJVJ8zUtluNJbd134/tJS7SsVQepj5Wz\n"\
+"tCO7TG1F8PapspUwtP1MVYwnSlcUfIKdzXOS0xZKBgyMUNGPHgm+F6HmIcr9g+UQ\n"\
+"vIOlCsRnKPZzFBQ9RnbDhxSJITRNrw9FDKZJobq7nMWxM4MphQIDAQABo0IwQDAP\n"\
+"BgNVHRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwIBhjAdBgNVHQ4EFgQUTiJUIBiV\n"\
+"5uNu5g/6+rkS7QYXjzkwDQYJKoZIhvcNAQELBQADggEBAGBnKJRvDkhj6zHd6mcY\n"\
+"1Yl9PMWLSn/pvtsrF9+wX3N3KjITOYFnQoQj8kVnNeyIv/iPsGEMNKSuIEyExtv4\n"\
+"NeF22d+mQrvHRAiGfzZ0JFrabA0UWTW98kndth/Jsw1HKj2ZL7tcu7XUIOGZX1NG\n"\
+"Fdtom/DzMNU+MeKNhJ7jitralj41E6Vf8PlwUHBHQRFXGU7Aj64GxJUTFy8bJZ91\n"\
+"8rGOmaFvE7FBcf6IKshPECBV1/MUReXgRPTqh5Uykw7+U0b6LJ3/iyK5S9kJRaTe\n"\
+"pLiaWN0bfVKfjllDiIGknibVb63dDcY3fe0Dkhvld1927jyNxF1WW6LZZm6zNTfl\n"\
+"MrY=\n"\
+"-----END CERTIFICATE-----"
+
+// IoTConnect Device Discovery and Identity REST API - HTTPS Server CA Certificate
+// https://certs.godaddy.com/repository/gdig2.crt.pem
+// GoDaddy Secure Server Certificate (Intermediate Certificate) - G2
+// CN = Go Daddy Root Certificate Authority - G2,O = GoDaddy.com\, Inc.,L = Scottsdale,ST = Arizona,C = US
+// Valid to 3 May 2031
+// Signature Algorithm: sha256WithRSAEncryption
+// Public Key Algorithm: rsaEncryption (2048 bit)
+#define IOTCL_CERT_GODADDY_SECURE_SERVER_CERTIFICATE_G2 \
+"-----BEGIN CERTIFICATE-----\n"\
+"MIIDjjCCAnagAwIBAgIQAzrx5qcRqaC7KGSxHQn65TANBgkqhkiG9w0BAQsFADBh\n"\
+"MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3\n"\
+"d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBH\n"\
+"MjAeFw0xMzA4MDExMjAwMDBaFw0zODAxMTUxMjAwMDBaMGExCzAJBgNVBAYTAlVT\n"\
+"MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j\n"\
+"b20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IEcyMIIBIjANBgkqhkiG\n"\
+"9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuzfNNNx7a8myaJCtSnX/RrohCgiN9RlUyfuI\n"\
+"2/Ou8jqJkTx65qsGGmvPrC3oXgkkRLpimn7Wo6h+4FR1IAWsULecYxpsMNzaHxmx\n"\
+"1x7e/dfgy5SDN67sH0NO3Xss0r0upS/kqbitOtSZpLYl6ZtrAGCSYP9PIUkY92eQ\n"\
+"q2EGnI/yuum06ZIya7XzV+hdG82MHauVBJVJ8zUtluNJbd134/tJS7SsVQepj5Wz\n"\
+"tCO7TG1F8PapspUwtP1MVYwnSlcUfIKdzXOS0xZKBgyMUNGPHgm+F6HmIcr9g+UQ\n"\
+"vIOlCsRnKPZzFBQ9RnbDhxSJITRNrw9FDKZJobq7nMWxM4MphQIDAQABo0IwQDAP\n"\
+"BgNVHRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwIBhjAdBgNVHQ4EFgQUTiJUIBiV\n"\
+"5uNu5g/6+rkS7QYXjzkwDQYJKoZIhvcNAQELBQADggEBAGBnKJRvDkhj6zHd6mcY\n"\
+"1Yl9PMWLSn/pvtsrF9+wX3N3KjITOYFnQoQj8kVnNeyIv/iPsGEMNKSuIEyExtv4\n"\
+"NeF22d+mQrvHRAiGfzZ0JFrabA0UWTW98kndth/Jsw1HKj2ZL7tcu7XUIOGZX1NG\n"\
+"Fdtom/DzMNU+MeKNhJ7jitralj41E6Vf8PlwUHBHQRFXGU7Aj64GxJUTFy8bJZ91\n"\
+"8rGOmaFvE7FBcf6IKshPECBV1/MUReXgRPTqh5Uykw7+U0b6LJ3/iyK5S9kJRaTe\n"\
+"pLiaWN0bfVKfjllDiIGknibVb63dDcY3fe0Dkhvld1927jyNxF1WW6LZZm6zNTfl\n"\
+"MrY=\n"\
+"-----END CERTIFICATE-----"
 
 
 #endif //IOTC_C_LIB_IOTCL_CERTS_H

@@ -50,6 +50,12 @@ Follow the links to examples to learn how to use the library:
 * [Sending Telemetry](docs/examples/01-telemetry.md)
 * [Receiving command and OTA messages and sending acknowledgements](docs/examples/02-c2d.md)
 
+If you need to generate your own certificates for device testing:
+* [Self-signed certificates with OpenSSL](tools/cert-generation-self-signed/).
+* [CA-signed certificates with OpenSSL](tools/cert-generation-ca/). 
+
+Also note that server CA certificates in C string PEM format are also available in library the sources at [iotcl_certs.h](core/include/iotcl_certs.h)  
+
 See [unit test examples](tests/unit/) for working samples that can compile and run with CMake and a PC compiler.
 
 ## Integration Notes
