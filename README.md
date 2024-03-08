@@ -51,12 +51,12 @@ Follow the links to examples to learn how to use the library:
 * [Receiving command and OTA messages and sending acknowledgements](docs/examples/02-c2d.md)
 
 If you need to generate your own certificates for device testing:
-* [Self-signed certificates with OpenSSL](tools/cert-generation-self-signed/).
-* [CA-signed certificates with OpenSSL](tools/cert-generation-ca/). 
+* [Self-signed certificates with OpenSSL](tools/cert-generation-self-signed).
+* [CA-signed certificates with OpenSSL](tools/cert-generation-ca). 
 
 Also note that server CA certificates in C string PEM format are also available in library the sources at [iotcl_certs.h](core/include/iotcl_certs.h)  
 
-See [unit test examples](tests/unit/) for working samples that can compile and run with CMake and a PC compiler.
+See [unit test examples](tests/unit) for working samples that can compile and run with CMake and a PC compiler.
 
 ## Integration Notes
 
@@ -66,7 +66,7 @@ See [unit test examples](tests/unit/) for working samples that can compile and r
 * Review iotcl_sample_config.h to make sure that default logging configuration for example will meet your needs.
  If needed, create your own configuration file, add it to the include path and and pass it to the compiler 
  with -DIOTCL_USER_CONFIG_FILE="iotcl_config.h" **with the quotes in the actual define**. 
- See [tests/uint/CMakeLists.txt] for an reference example.
+ See [tests/uint/CMakeLists.txt](tests/uint/CMakeLists.txt) for an reference example.
 * If you have SNTP, battery backed clock, network time from the mobile network or similar, consider providing a time function 
 to timestamp messages. You can skip this option even if you have the needed facilities in order to save on network bandwidth and
 let the server timestamp messages as they arrive. Note that in this case time is not available, 

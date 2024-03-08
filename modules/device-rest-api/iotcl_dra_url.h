@@ -53,17 +53,20 @@ int iotcl_dra_url_init(IotclDraUrlContext *c, const char *url);
 // adds slack number of bytes to the URL buffer. See iotcl_dra_url_use_suffix_path()
 int iotcl_dra_url_init_with_slack(IotclDraUrlContext *c, size_t slack, const char *url);
 
+// NOTE: After calling iotcl_dra_url_use_suffix_path(), the returned reference may become invalid
 const char *iotcl_dra_url_get_url(const IotclDraUrlContext *c);
 
 const char *iotcl_dra_url_get_hostname(const IotclDraUrlContext *c);
 
+// NOTE: After calling iotcl_dra_url_use_suffix_path(), the returned reference may become invalid
 const char *iotcl_dra_url_get_resource(const IotclDraUrlContext *c);
 
 // Can be used to set the port, but we generally use https URls.
 bool iotcl_dra_url_is_https(const IotclDraUrlContext *c);
 
-// It will append a suifix to the original URL
-// For example, if original (base) URL pased into the init function is https://myhost.com/api/v4.6 ,
+// It will append a suffix to the original URL and ALSO potentially invalidate returned references from
+// iotcl_dra_url_get_url() or iotcl_dra_url_get_resource().
+// For example, if original (base) URL passed into the init function is https://myhost.com/api/v4.6 ,
 // calling iotcl_dra_url_use_suffix_path(c, "/my/path") will append to the url, iotcl_dra_url_get_url
 // resulting in  https://myhost.com/api/v4.6/my/path being returned by
 // Calling iotcl_dra_url_use_suffix_path subsequently will overwrite the suffix part of the URL with the new one
