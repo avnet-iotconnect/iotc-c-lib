@@ -1,7 +1,7 @@
 # iotc-c-lib
 
 iotc-c-lib is a library which abstracts IoTConnect MQTT protocol messages,
-device configuration and the Discovery/Identity HTTP protocol (WIP).
+device configuration and the Discovery/Identity HTTP protocol
 
 Use the main branch for [protocol 2.1](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/) devices.
 
@@ -31,7 +31,8 @@ This library is distributed under the [MIT License](LICENSE.md).
 * Parsing [C2D OTA](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/c2d-messages/#OTA) messages and providing download details.
 * Parsing [C2D Command](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/c2d-messages/#Device) messages.
 * Composing [OTA and command acknowledgements](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/d2c-messages) acknowledgements.
-* (WIP) Parsing HTTP discovery and identity JSON responses
+* Parsing HTTP [discovery](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/discovery-api/)
+and [identity](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/identity-api/) Composing [Telemetry](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/d2c-messages/#Device) messages.
 
 ## General Features
 * Easy to use message parsing and composition.
