@@ -7,15 +7,15 @@ include_directories(
         ${CMAKE_SOURCE_DIR}/../../core/include
         ${CMAKE_SOURCE_DIR}/../../modules/heap-tracker
         ${CMAKE_SOURCE_DIR}/../../modules/device-rest-api
-        ${CMAKE_SOURCE_DIR}/cJSON
+        ${CMAKE_SOURCE_DIR}/../../lib/cJSON
 )
 
 aux_source_directory(../../core/src iotc_c_lib_sources)
 aux_source_directory(../../modules/heap-tracker heap_tracker_sources)
 aux_source_directory(../../modules/device-rest-api dra_sources)
 
-aux_source_directory(cJSON cjson)
-list(REMOVE_ITEM cjson cJSON/test.c)
+aux_source_directory(../../lib/cJSON cjson)
+list(REMOVE_ITEM cjson ../../lib/cJSON/test.c)
 
 set(CMAKE_BUILD_TYPE Debug)
 

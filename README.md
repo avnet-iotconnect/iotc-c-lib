@@ -18,7 +18,7 @@ protocols.
 
 ## Dependencies
 
-* cJSON library v1.7.13 or greater.
+* cJSON library v1.7.13 or greater - v1.7.17 is included as submodule at lib/cJSON.
 * A dynamic memory management facility. For example malloc, FreeRTOS heap or ThreadX memory pools. 
 
 ## Licensing

@@ -4,10 +4,9 @@ this_dir=$(dirname "$0")
 
 pushd "$this_dir"
 set -e
-if [[ ! -d cJSON ]]; then
-  git clone --depth 1 --branch v1.7.13 https://github.com/DaveGamble/cJSON.git
-fi
-test -d cJSON
+
+# pull in cJSON if it is not pulled in already
+git submodule update --init --recursive
 
 cmake .
 cmake --build . --target test-discovery test-event test-telemetry
