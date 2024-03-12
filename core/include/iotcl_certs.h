@@ -40,7 +40,7 @@
 
 // IoT Core MQTT server CA Certificate
 // https://www.amazontrust.com/repository/AmazonRootCA3.pem
-// Self Signed Amazon Root CA2
+// Self Signed Amazon Root CA3
 // CN = Amazon Root CA 3,O = Amazon,C = US
 // Valid to 26 May 2040
 // Signature Algorithm: ecdsa-with-SHA256
