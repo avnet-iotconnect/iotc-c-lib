@@ -16,6 +16,12 @@
 #define IOTCL_C2D_LEGACY_ACK_SUPPORT
 */
 
+
+/* Enable this if your discovery response is erroneously reporting that your subscription has expired.
+ * Related service ticket https://awspoc.iotconnect.io/support-info/2024031415124727
+#define IOTCL_DRA_DISCOVERY_IGNORE_SUBSCRIPTION_EXPIRED
+*/
+
 // See iotc_log.h for more information about configuring logging
 
 /*

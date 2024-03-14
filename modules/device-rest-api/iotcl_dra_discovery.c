@@ -2,8 +2,6 @@
  * Copyright (C) 2024 Avnet
  * Authors: Nikola Markovic <nikola.markovic@avnet.com> et al.
  */
-
-#include <stdlib.h>
 #include <string.h>
 
 #include "cJSON.h"
@@ -52,8 +50,16 @@ static int iotcl_dra_parse_discovery_json(IotclDraUrlContext *base_url_context, 
     if (!j_ec || !cJSON_IsNumber(j_ec)) goto cleanup;
     int ec = cJSON_GetNumberValue(j_ec);
 
+#ifdef IOTCL_DRA_DISCOVERY_IGNORE_SUBSCRIPTION_EXPIRED
+    // Related service ticket https://awspoc.iotconnect.io/support-info/2024031415124727
+    if (3 == ec) {
+        IOTCL_WARN(IOTCL_ERR_FAILED, "DRA Discovery: Received error %d! Server message was: \"%s\". Ignoring...", ec, message);
+        ec = 0; // ignore this error
+    }
+#endif
+
     if (0 != ec) {
-        IOTCL_ERROR(IOTCL_ERR_FAILED, "DRA Discovery: Received error %d! Message: %s", ec, message);
+        IOTCL_ERROR(IOTCL_ERR_FAILED, "DRA Discovery: Received error %d! Server message was: \"%s\"", ec, message);
         return IOTCL_ERR_BAD_VALUE;
     }
 
