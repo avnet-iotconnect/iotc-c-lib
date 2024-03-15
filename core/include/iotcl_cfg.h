@@ -34,15 +34,6 @@ extern "C" {
 #define IOTCL_ISO_TIMESTAMP_FORMAT "%Y-%m-%dT%H:%M:%S.000Z"
 #define IOTCL_ISO_TIMESTAMP_STR_LEN (sizeof("2024-01-02T03:04:05.006Z") - 1)
 
-// ------- STRTOK --------
-// If using pure c99 standard or if your platform doesn't have reentrant strtok (strtok_r)
-// you can route to strtok with a custom function, but ensure that it's called in a thread-safe manner,
-// or add your own custom implementation. See an example in iotcl_config.h in tests/unit/
-#ifndef IOTCL_STRTOK_R
-#define IOTCL_STRTOK_R strtok_r
-#endif
-
-
 // -------  MQTT TOPIC FORMATS AND DEFINES -------
 // Always use secure MQTT port
 #define IOTCL_MQTT_PORT 8883
@@ -61,7 +52,7 @@ extern "C" {
 
 
 // --------------- LIMITS DEFINITIONS ---------------
-// These definitions are not currently utilizaed by the library but can be used by the client code
+// These definitions are not currently utilized by the library but can be used by the client code
 #define IOTCL_CONFIG_DUID_MAX_LEN 64
 #define IOTCL_CONFIG_CPID_MAX_LEN 63
 #define IOTCL_CONFIG_ENV_MAX_LEN 20

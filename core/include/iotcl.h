@@ -14,7 +14,9 @@
  * Functions which return values that need to be freed are generally prefixed with "create" or "clone".
  * Otherwise they are prefixed with "get" or other general prefixes.
  *
- * All library's functions are thread safe unless otherwise noted.
+ * ---- THREAD SAFETY AND REENTRANCY ----
+ * The library's functions implementations are implemented with thread safety and reentrancy in mind,
+ * unless otherwise noted.
  * iotcl_init() and iotcl_deinit() are making modifications to a global configuration instance and are not thread safe,
  * so they should be handled with care and stage before and after device connections are started/terminated or only once
  * at application startup (no need to deinit).

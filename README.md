@@ -45,11 +45,18 @@ and [identity](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device
     * Logging with optional error handling hooks, to potentially reset or halt the device.
 * Optional telemetry timestamp reporting for devices which have access to SNTP or battery backed clock.  
 
-# Examples
+# Library Integration and Examples 
 
-Follow the links to examples to learn how to use the library:
+Before using the library, one should read the header comments at [iotcl.h](core/include/iotcl.h)
+to get familiar with the library concepts, goals, features and configuration.
+
+For a quick-start, follow the links to examples to learn how to use the library:
 * [Sending Telemetry](docs/examples/01-telemetry.md)
 * [Receiving command and OTA messages and sending acknowledgements](docs/examples/02-c2d.md)
+
+Reference Implementations:
+* [IoTConnect Generic C SDK](https://github.com/avnet-iotconnect/iotc-generic-c-sdk) - Paho OpenSSL implementation 
+for Windows/Linux/MacOS and similar operating systems. 
 
 If you need to generate your own certificates for device testing:
 * [Self-signed certificates with OpenSSL](tools/cert-generation-self-signed).

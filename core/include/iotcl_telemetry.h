@@ -30,13 +30,14 @@ void iotcl_telemetry_destroy(IotclMessageHandle message);
 
 /*
  * Call this optional function to add more than one data set to your message, or use custom timestamps.
+ * You can also call this function before setting any telemetry values to define the time and date corresponding
+ * to those values, or to add more precision to the timestamps.
  * Example usage would be a case where the user would want to record temperature measurement every hour of the day,
  * but wants to send all data sets once per day.
- * If time is not configured, adding more than one data set would be a questionable thing to do
- * or application specific, as each data set would be timestamped with server receipt time, which would be the same
+ * If time is not configured, adding more than one data set is invalid, and the function will fail.
+ * This is because data set would be timestamped with server receipt time, which would be the same
  * for all data sets.
  * See iotcl_iso_timestamp_now() and iotcl_to_iso_timestamp() in iotcl_util.h.
- * The iso_timestamp argument is optional. If set to NULL, it will use the current time (if configured).
  */
 int iotcl_telemetry_add_new_data_set(IotclMessageHandle message, const char *iso_timestamp);
 

@@ -46,10 +46,6 @@ IotclGlobalConfig *iotcl_get_global_config(void);
 // A helper function to clone a string from cJSON structure and return NULL if type is invalid etc.
 char *iotcl_strdup_json_string(cJSON *cjson, const char *value_name);
 
-// Provides means to locate a path in the form "a.v.c" within cJSON structure.
-// See the implementation for more details.
-int iotcl_cjson_dot_path_locate(cJSON *root_object, cJSON **parent_object, const char **leaf_name, const char *path);
-
 #ifdef __cplusplus
 }
 #endif
