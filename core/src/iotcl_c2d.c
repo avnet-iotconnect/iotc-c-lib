@@ -264,7 +264,7 @@ const char *iotcl_c2d_get_ota_url_hostname(IotclC2dEventData data, int index) {
         IOTCL_ERROR(IOTCL_ERR_PARSING_ERROR, "The download URL does not appear to be correctly formatted");
         return NULL;
     }
-    size_t hostname_str_len = resource_start - host_start;
+    size_t hostname_str_len = (size_t) (resource_start - host_start);
     char *hostname = iotcl_malloc(hostname_str_len + 1 /* for null terminator */);
     if (!hostname) {
         IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, "Out of memory while allocating the OTA hostname string");

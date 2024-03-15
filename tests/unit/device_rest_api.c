@@ -27,8 +27,6 @@ static void discovery_test(void) {
     config.device.instance_type = IOTCL_DCT_CUSTOM;
     iotcl_init_and_print_config(&config);
 
-
-
     IotclDraUrlContext c = {0};
 
     iotcl_dra_url_init(&c, "https://diavnet.iotconnect.io/api/2.1/agent/device-identity/cg/b892c358-e375-4cc3-8841-32e271e26122");

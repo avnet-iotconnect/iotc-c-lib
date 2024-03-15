@@ -39,7 +39,7 @@ int iotcl_to_iso_timestamp(time_t timestamp, char *buffer, size_t buffer_size) {
         IOTCL_WARN(IOTCL_ERR_OVERFLOW, "iotcl_to_iso_timestamp: Buffer too small! Timestamp not created.");
         return IOTCL_ERR_OVERFLOW;
     }
-    int tmp_ret = strftime(buffer, buffer_size, IOTCL_ISO_TIMESTAMP_FORMAT, gmtime(&timestamp));
+    int tmp_ret = (int) strftime(buffer, buffer_size, IOTCL_ISO_TIMESTAMP_FORMAT, gmtime(&timestamp));
     if (IOTCL_ISO_TIMESTAMP_STR_LEN != tmp_ret) {
         IOTCL_WARN(
                 IOTCL_ERR_CONFIG_ERROR,

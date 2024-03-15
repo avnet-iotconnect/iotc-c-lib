@@ -16,6 +16,7 @@ static void my_transport_send(const char *topic, size_t topic_len, const char *j
 }
 
 static void telemetry_test(bool use_time) {
+    int err_cnt = 0;
     IotclClientConfig config;
 
     iotcl_init_client_config(&config);
@@ -25,27 +26,44 @@ static void telemetry_test(bool use_time) {
     if (use_time) {
         config.time_fn = iotcl_default_time;
     }
-    iotcl_init_and_print_config(&config);
+    err_cnt += iotcl_init_and_print_config(&config) ? 1 : 0;
     iotcl_mqtt_print_config();
 
     IotclMessageHandle msg = iotcl_telemetry_create();
 
-    //iotcl_telemetry_add_new_data_set(msg, "2024-01-02T03:04.000Z");
-    iotcl_telemetry_set_number(msg, "mytemp", 123);
-    iotcl_telemetry_set_string(msg, "str-prs", "prs");
+    err_cnt += iotcl_telemetry_set_number(msg, "mytemp", 123) ? 1 : 0;
+    err_cnt += iotcl_telemetry_set_string(msg, "str_abc", "abc") ? 1 : 0;
 
     // Create a new entry with different time and values
-    iotcl_telemetry_add_new_data_set(msg, NULL);
-    iotcl_telemetry_set_number(msg, "parent.num-111", 111);
-    iotcl_telemetry_set_string(msg, "str-456", "456");
-    iotcl_telemetry_set_number(msg, "num-123,55", 123.55);
+    err_cnt += iotcl_telemetry_add_new_data_set(msg, "2024-01-02T03:04.000Z") ? 1 : 0;
+    err_cnt += iotcl_telemetry_set_number(msg, "parent.num_111", 111) ? 1 : 0;
+    err_cnt += iotcl_telemetry_set_string(msg, "str_456", "456") ? 1 : 0;
+    err_cnt += iotcl_telemetry_set_number(msg, "num-123_55", 123.55) ? 1 : 0;
 
-    iotcl_telemetry_add_new_data_set(msg, "2024-01-02T03:04.000Z");
-    iotcl_telemetry_set_null(msg, "nulltest");
-    iotcl_telemetry_set_bool(msg, "booltest", true);
+    err_cnt += iotcl_telemetry_add_new_data_set(msg, "2024-01-02T03:05.000Z") ? 1 : 0;
+    err_cnt += iotcl_telemetry_set_null(msg, "nulltest") ? 1 : 0;
+    err_cnt += iotcl_telemetry_set_bool(msg, "booltest", true) ? 1 : 0;
 
-    iotcl_mqtt_send_telemetry(msg, true);
+
+    const int EXPECTED_CNT = 5;
+    printf("START INVALID VALUE TESTING. Expecting %d errors:\n", EXPECTED_CNT);
+    printf("---------------------------\n");
+    err_cnt += iotcl_telemetry_add_new_data_set(msg, NULL) ? 1 : 0;
+    err_cnt += iotcl_telemetry_set_number(msg, "too.many.dots", 1) ? 1 : 0;
+    err_cnt += iotcl_telemetry_set_number(msg, ".starts_with_dot", 1) ? 1 : 0;
+    err_cnt += iotcl_telemetry_set_bool(msg, "ends_with_dot.", false) ? 1 : 0;
+    err_cnt += iotcl_telemetry_set_bool(msg, NULL, true) ? 1 : 0;
+    printf("---------------------------\n");
+
+    err_cnt += iotcl_mqtt_send_telemetry(msg, true) ? 1 : 0;
     iotcl_telemetry_destroy(msg);
+
+    if (EXPECTED_CNT != err_cnt) {
+        printf("Total error count of %d is INCORRECT!\n", err_cnt);
+    } else {
+        printf("Total error count is correct.\n");
+    }
+    printf("END INVALID VALUE TESTING.\n");
 
     iotcl_deinit();
 }

@@ -59,7 +59,7 @@ void *ht_malloc(size_t size) {
         }
     }
 
-    float r = (float) rand() / RAND_MAX;
+    double r = (double) rand() / RAND_MAX;
     if (r < ht_config.random_failure_percentage) {
         return NULL;
     }
