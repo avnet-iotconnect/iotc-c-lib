@@ -73,7 +73,7 @@ int iotcl_dra_url_init_with_slack(IotclDraUrlContext* c, size_t slack, const cha
     c->hostname[hostname_len] = 0; // terminate the string
 
     c->idx_suffix_start = strlen(url);
-    c->idx_path = (int) (path_start - url); // pointer subtraction
+    c->idx_path = (size_t) (path_start - url); // pointer subtraction
     return IOTCL_SUCCESS;
 }
 int iotcl_dra_url_init(IotclDraUrlContext* c,const char *url) {

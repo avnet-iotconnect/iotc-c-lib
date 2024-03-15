@@ -26,7 +26,7 @@ static int iotcl_dra_parse_discovery_json(IotclDraUrlContext *base_url_context, 
     cJSON *j_status = cJSON_GetObjectItem(json_root, f);
     if (!j_status || !cJSON_IsNumber(j_status)) goto cleanup;
 
-    int response_status = cJSON_GetNumberValue(j_status);
+    int response_status = (int) cJSON_GetNumberValue(j_status);
     if (200 != response_status) {
         IOTCL_ERROR(IOTCL_ERR_BAD_VALUE, "DRA Discovery: Received status %d! Incorrect environment name?", response_status);
         return IOTCL_ERR_BAD_VALUE;
@@ -48,7 +48,7 @@ static int iotcl_dra_parse_discovery_json(IotclDraUrlContext *base_url_context, 
     f = "ec";
     cJSON *j_ec = cJSON_GetObjectItem(j_d, f);
     if (!j_ec || !cJSON_IsNumber(j_ec)) goto cleanup;
-    int ec = cJSON_GetNumberValue(j_ec);
+    int ec = (int) cJSON_GetNumberValue(j_ec);
 
 #ifdef IOTCL_DRA_DISCOVERY_IGNORE_SUBSCRIPTION_EXPIRED
     // Related service ticket https://awspoc.iotconnect.io/support-info/2024031415124727
@@ -86,7 +86,7 @@ int iotcl_dra_discovery_init_url_with_host(IotclDraUrlContext *c, char *host, co
         IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "DRA: Host, cpid and env arguments are required.");
         return IOTCL_ERR_MISSING_VALUE;
     }
-    size_t size = snprintf(NULL, 0, IOTCL_DRA_DISCOVERY_URL_FORMAT, host, cpid, env);
+    size_t size = (size_t) snprintf(NULL, 0, IOTCL_DRA_DISCOVERY_URL_FORMAT, host, cpid, env);
     char * disc_url = iotcl_malloc(size + 1);
     if (!disc_url) {
         IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, "DRA: Out of memory while allocating the URL buffer!");
@@ -108,14 +108,14 @@ int iotcl_dra_discovery_init_url_azure(IotclDraUrlContext *c, const char *cpid, 
 
 int iotcl_dra_discovery_parse(IotclDraUrlContext *c, int base_url_slack, const char *response_str) {
     cJSON *root = cJSON_Parse(response_str);
-    int status = iotcl_dra_parse_discovery_json(c, base_url_slack, root);
+    int status = iotcl_dra_parse_discovery_json(c, (size_t) base_url_slack, root);
     cJSON_Delete(root);
     return status;
 }
 
 int iotcl_dra_discovery_parse_with_length(IotclDraUrlContext *c, int base_url_slack, const uint8_t *response_data, size_t response_data_size) {
     cJSON *root = cJSON_ParseWithLength((const char *)response_data, response_data_size);
-    int status = iotcl_dra_parse_discovery_json(c, base_url_slack, root);
+    int status = iotcl_dra_parse_discovery_json(c, (size_t) base_url_slack, root);
     cJSON_Delete(root);
     return status;
 }

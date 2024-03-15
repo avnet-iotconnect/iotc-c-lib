@@ -37,11 +37,11 @@ typedef struct {
 
     // https://apihost.io/baseurl/path
     //                   ^ points here
-    int idx_path;       //
+    size_t idx_path;       //
 
     // https://apihost.io/baseurl/path
     //                                ^ points here. We can write and overwrite leaves here
-    int idx_suffix_start;
+    size_t idx_suffix_start;
 
     bool is_https;      // true if starts with https://
 } IotclDraUrlContext;

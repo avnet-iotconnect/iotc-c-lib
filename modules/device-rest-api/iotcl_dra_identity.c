@@ -56,7 +56,7 @@ static int iotcl_dra_parse_response_and_configure_iotcl(cJSON *json_root) {
     cJSON *j_status = cJSON_GetObjectItem(json_root, f);
     if (!j_status || !cJSON_IsNumber(j_status)) goto cleanup;
 
-    int response_status = cJSON_GetNumberValue(j_status);
+    int response_status = (int) cJSON_GetNumberValue(j_status);
     if (200 != response_status) {
         IOTCL_ERROR(IOTCL_ERR_BAD_VALUE, "DRA Identity: Bad response status %d!", response_status);
         return IOTCL_ERR_BAD_VALUE;
@@ -144,7 +144,7 @@ int iotcl_dra_identity_build_url(IotclDraUrlContext *base_url_context, const cha
         return IOTCL_ERR_MISSING_VALUE;
     }
     int suffix_size = snprintf(NULL, 0, IOTC_DRA_IDENTITY_FORMAT, duid);
-    char* suffix = iotcl_malloc(suffix_size + 1);
+    char* suffix = iotcl_malloc((size_t) suffix_size + 1);
     sprintf(suffix, IOTC_DRA_IDENTITY_FORMAT, duid);
     int status = iotcl_dra_url_use_suffix_path(base_url_context, suffix); // the called function will report error
     iotcl_free(suffix);
