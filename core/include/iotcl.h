@@ -41,7 +41,8 @@
  *    IOTCL_DCT_AZURE_SHARED and OTCL_DCT_AZURE_DEDICATED configuration methods along with your device's CD value.
  *
  * Azure accounts also require the MQTT endpoint hostname in order to construct the username to be used
- * for the mqtt connection. See IOTCL_AZURE_USERNAME_FORMAT in iotcl_constants.h
+ * for the mqtt connection. See IOTCL_AZURE_USERNAME_FORMAT in iotcl_constants.h. The host string passed will be cloned
+ * and permanently kept in MQTT config when passed -- or if passed in case of AWS.
  *
  * To determine if you are on a dedicated or shared instance you can examine the Connection Info panel at the
  * IoTConnect web site and follow this simple guide:

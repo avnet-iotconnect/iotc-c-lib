@@ -104,6 +104,11 @@ int iotcl_init(IotclClientConfig *c) {
         return IOTCL_ERR_MISSING_VALUE;
     }
 
+    if (is_azure && (NULL == c->device.host || 0 == strlen(c->device.host))) {
+        IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "iotcl_init: Host is required for azure instance configuration");
+        return IOTCL_ERR_MISSING_VALUE;
+    }
+
     memcpy(&config.event_functions, &c->events, sizeof(config.event_functions));
     config.time_fn = c->time_fn;
     config.mqtt_send_cb = c->mqtt_send_cb;
@@ -125,6 +130,12 @@ int iotcl_init(IotclClientConfig *c) {
         p = config.mqtt_config.client_id = iotcl_strdup(c->device.duid);
         if (!p) goto cleanup_print_oom;
     }
+
+    if (c->device.host) {
+        p = config.mqtt_config.host = iotcl_strdup(c->device.host);
+        if (!p) goto cleanup_print_oom;
+    }
+
     if (is_azure) {
         // we use snprintf with null to calculate buffer size
         p = config.mqtt_config.username = iotcl_malloc(
