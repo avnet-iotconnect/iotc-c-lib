@@ -1,4 +1,10 @@
-# iotc-c-lib
+# iotc-c-lib for IoTConnect Protocol 1.0
+
+This version of the C library is for
+[IoTConnect Protocol version 1.0](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-1-0/)
+on IoTConnect Azure instances.
+
+This library is in maintenance mode and should generally not be used for new development.
 
 This is a C library intended generally for embedded systems which abstracts IoTConnect MQTT protocol messages
 and the discovery HTTP protocol.
