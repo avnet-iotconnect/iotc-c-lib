@@ -53,6 +53,7 @@ to get familiar with the library concepts, goals, features and configuration.
 For a quick-start, follow the links to examples to learn how to use the library:
 * [Sending Telemetry](docs/examples/01-telemetry.md)
 * [Receiving command and OTA messages and sending acknowledgements](docs/examples/02-c2d.md)
+* [Using Discovery/Identity REST API](docs/examples/03-identity.md) to configure your MQTT connections.
 
 Reference Implementations:
 * [IoTConnect Generic C SDK](https://github.com/avnet-iotconnect/iotc-generic-c-sdk) - Paho OpenSSL implementation 
