@@ -14,8 +14,7 @@
 static const char *const TEST_STR_COMMAND = "{\"v\":\"2.1\",\"ct\":0,\"cmd\":\"set-led-green off\",\"ack\":\"4d99ed07-0ea0-43c6-97ba-53780faddc5c\"}";
 static const char *const TEST_STR_OTA = "{\"v\":\"2.1\",\"ct\":1,\"cmd\":\"ota\",\"ack\":\"c6c90df6-d27f-44e5-8eb0-e278dc73ad4f\",\"sw\":\"1.5\",\"hw\":\"1\",\"urls\":[{\"url\":\"https://iotc-260030673750.s3.amazonaws.com/584af730-2854-4a77-8f3b-ca1696401e08/firmware/415443e4-8bad-4375-a124-9734d6cc7fdc/64b18fa3-3aa2-43bc-b65b-71371aca72cb.bin?AWSAccessKeyId=ASIATZCYJGNLASDPEL4H&Expires=1706815818&x-amz-security-token=FwoGZXIvYXdzEJT%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDP0cBexs1rTHqcBxZyKuASD9RoOOeHUIC0pN4AsL%2FA1aXOkEJwSvdI317PwQuKZF%2FRqnBUM3Fxqie7qVtaWIOaWrYXXW9BlJrlZyxJbEsrZ0TWtYB%2FJUqPT300Ioe7Z3E8bswpVFe%2FVw4HscmKDNcHiF54e1ldDRQisiuNiCA4SgCXHMMXvj4%2FFZ1CvlDj2IK3I1m%2FsF9BIoq12q4%2FvgHhb4IG5jG6GtSALb0r5OpcaC0Epy3lXvEj6P5%2BoxqSj91O%2BtBjIti7EkqDYqK%2BI4QAJbPDb2YbpDbXR35ZkihiRXQ6uAWpCuX0Af%2Buw4%2BGIOcd8c&Signature=X1ecCh7I9zojlj%2BCjtwAHhzl9Rg%3D\",\"fileName\":\"my_firmware.bin\"}]}";
 
-static void my_transport_send(const char *topic, size_t topic_len, const char *json_str) {
-    (void) topic_len;
+static void my_transport_send(const char *topic, const char *json_str) {
     printf("Sending on topic %s:\n%s\n", topic, json_str);
 }
 
@@ -85,11 +84,9 @@ static void c2d_test(void) {
     // and we supposedly received the topic from subscription callback on a real MQTT client.
     // BWe are hardcoding it for the purpose of testing the topic generation.
     const char *const C2D_TOPIC = "iot/MYCPID-mydevice/cmd";
-    const size_t C2D_TOPIC_LEN = strlen(C2D_TOPIC);
-    iotcl_mqtt_receive(C2D_TOPIC, C2D_TOPIC_LEN, TEST_STR_COMMAND);
+    iotcl_mqtt_receive(C2D_TOPIC, TEST_STR_COMMAND);
 
-    iotcl_mqtt_receive_with_length(C2D_TOPIC, C2D_TOPIC_LEN, (uint8_t *) TEST_STR_OTA,
-                                   strlen(TEST_STR_OTA)); // test _with_length as well...
+    iotcl_mqtt_receive_with_length(C2D_TOPIC, (uint8_t *) TEST_STR_OTA, strlen(TEST_STR_OTA)); // test _with_length as well...
     iotcl_deinit();
 }
 

@@ -40,9 +40,6 @@ static void iotcl_dra_clear_and_free_mqtt_config(IotclMqttConfig* c) {
     c->pub_rpt = NULL;
     c->pub_ack = NULL;
     c->sub_c2d = NULL;
-    c->pub_rpt_len = 0;
-    c->pub_ack_len = 0;
-    c->sub_c2d_len = 0;
 }
 static int iotcl_dra_parse_response_and_configure_iotcl(cJSON *json_root) {
     const char *f;

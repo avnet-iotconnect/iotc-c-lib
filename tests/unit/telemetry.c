@@ -10,8 +10,7 @@
 #include "iotcl_telemetry.h"
 #include "heap_tracker.h"
 
-static void my_transport_send(const char *topic, size_t topic_len, const char *json_str) {
-    (void) topic_len;
+static void my_transport_send(const char *topic, const char *json_str) {
     printf("Sending on topic %s:\n%s\n", topic, json_str);
 }
 

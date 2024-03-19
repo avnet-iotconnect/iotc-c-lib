@@ -155,7 +155,6 @@ int iotcl_init(IotclClientConfig *c) {
         );
         if (!p) goto cleanup_print_oom;
         sprintf(p, IOTCL_AZURE_PUB_RPT_FORMAT, config.mqtt_config.client_id, c->device.cd);
-        config.mqtt_config.pub_rpt_len = strlen(p);
 
         p = config.mqtt_config.pub_ack = iotcl_malloc(
                 1 + (size_t) snprintf(NULL, 0, IOTCL_AZURE_PUB_ACK_FORMAT,
@@ -165,7 +164,6 @@ int iotcl_init(IotclClientConfig *c) {
         );
         if (!p) goto cleanup_print_oom;
         sprintf(p, IOTCL_AZURE_PUB_ACK_FORMAT, config.mqtt_config.client_id, c->device.cd);
-        config.mqtt_config.pub_ack_len = strlen(p);
 
         p = config.mqtt_config.sub_c2d = iotcl_malloc(
                 1 + (size_t) snprintf(NULL, 0, IOTCL_AZURE_SUB_C2D_FORMAT,
@@ -174,7 +172,6 @@ int iotcl_init(IotclClientConfig *c) {
         );
         if (!p) goto cleanup_print_oom;
         sprintf(p, IOTCL_AZURE_SUB_C2D_FORMAT, config.mqtt_config.client_id);
-        config.mqtt_config.sub_c2d_len = strlen(p);
 
     } else {
         p = config.mqtt_config.pub_rpt = iotcl_malloc(
@@ -184,7 +181,6 @@ int iotcl_init(IotclClientConfig *c) {
         );
         if (!p) goto cleanup_print_oom;
         sprintf(p, IOTCL_AWS_PUB_RPT_FORMAT, config.mqtt_config.client_id);
-        config.mqtt_config.pub_rpt_len = strlen(p);
 
         p = config.mqtt_config.pub_ack = iotcl_malloc(
                 1 + (size_t) snprintf(NULL, 0,IOTCL_AWS_PUB_ACK_FORMAT,
@@ -193,7 +189,6 @@ int iotcl_init(IotclClientConfig *c) {
         );
         if (!p) goto cleanup_print_oom;
         sprintf(p, IOTCL_AWS_PUB_ACK_FORMAT, config.mqtt_config.client_id);
-        config.mqtt_config.pub_ack_len = strlen(p);
 
         p = config.mqtt_config.sub_c2d = iotcl_malloc(
                 1 + (size_t) snprintf(NULL, 0, IOTCL_AWS_SUB_C2D_FORMAT,
@@ -202,7 +197,6 @@ int iotcl_init(IotclClientConfig *c) {
         );
         if (!p) goto cleanup_print_oom;
         sprintf(p, IOTCL_AWS_SUB_C2D_FORMAT, config.mqtt_config.client_id);
-        config.mqtt_config.sub_c2d_len = strlen(p);
     }
 
     config.is_valid = true;
@@ -294,7 +288,7 @@ int iotcl_mqtt_send_telemetry(IotclMessageHandle msg, bool pretty) {
     if (!json_str) {
         return IOTCL_ERR_FAILED; // called function will print the error
     }
-    config.mqtt_send_cb(config.mqtt_config.pub_rpt, config.mqtt_config.pub_rpt_len, json_str);
+    config.mqtt_send_cb(config.mqtt_config.pub_rpt, json_str);
     iotcl_telemetry_destroy_serialized_string(json_str);
     return IOTCL_SUCCESS;
 }
@@ -316,7 +310,7 @@ int iotcl_mqtt_send_ota_ack(const char *ack_id, int ota_status, const char *mess
     if (!json_str) {
         return IOTCL_ERR_FAILED; // called function will print the error
     }
-    config.mqtt_send_cb(config.mqtt_config.pub_ack, config.mqtt_config.pub_ack_len, json_str);
+    config.mqtt_send_cb(config.mqtt_config.pub_ack, json_str);
     iotcl_c2d_destroy_ack_json(json_str);
     return IOTCL_SUCCESS;
 }
@@ -338,12 +332,13 @@ int iotcl_mqtt_send_cmd_ack(const char *ack_id, int cmd_status, const char *mess
     if (!json_str) {
         return IOTCL_ERR_FAILED; // called function will print the error
     }
-    config.mqtt_send_cb(config.mqtt_config.pub_ack, config.mqtt_config.pub_ack_len, json_str);
+    config.mqtt_send_cb(config.mqtt_config.pub_ack, json_str);
     iotcl_c2d_destroy_ack_json(json_str);
     return IOTCL_SUCCESS;
 }
 
-int iotcl_mqtt_receive(const char *topic_name, size_t topic_len, const char *str) {
+int iotcl_mqtt_receive(const char *topic_name, const char *str) {
+    const size_t topic_len = strlen(topic_name);
     if (!config.is_valid) {
         IOTCL_ERROR(IOTCL_ERR_CONFIG_MISSING, "iotcl_mqtt_receive: Library not configured!");
         return IOTCL_ERR_CONFIG_MISSING;
@@ -357,7 +352,8 @@ int iotcl_mqtt_receive(const char *topic_name, size_t topic_len, const char *str
     return iotcl_mqtt_receive_c2d(str);
 }
 
-int iotcl_mqtt_receive_with_length(const char *topic_name, size_t topic_len, const uint8_t *data, size_t data_len) {
+int iotcl_mqtt_receive_with_length(const char *topic_name, const uint8_t *data, size_t data_len) {
+    const size_t topic_len = strlen(topic_name);
     if (!config.is_valid) {
         IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "iotcl_mqtt_receive_with_length: Library not configured!");
         return IOTCL_ERR_CONFIG_ERROR;

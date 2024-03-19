@@ -103,7 +103,7 @@ typedef void *(*IoTclMallocFunction)(size_t size);
 
 typedef void (*IoTclFreeFunction)(void *ptr);
 
-typedef void (*IotclMqttTransportSend)(const char *topic, size_t topic_len, const char *json_str);
+typedef void (*IotclMqttTransportSend)(const char *topic, const char *json_str);
 
 typedef time_t (*IotclTimeFunction)(void);
 
@@ -119,11 +119,6 @@ typedef struct {
     char *pub_rpt;      // MQTT topic for reporting (telemetry) publishing.
     char *pub_ack;      // MQTT topic for acknowledgement publishing.
     char *sub_c2d;      // MQTT topic for receiving C2D commands.
-
-    // convenience preset topic lengths, to avoid having to strlen() often
-    size_t pub_rpt_len;
-    size_t pub_ack_len;
-    size_t sub_c2d_len;
 } IotclMqttConfig;
 
 // See DEVICE CONFIGURATION GUIDE in the header of this file.
@@ -242,9 +237,9 @@ int iotcl_mqtt_send_cmd_ack(
 // The library will attempt to parse the message and route the call to the appropriate subsystem
 // depending on the topic name, or silently ignore it and return IOTCL_ERR_IGNORED.
 // The functions will also validate data and topic names to ensure they contain only printable characters.
-int iotcl_mqtt_receive(const char *topic_name, size_t topic_len, const char *str);
+int iotcl_mqtt_receive(const char *topic_name, const char *str);
 
-int iotcl_mqtt_receive_with_length(const char *topic_name, size_t topic_len, const uint8_t *data, size_t data_len);
+int iotcl_mqtt_receive_with_length(const char *topic_name, const uint8_t *data, size_t data_len);
 
 // If if your client does not pass the topic name or you have dedicated callbacks for each subscribed topic, then use the
 // iotcl_mqtt_receive_c2d* functions. The functions will also validate data to ensure they contain only printable characters.
