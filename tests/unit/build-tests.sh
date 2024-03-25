@@ -9,6 +9,6 @@ set -e
 git submodule update --init --recursive
 
 cmake .
-cmake --build . --target test-discovery test-event test-telemetry
+cmake --build . --target test-rest-api test-event test-telemetry
 
 popd

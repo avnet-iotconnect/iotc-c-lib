@@ -19,4 +19,4 @@ jobs:
       - name: Run Tests
         run: |
           cd tests &&
-          ./test-event  && ./test-telemetry && ./test-discovery
+          ./test-event  && ./test-telemetry && ./test-rest-api
