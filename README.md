@@ -5,8 +5,7 @@ device configuration and the Discovery/Identity HTTP protocol
 
 Use the main branch for [protocol 2.1](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/) devices.
 
-Use the rel-protocol-1.0 branch for [protocol 1.0](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-1-0/) devices
-or if you need TPM support.
+Use the rel-protocol-1.0 branch for [protocol 1.0](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-1-0/) devices.
 
 This library not an SDK. Each target platform/os generally has its own MQTT and HTTP 
 implementation, so the library does not have direct dependencies on any specific one. 
