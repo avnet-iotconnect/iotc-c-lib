@@ -11,12 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Build Tests
-        run: cd tests && ./build-tests.sh
+        run: cd tests/unit && ./build-tests.sh
 
       - name: Run Tests
         run: |
-          cd tests &&
-          ./test-event  && ./test-telemetry && ./test-discovery
+          cd tests/unit &&
+          ./test-event  && ./test-telemetry && ./test-rest-api

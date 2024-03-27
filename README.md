@@ -1,186 +1,84 @@
 # iotc-c-lib
 
-This is a C library intended generally for embedded systems which abstracts IoTConnect MQTT protocol messages
-and the discovery HTTP protocol.
+iotc-c-lib is a library which abstracts IoTConnect MQTT protocol messages,
+device configuration and the Discovery/Identity HTTP protocol
 
-This library is distributed under the [MIT License](LICENSE.md).
+Use the main branch for [protocol 2.1](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/) devices.
 
-This library not an SDK. As each embedded platform/os generally has its own MQTT and HTTP 
-implementation, the library does not have direct dependencies on any specific one. 
+Use the rel-protocol-1.0 branch for [protocol 1.0](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-1-0/) devices.
 
-The library only abstracts JSON responses from the cloud and provides mechanisms for composing JSON
-messages that need to be sent to the cloud. The general use case would require os/platform specific HTTP 
+This library not an SDK. Each target platform/os generally has its own MQTT and HTTP 
+implementation, so the library does not have direct dependencies on any specific one. 
+
+The library provides mechanisms for parsing JSON notifications from the cloud (c2d) and composing JSON
+telemetry and acknowledgement messages. The general use case would require os/platform specific HTTP 
 and MQTT implementation to be handled by the user code, where the library would only provide mechanisms
 for interpreting or composing the JSON that needs to be received or sent with underlying specific 
 protocols.
 
-Visit the [iotc-nrf-sdk](https://github.com/Avnet/iotc-nrf-sdk) or [iotc-wiced](https://github.com/Avnet/iotc-wiced) GitHub repositories 
-for examples on use of this library.
-
-## Features
-
-* Composing of D2C JSON for MQTT telemetry messages
-* Parsing C2D JSON for MQTT OTA messages and providing download URLs
-* Parsing C2D JSON for MQTT command messages
-* Composing D2C JSON for MQTT OTA and command acknowledgements
-* Parsing HTTP discovery and sync JSON responses, in order to obtain DTG value, required for telemetry 
-* Helpers for parsing raw HTTP headers for discovery and sync responses
-
-# Example Usage
-
-(Optional Step) Use HTTP sync rest call to obtain dtg for telemetry configuration. 
-The response can be used to help configure telemetry module and your MQTT client code:
-
-```c
-#include "iotconnect_discovery.h"
-// use http to get the JSON response from IOTCONNECT_DISCOVERY_HOSTNAME declared in iotconnect_discovery.h
-// use your-cpid and your-env as part of the url:
-const char* discovery_response_str = native_http_get(IOTCONNECT_DISCOVERY_HOSTNAME, "/api/sdk/cpid/your-cpid/lang/M_C/ver/2.0/env/your-env");
-
-IotclDiscoveryResponse *dr;
-dr = iotcl_discovery_parse_discovery_response(discovery_response_str);
-printf("Discovery Response:\n");
-printf("url: %s\n", dr->url);
-printf("host: %s\n", dr->host);
-printf("path: %s\n", dr->path);
-
-// pass either dr->url) or host/path combination to your http code to GET the sync response
-const char * sync_response_str = native_http_get(dr->host, dr->path);
-
-// Once we have obtained the sync response JSON, we should no longer need the discovery response
-iotcl_discovery_free_discovery_response(dr);
-
-IotclSyncResponse *sr = iotcl_discovery_parse_sync_response(sync_response_str);
-// the response now contains the dtg and MQTT information that you can pass to telemetry module of this library and your MQTT client implementation 
-printf("dtg: %s\n", sr->dtg);
-printf("cpid: %s\n", sr->cpid);
-printf("MQTT host: %s\n", sr->broker.host);
-// ... etc.
-
-// pass the info and initialize your MQTT client with the broker information
-intialize_mqtt_client(sr->broker);
-
-// Free the sync response once you are done using the information provided by it
-iotcl_discovery_free_sync_response(gsr);
-```
-
-Configure the Telemetry module, compose and send a message to MQTT.  
-
-```c
-#include "iotconnect_lib.h"
-#include "iotconnect_common.h"
-#include "iotconnect_telemetry.h"
-
-void send_telemetry() {
-    
-    IotclConfig config;
-    memset(&config, 0, sizeof(config));
-    config.device.cpid = "MyCpid";
-    config.device.duid = "my-device-id";
-    config.device.env = "prod";
-    
-    config.telemetry.dtg = "5a913fef-428b-4a41-9927-6e0f4a1602ba";
-    // or pass from discovery response above
-    config.telemetry.dtg = sr->dtg;
-    
-    iotcl_init(&config);
-    
-    IotclMessageHandle msg = iotcl_telemetry_create();
-    // Initial entry will be created with system timestamp
-    // You can call AddWith*Time before making Set* calls in order to add a custom timestamp
-    
-    iotcl_telemetry_set_number(msg, "number-value", 123);
-    iotcl_telemetry_set_string(msg, "string-value", "myvalue");
-    // ... etc. See the telemetry header file and tests/telemetry.c for more examples
-    
-    // construct json string from message handle (false = not pretty-formatted to reduce string size)
-    const char *json_str = iotcl_create_serialized_string(msg, false);
-    
-    // We no longer need the message handle. We have the json string
-    iotcl_telemetry_destroy(msg);
-    
-    // pass the string to mqtt sybsystem
-    printf("%s\n", str);
-    send_string_to_pub_topic(str);
-    
-    // we are done with the serialized string, so destroy it here
-    iotcl_destroy_serialized(str);
-}
-```
-
-Configure the Event module, process raw mqtt json strings and receive commands and OTA download URLs 
-in your configured callback functions.
-
-```c
-#include "iotconnect_lib.h"
-
-// declare on_cmd and on_ota callback handlers
-
-void on_cmd(IotclEventData data) {
-    const char *command = iotcl_clone_command(data);
-    printf("Command is: %s\n", command); // handle the command string here... tokenize etc.
-    free(command);
-
-    // end ack true (success) to the command. you can also pass false (failure) and a message response
-    const char *ack_json = iotcl_create_ack_string_and_destroy_event(data, true, NULL);
-    send_string_to_pub_topic(ack_json)
-    printf("Sent CMD ack: %s\n", ack_json);
-    free(ack_json);
-}
-
-void on_ota(IotclEventData data) {
-    const char *url = iotcl_clone_download_url(data, 0);
-    const char *sw_ver = iotcl_clone_sw_version(data);
-    const char *hw_ver = iotcl_clone_hw_version(data);
-    printf("Download URL is: %s\n", url);
-    printf("SW Version is: %s\n", sw_ver);
-    printf("HW Version is: %s\n", hw_ver);
-
-    // your handler for OTA ...
-    app_download_ota(url);
-
-    free(url);
-    free(sw_ver);
-    free(hw_ver);
-
-    // end ack true (success) to the command. you can also pass false (failure) and a message response
-    const char *ack = iotcl_create_ack_string_and_destroy_event(data, true, NULL);
-    send_string_to_pub_topic(ack_json)
-    printf("Sent CMD ack: %s\n", ack);
-    free(ack);
-}
-
-void on_mqtt_sub_message(const char* json_str) {
-    if (!iotcl_process_event(json_str)) {
-        printf("Error encountered while processing %s\n", TEST_STR_V1);
-    }
-}
-
-void confiigure_events() {
-    IotclConfig config;
-    memset(&config, 0, sizeof(config));
-
-    config.device.env = "prod";
-    config.device.cpid = "MyCpid";
-    config.device.duid = "my-device-id";
-
-    config.event_functions.ota_cb = on_ota;
-    config.event_functions.cmd_cb = on_cmd;
-
-    iotcl_init(&config);
-}
-```
-
 ## Dependencies
 
-* cJSON library v1.7.13 or greater
-* Time subsystem (time() function) needs to be available on the system
+* cJSON library v1.7.13 or greater - v1.7.17 is included as submodule at lib/cJSON.
+* A dynamic memory management facility. For example malloc, FreeRTOS heap or ThreadX memory pools. 
+
+## Licensing
+
+This library is distributed under the [MIT License](LICENSE.md).
+
+## Protocol Features
+
+* Composing [Telemetry](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/d2c-messages/#Device) messages.
+* Parsing [C2D OTA](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/c2d-messages/#OTA) messages and providing download details.
+* Parsing [C2D Command](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/c2d-messages/#Device) messages.
+* Composing [OTA and command acknowledgements](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/d2c-messages) acknowledgements.
+* Parsing HTTP [discovery](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/discovery-api/)
+and [identity](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/identity-api/) Composing [Telemetry](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/d2c-messages/#Device) messages.
+
+## General Features
+* Easy to use message parsing and composition.
+* Customizable dynamic memory allocation for the library and the cJSON dependency.
+* IoTConnect topic name generation for AWS embedded devices which do not have HTTP clients or not enough resources 
+ to implement HTTPS protocol or the discovery mechanism.
+* Customizable error reporting.
+    * Reduces the amount of error handling required by the client application or SDK.
+    * Provides an option to completely remove logging and save on const strings RAM/ROM footprint.
+    * Logging with optional error handling hooks, to potentially reset or halt the device.
+* Optional telemetry timestamp reporting for devices which have access to SNTP or battery backed clock.  
+
+# Library Integration and Examples 
+
+Before using the library, one should read the header comments at [iotcl.h](core/include/iotcl.h)
+to get familiar with the library concepts, goals, features and configuration.
+
+For a quick-start, follow the links to examples to learn how to use the library:
+* [Sending Telemetry](docs/examples/01-telemetry.md)
+* [Receiving command and OTA messages and sending acknowledgements](docs/examples/02-c2d.md)
+* [Using Discovery/Identity REST API](docs/examples/03-identity.md) to configure your MQTT connections.
+
+Reference Implementations:
+* [IoTConnect Generic C SDK](https://github.com/avnet-iotconnect/iotc-generic-c-sdk) - Paho OpenSSL implementation 
+for Windows/Linux/MacOS and similar operating systems. 
+
+If you need to generate your own certificates for device testing:
+* [Self-signed certificates with OpenSSL](tools/cert-generation-self-signed).
+* [CA-signed certificates with OpenSSL](tools/cert-generation-ca). 
+
+Also note that server CA certificates in C string PEM format are also available in library the sources at [iotcl_certs.h](core/include/iotcl_certs.h)  
+
+See [unit test examples](tests/unit) for working samples that can compile and run with CMake and a PC compiler.
 
 ## Integration Notes
 
-* The library attempts to be lightweight, allowing you to, for example, only include and
- build only telemetry-related source files into your project, so the user can choose to include only
- specific files with their platform's build system.  
-* Include the desired source and header files fo this library into your embedded project.
-* Follow examples in tests/ directory to learn how to initialize and use the components in your project.
+* Provide cJSON library v1.7.13 or greater to your build. If you already have an older version, you will need to upgrade it. 
+* Add relevant include directories to your includes and add sources to your build.
+* Follow examples in this document and examples in the tests/unit/ directory to learn how to initialize and use the components in your project.
+* Review iotcl_sample_config.h to make sure that default logging configuration for example will meet your needs.
+ If needed, create your own configuration file, add it to the include path and and pass it to the compiler 
+ with -DIOTCL_USER_CONFIG_FILE="iotcl_config.h" **with the quotes in the actual define**. 
+ See [tests/uint/CMakeLists.txt](tests/uint/CMakeLists.txt) for an reference example.
+* If you have SNTP, battery backed clock, network time from the mobile network or similar, consider providing a time function 
+to timestamp messages. You can skip this option even if you have the needed facilities in order to save on network bandwidth and
+let the server timestamp messages as they arrive. Note that in this case time is not available, 
+you should not be sending "bulk" telemetry messages with iotcl_telemetry_add_new_data_set().
+* Read the instructions in iotcl.h and relevant function to learn how properly configure the library to fit your needs best. 
  
