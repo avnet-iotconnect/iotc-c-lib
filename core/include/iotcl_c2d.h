@@ -36,15 +36,18 @@
 
 // Command statuses
 
-#ifndef IOTCL_C2D_LEGACY_ACK_SUPPORT
+#ifndef IOTCL_C2D_ACK_USES_SPEC
+#define IOTCL_C2D_EVT_CMD_SUCCESS           7
+#define IOTCL_C2D_EVT_CMD_FAILED            4
+#define IOTCL_C2D_EVT_CMD_SUCCESS_WITH_ACK  7 // Should not be used in most cases
+#else
+/* The specification states different values which differ from the actual values and behavior
+ * accepted by the back end. If/when the back end changes to comply with the documentation,
+ * define IOTCL_C2D_ACK_USES_SPEC in your iotcl_config.h to use values defined by the documentation.
+ */
 #define IOTCL_C2D_EVT_CMD_SUCCESS           0
 #define IOTCL_C2D_EVT_CMD_FAILED            1
 #define IOTCL_C2D_EVT_CMD_SUCCESS_WITH_ACK  2
-#else
-// Enable this in condig file to work around the values issue util it's fixed on the back end
-#define IOTCL_C2D_EVT_CMD_SUCCESS           7
-#define IOTCL_C2D_EVT_CMD_FAILED            4
-#define IOTCL_C2D_EVT_CMD_SUCCESS_WITH_ACK  7
 #endif
 
 // OTA Download statuses
