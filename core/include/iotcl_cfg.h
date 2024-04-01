@@ -14,6 +14,10 @@
 extern "C" {
 #endif
 
+// While different versions may be supported in the future, the default version will be reported to the
+// back end to be this value for now.
+#define IOTCL_PROTOCOL_VERSION_DEFAULT "2.1"
+
 // Error values for function returns and error codes passed to IOTCL_ERROR and similar macros
 // IOTCL_SUCCESS  is used for readability purposes only. The client does not need to compare against IOTCL_SUCCESS.
 // "if (status)" and similar comparisons against zero (being success) are safe constructs to use

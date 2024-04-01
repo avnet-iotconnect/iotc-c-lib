@@ -12,6 +12,7 @@
 #include "iotcl_dra_url.h"
 #include "iotcl_dra_discovery.h"
 
+// NOTE: We assume that v2.1 in the API is not directly tied to the protocol version
 #define IOTCL_DRA_DISCOVERY_URL_FORMAT "https://%s/api/v2.1/dsdk/cpId/%s/env/%s"
 
 static int iotcl_dra_parse_discovery_json(IotclDraUrlContext *base_url_context, size_t base_url_slack, cJSON *json_root) {
@@ -87,12 +88,12 @@ int iotcl_dra_discovery_init_url_with_host(IotclDraUrlContext *c, char *host, co
         return IOTCL_ERR_MISSING_VALUE;
     }
     size_t size = (size_t) snprintf(NULL, 0, IOTCL_DRA_DISCOVERY_URL_FORMAT, host, cpid, env);
-    char * disc_url = iotcl_malloc(size + 1);
+    char *disc_url = iotcl_malloc(size + 1);
     if (!disc_url) {
         IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, "DRA: Out of memory while allocating the URL buffer!");
         return IOTCL_ERR_OUT_OF_MEMORY;
     }
-    sprintf(disc_url,  IOTCL_DRA_DISCOVERY_URL_FORMAT, host, cpid, env);
+    sprintf(disc_url, IOTCL_DRA_DISCOVERY_URL_FORMAT, host, cpid, env);
     iotcl_dra_url_init(c, disc_url);
     iotcl_free(disc_url);
     return IOTCL_SUCCESS;
