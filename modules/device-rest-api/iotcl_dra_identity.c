@@ -34,12 +34,16 @@ static void iotcl_dra_clear_and_free_mqtt_config(IotclMqttConfig* c) {
     iotcl_free(c->pub_rpt);
     iotcl_free(c->pub_ack);
     iotcl_free(c->sub_c2d);
+    iotcl_free(c->cd);
+    // version is a constant
     c->username = NULL;
     c->host = NULL;
     c->client_id = NULL;
     c->pub_rpt = NULL;
     c->pub_ack = NULL;
     c->sub_c2d = NULL;
+    c->cd = NULL;
+    c->version = NULL;
 }
 static int iotcl_dra_parse_response_and_configure_iotcl(cJSON *json_root) {
     const char *f;
@@ -80,6 +84,15 @@ static int iotcl_dra_parse_response_and_configure_iotcl(cJSON *json_root) {
         return IOTCL_ERR_BAD_VALUE;
     }
 
+    cJSON *j_meta = cJSON_GetObjectItem(j_d, "meta");
+    if (!j_meta || !cJSON_IsObject(j_meta)) goto cleanup;
+
+    cJSON *j_cd = cJSON_GetObjectItem(j_meta, "cd");
+    if (!j_cd || !cJSON_IsString(j_cd)) goto cleanup;
+
+    // NOTE: Consider a safe way to get meta.v without potentially running into floating point precision issues.
+    // and compare to a number like 2.1. We could use that to report that the back end version is different than the protocol version.
+
     f = "p";
     cJSON *j_p = cJSON_GetObjectItem(j_d, f);
     if (!j_p || !cJSON_IsObject(j_p)) goto cleanup;
@@ -98,10 +111,12 @@ static int iotcl_dra_parse_response_and_configure_iotcl(cJSON *json_root) {
     c->pub_rpt = iotcl_strdup_json_string(j_topics, "rpt");
     c->pub_ack = iotcl_strdup_json_string(j_topics, "ack");
     c->sub_c2d = iotcl_strdup_json_string(j_topics, "c2d");
+    c->cd = iotcl_strdup_json_string(j_meta, "cd");
+    c->version = IOTCL_PROTOCOL_VERSION_DEFAULT;
 
     // NOTE: username should be null for aws, but currently identity returns one
     // We don't know whether this is aws or not just based on identity response
-    if (!c->host || !c->client_id || !c->pub_rpt || !c->pub_ack || !c->sub_c2d) {
+    if (!c->host || !c->client_id || !c->pub_rpt || !c->pub_ack || !c->sub_c2d || !c->cd) {
         iotcl_dra_clear_and_free_mqtt_config(c);
         IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, "DRA Identity: One or more response fields was not found or ran out of memory");
         return IOTCL_ERR_OUT_OF_MEMORY;
@@ -112,8 +127,6 @@ static int iotcl_dra_parse_response_and_configure_iotcl(cJSON *json_root) {
     cleanup:
     IOTCL_ERROR(IOTCL_ERR_PARSING_ERROR, "DRA Identity: Error encountered while parsing the response field \"%s\"", f);
     return IOTCL_ERR_PARSING_ERROR;
-
-
 }
 
 static int iotcl_dra_identity_validate_config(void) {

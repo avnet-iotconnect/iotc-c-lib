@@ -136,6 +136,8 @@ int iotcl_init(IotclClientConfig *c) {
         if (!p) goto cleanup_print_oom;
     }
 
+    config.mqtt_config.version = IOTCL_PROTOCOL_VERSION_DEFAULT;
+
     if (is_azure) {
         // we use snprintf with null to calculate buffer size
         p = config.mqtt_config.username = iotcl_malloc(
@@ -172,6 +174,9 @@ int iotcl_init(IotclClientConfig *c) {
         );
         if (!p) goto cleanup_print_oom;
         sprintf(p, IOTCL_AZURE_SUB_C2D_FORMAT, config.mqtt_config.client_id);
+
+        p = config.mqtt_config.cd = iotcl_strdup(c->device.cd);
+        if (!p) goto cleanup_print_oom;
 
     } else {
         p = config.mqtt_config.pub_rpt = iotcl_malloc(
@@ -233,6 +238,8 @@ void iotcl_deinit(void) {
     iotcl_free(config.mqtt_config.pub_rpt);
     iotcl_free(config.mqtt_config.pub_ack);
     iotcl_free(config.mqtt_config.sub_c2d);
+    iotcl_free(config.mqtt_config.cd);
+    // config.mqtt_config.version is a constant string always in this implementation
 
     // config.is_valid = false; after memset
     memset(&config, 0, sizeof(config));
@@ -269,6 +276,7 @@ void iotcl_mqtt_print_config(void) {
     print_value_if_not_null("Pub RPT  ", mc->pub_rpt);
     print_value_if_not_null("Pub ACK  ", mc->pub_ack);
     print_value_if_not_null("Sub C2D  ", mc->sub_c2d);
+    print_value_if_not_null("CD       ", mc->cd);
 }
 
 int iotcl_mqtt_send_telemetry(IotclMessageHandle msg, bool pretty) {

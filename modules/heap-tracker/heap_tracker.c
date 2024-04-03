@@ -60,7 +60,7 @@ void *ht_malloc(size_t size) {
     }
 
     double r = (double) rand() / RAND_MAX;
-    if (r < ht_config.random_failure_percentage) {
+    if (r < (double) ht_config.random_failure_percentage) {
         return NULL;
     }
     ht_context.allocations_on_heap++;

@@ -112,6 +112,8 @@ typedef time_t (*IotclTimeFunction)(void);
 // The client can use provided values in order to configure their mqtt client.
 // The client can also manually provide this structure's values (along wth RAM storage) when using IOTCL_MQTT_CFG_CUSTOM
 // via Identity REST API module or other means. In this case, initially all values in this structure will be NULL.
+// When using Azure IoT C Device SDK or Azure RTOS, the client has no control over the topics, so
+// certain message "properties" (like "cd" and "version" need to be configured with every message).
 typedef struct {
     char *client_id;    // Value is "DUID" for all dedicated instances, "CPID-DUID" for shared.
     char *username;     // For AWS, username will be NULL. It is not required for the MQTT connection. Ignore this value for AWS Custom config with Identity API.
@@ -119,6 +121,8 @@ typedef struct {
     char *pub_rpt;      // MQTT topic for reporting (telemetry) publishing.
     char *pub_ack;      // MQTT topic for acknowledgement publishing.
     char *sub_c2d;      // MQTT topic for receiving C2D commands.
+    char *cd;           // The "CD" value that can be used with AzureRTOS and similar to configure main topic "properties" (Azure concept)
+    char *version;      // The "protocol ver" value that can be used with AzureRTOS and similar to configure main topic "properties" (Azure concept)
 } IotclMqttConfig;
 
 // See DEVICE CONFIGURATION GUIDE in the header of this file.
