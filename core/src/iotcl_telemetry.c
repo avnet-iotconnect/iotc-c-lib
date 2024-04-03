@@ -68,6 +68,10 @@ static int setup_data_set_object(const char *function_name, IotclMessageHandle m
 // Common functionality for all set functions.
 // Lazy creates message->current_data_set and sets it up with timestamp (if available).
 // Prints common errors and returns the error if one is encountered.
+// Returns the parent object where the lef needs to be set in case, for example,
+//  coordinate.x needs to be set. In those case, only one level of nesting is allowed.
+//  If coordinate object exists at data top level, it will be returned, or a new one will be created
+//  and added at data top level.
 static int iotcl_telemetry_set_functions_common(
         const char *function_name,
         cJSON **parent_object,
@@ -140,7 +144,17 @@ static int iotcl_telemetry_set_functions_common(
 
         // truncate the duplicate here so we can nest with the object name
         object_name[dot_index] = '\0';
-        *parent_object = cJSON_AddObjectToObject(message->current_data_set, object_name);
+
+        cJSON *parent_obj_ptr = cJSON_GetObjectItem(message->current_data_set, object_name);
+        if (parent_obj_ptr) {
+            if (!cJSON_IsObject(parent_obj_ptr)) {
+                IOTCL_ERROR(IOTCL_ERR_BAD_VALUE, "%s: Error: \"%s\" must be an object type and not a value!", function_name, object_name);
+                return IOTCL_ERR_BAD_VALUE;
+            }
+            *parent_object = parent_obj_ptr;
+        } else {
+            *parent_object = cJSON_AddObjectToObject(message->current_data_set, object_name);
+        }
         iotcl_free(object_name);
         if (!*parent_object) {
             IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, "%s: Out of memory!", function_name);

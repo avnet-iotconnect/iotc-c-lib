@@ -35,7 +35,8 @@ static void telemetry_test(bool use_time) {
 
     // Create a new entry with different time and values
     err_cnt += iotcl_telemetry_add_new_data_set(msg, "2024-01-02T03:04.000Z") ? 1 : 0;
-    err_cnt += iotcl_telemetry_set_number(msg, "parent.num_111", 111) ? 1 : 0;
+    err_cnt += iotcl_telemetry_set_number(msg, "coord.x", 2) ? 1 : 0;
+    err_cnt += iotcl_telemetry_set_number(msg, "coord.y", 3.3) ? 1 : 0;
     err_cnt += iotcl_telemetry_set_string(msg, "str_456", "456") ? 1 : 0;
     err_cnt += iotcl_telemetry_set_number(msg, "num-123_55", 123.55) ? 1 : 0;
 
@@ -44,14 +45,16 @@ static void telemetry_test(bool use_time) {
     err_cnt += iotcl_telemetry_set_bool(msg, "booltest", true) ? 1 : 0;
 
 
-    const int EXPECTED_CNT = 5;
+    const int EXPECTED_CNT = 6;
     printf("START INVALID VALUE TESTING. Expecting %d errors:\n", EXPECTED_CNT);
     printf("---------------------------\n");
     err_cnt += iotcl_telemetry_add_new_data_set(msg, NULL) ? 1 : 0;
     err_cnt += iotcl_telemetry_set_number(msg, "too.many.dots", 1) ? 1 : 0;
     err_cnt += iotcl_telemetry_set_number(msg, ".starts_with_dot", 1) ? 1 : 0;
     err_cnt += iotcl_telemetry_set_bool(msg, "ends_with_dot.", false) ? 1 : 0;
-    err_cnt += iotcl_telemetry_set_bool(msg, NULL, true) ? 1 : 0;
+    err_cnt += iotcl_telemetry_set_bool(msg, "ends_with_dot.", false) ? 1 : 0;
+    err_cnt += iotcl_telemetry_set_number(msg, "coordinate", 99999) ? 1 : 0; // should succeed
+    err_cnt += iotcl_telemetry_set_number(msg, "coordinate.x", 88888) ? 1 : 0; // should fail because "object" cannot be object
     printf("---------------------------\n");
 
     err_cnt += iotcl_mqtt_send_telemetry(msg, true) ? 1 : 0;
