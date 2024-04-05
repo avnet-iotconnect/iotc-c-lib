@@ -170,7 +170,7 @@ static char *iotcl_c2d_create_ack(IotclC2dEventType type, const char *ack_id, in
 
     cJSON *ack_json = cJSON_CreateObject();
     if (!ack_json) goto cleanup;
-#ifdef IOTCL_C2D_LEGACY_ACK_SUPPORT
+#ifndef IOTCL_C2D_ACK_USES_SPEC
     if (!cJSON_AddStringToObject(ack_json, "t", "2024-00-00T00:00:00.000Z")) goto cleanup;
 #endif
     cJSON *ack_d = cJSON_AddObjectToObject(ack_json, "d");
