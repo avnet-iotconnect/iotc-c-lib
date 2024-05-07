@@ -14,7 +14,7 @@ static void my_transport_send(const char *topic, const char *json_str) {
     printf("Sending on topic %s:\n%s\n", topic, json_str);
 }
 
-static void telemetry_test(bool use_time) {
+static bool telemetry_test(bool use_time) {
     int err_cnt = 0;
     IotclClientConfig config;
 
@@ -44,8 +44,8 @@ static void telemetry_test(bool use_time) {
     err_cnt += iotcl_telemetry_set_null(msg, "nulltest") ? 1 : 0;
     err_cnt += iotcl_telemetry_set_bool(msg, "booltest", true) ? 1 : 0;
 
-
     const int EXPECTED_CNT = 6;
+
     printf("START INVALID VALUE TESTING. Expecting %d errors:\n", EXPECTED_CNT);
     printf("---------------------------\n");
     err_cnt += iotcl_telemetry_add_new_data_set(msg, NULL) ? 1 : 0;
@@ -55,6 +55,7 @@ static void telemetry_test(bool use_time) {
     err_cnt += iotcl_telemetry_set_bool(msg, "ends_with_dot.", false) ? 1 : 0;
     err_cnt += iotcl_telemetry_set_number(msg, "coordinate", 99999) ? 1 : 0; // should succeed
     err_cnt += iotcl_telemetry_set_number(msg, "coordinate.x", 88888) ? 1 : 0; // should fail because "object" cannot be object
+
     printf("---------------------------\n");
 
     err_cnt += iotcl_mqtt_send_telemetry(msg, true) ? 1 : 0;
@@ -68,6 +69,8 @@ static void telemetry_test(bool use_time) {
     printf("END INVALID VALUE TESTING.\n");
 
     iotcl_deinit();
+
+    return err_cnt == EXPECTED_CNT;
 }
 
 int main(void) {
@@ -75,8 +78,13 @@ int main(void) {
     ht_init();
     iotcl_configure_dynamic_memory(ht_malloc, ht_free);
 
-    telemetry_test(true);
-    telemetry_test(false);
+    bool test_result = true; // until proven otherwise
+    test_result &= telemetry_test(true);
+    test_result &= telemetry_test(false);
 
     ht_print_summary();
+    if (ht_get_num_current_allocations() != 0) {
+        return 2;
+    }
+    return (test_result ? 0 : 1);
 }
