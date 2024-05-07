@@ -34,7 +34,7 @@ void ht_init() {
     memset(&ht_context, 0, sizeof(ht_context));
 }
 
-int ht_get_num_allocations_on_heap(void) {
+int ht_get_num_current_allocations(void) {
     return ht_context.allocations_on_heap;
 }
 
@@ -66,6 +66,7 @@ void *ht_malloc(size_t size) {
     ht_context.allocations_on_heap++;
     return malloc(size);
 }
+
 
 void ht_free(void *ptr) {
     if (NULL != ptr) {
