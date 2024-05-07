@@ -148,6 +148,7 @@ static int iotcl_telemetry_set_functions_common(
         cJSON *parent_obj_ptr = cJSON_GetObjectItem(message->current_data_set, object_name);
         if (parent_obj_ptr) {
             if (!cJSON_IsObject(parent_obj_ptr)) {
+                iotcl_free(object_name);
                 IOTCL_ERROR(IOTCL_ERR_BAD_VALUE, "%s: Error: \"%s\" must be an object type and not a value!", function_name, object_name);
                 return IOTCL_ERR_BAD_VALUE;
             }
@@ -174,8 +175,7 @@ IotclMessageHandle iotcl_telemetry_create(void) {
         return NULL; // called function will print the error
     }
 
-    struct IotclMessageHandleTag *message = iotcl_malloc(sizeof(struct IotclMessageHandleTag))
-    ;
+    struct IotclMessageHandleTag *message = iotcl_malloc(sizeof(struct IotclMessageHandleTag));
 
     if (!message) {
         IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, "iotcl_telemetry_create: Out of memory error while allocating message handle!");
@@ -196,6 +196,7 @@ IotclMessageHandle iotcl_telemetry_create(void) {
     cJSON_Delete(message->root_value);
     message->root_value = NULL;
     message->data_set_array = NULL;
+    iotcl_free(message);
     return NULL;
 }
 
