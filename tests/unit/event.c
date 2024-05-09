@@ -54,7 +54,7 @@ static void on_ota(IotclC2dEventData data) {
     printf("SW version: %s\n", sw_ver);
     printf("HW version: %s\n", hw_ver);
 
-    iotcl_mqtt_send_ota_ack(ack_id, IOTCL_C2D_EVT_OTA_SUCCESS, NULL);
+    iotcl_mqtt_send_ota_ack(ack_id, IOTCL_C2D_EVT_OTA_DOWNLOAD_DONE, NULL);
 
     // try generating a failure
     iotcl_mqtt_send_ota_ack(ack_id, IOTCL_C2D_EVT_OTA_DOWNLOAD_FAILED, NULL);
@@ -99,5 +99,10 @@ int main(void) {
     c2d_test();
 
     ht_print_summary();
+
+    if (ht_get_num_current_allocations() != 0) {
+        return 1;
+    }
+    return 0;
 }
 

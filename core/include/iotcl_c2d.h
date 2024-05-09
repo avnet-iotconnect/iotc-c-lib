@@ -35,33 +35,22 @@
 #endif
 
 // Command statuses
-
-#ifndef IOTCL_C2D_ACK_USES_SPEC
-#define IOTCL_C2D_EVT_CMD_SUCCESS           7
-#define IOTCL_C2D_EVT_CMD_FAILED            4
-#define IOTCL_C2D_EVT_CMD_SUCCESS_WITH_ACK  7 // Should not be used in most cases
-#else
-/* The specification states different values which differ from the actual values and behavior
- * accepted by the back end. If/when the back end changes to comply with the documentation,
- * define IOTCL_C2D_ACK_USES_SPEC in your iotcl_config.h to use values defined by the documentation.
- */
-#define IOTCL_C2D_EVT_CMD_SUCCESS           0
 #define IOTCL_C2D_EVT_CMD_FAILED            1
 #define IOTCL_C2D_EVT_CMD_SUCCESS_WITH_ACK  2
-#endif
 
 // OTA Download statuses
 // Best practices for OTA status:
-// While the final result of the OTA action should be IOTCL_EVT_OTA_SUCCESS,
-// it can only be determined only if we are certain that we downloaded the OTA and are guaranteed to be successful.
-// A good way to ensure proper result is to send the ack only when the device is up and running OK with the new version.
-// This can be left to the interpretation of the user given the device's capabilities and limitations or the need
-// for fine-grained status.
-#define IOTCL_C2D_EVT_OTA_SUCCESS           0
-#define IOTCL_C2D_EVT_OTA_FAILED            1
-#define IOTCL_C2D_EVT_OTA_DOWNLOADING       2
-#define IOTCL_C2D_EVT_OTA_DOWNLOAD_DONE     3
-#define IOTCL_C2D_EVT_OTA_DOWNLOAD_FAILED   4
+// While the final success of the OTA action should be IOTCL_C2D_EVT_OTA_DOWNLOAD_DONE, it should be generally sent
+// only if we are certain that we downloaded the OTA and the new firmware is up and running successfully.
+// The user can store the original ACK ID and only report success only after successfully running with the new firmware.
+// While the new firmware is downloading over the network or (if available/applicable) flashing, unpacking,
+// self-testing etc. the intermediate fine-grained statuses along with an appropriate message can be reported
+// with the IOTCL_C2D_EVT_OTA_DOWNLOADING status until DONE or FAILED status is reported.
+// The exact steps can be left to the interpretation of the user, given the device's capabilities and limitations.
+#define IOTCL_C2D_EVT_OTA_FAILED            1  // OTA download was not attempted or was rejected
+#define IOTCL_C2D_EVT_OTA_DOWNLOADING       2  // An intermediate step during the firmware update is pending
+#define IOTCL_C2D_EVT_OTA_DOWNLOAD_DONE     3  // OTA download is fully completed. New firmware is up and running.
+#define IOTCL_C2D_EVT_OTA_DOWNLOAD_FAILED   4  // The download itself, self-test, flashing, or unpacking or running the downloaded firmware has failed.
 
 
 #ifdef __cplusplus

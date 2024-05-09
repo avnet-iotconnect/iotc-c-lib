@@ -83,4 +83,9 @@ int main(void) {
     discovery_test();
 
     ht_print_summary();
+
+    if (ht_get_num_current_allocations() != 0) {
+        return 2;
+    }
+    return 0;
 }
