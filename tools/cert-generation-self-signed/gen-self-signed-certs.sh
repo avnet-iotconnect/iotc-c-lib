@@ -2,6 +2,9 @@
 
 set -e
 
+# workaround for Git bash failing with subject formatting error
+export MSYS_NO_PATHCONV=1
+
 if [ -z "$1" ]; then
   echo Need argument 1
   exit
@@ -14,7 +17,7 @@ rsa_key_size=4096
 ec_curve=prime256v1
 
 openssl req -newkey rsa:${rsa_key_size} -days ${days} -nodes -x509 \
-    -subj ${subj} -keyout ${cn}_rsa_key.pem -out ${cn}_rsa_crt.pem
+    -subj "${subj}" -keyout ${cn}_rsa_key.pem -out ${cn}_rsa_crt.pem
 openssl rsa -outform der -in ${cn}_rsa_key.pem -out ${cn}_rsa_key.der
 openssl x509 -outform der -in ${cn}_rsa_crt.pem -out ${cn}_rsa_crt.der
 xxd -i ${cn}_rsa_key.der ${cn}_rsa_key_der.c
@@ -27,7 +30,7 @@ echo $fp | sed 's#:##g' > ${cn}_rsa_fp.txt
 
 openssl ecparam -name ${ec_curve} -genkey -noout -out ${cn}_ec_key.pem
 openssl req -new -days ${days} -nodes -x509 \
-    -subj ${subj} -key ${cn}_ec_key.pem -out ${cn}_ec_crt.pem
+    -subj "${subj}" -key ${cn}_ec_key.pem -out ${cn}_ec_crt.pem
 openssl ec -outform der -in ${cn}_ec_key.pem -out ${cn}_ec_key.der
 openssl x509 -outform der -in ${cn}_ec_crt.pem -out ${cn}_ec_crt.der
 xxd -i ${cn}_ec_key.der ${cn}_ec_key_der.c
