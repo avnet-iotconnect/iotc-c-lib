@@ -51,9 +51,11 @@ To ensure consistency throughout this repository, as well as SDKs and sample app
    * For type names for structs, enums and function pointers, use CamelCase.
    * For all non-constant (static, global or local) variable names, function names and function parameters, use snake_case.
    * For C source and header file names, use snake_case.
-   * For directories, shell scripts and all other files (where applicable or suitable) except for markdown files at top level use kebab-case.
+   * For all other files, directories and shell scripts (where applicable or suitable) except for markdown files at top level use kebab-case.
    * For markdown files at repository top level use UPPER_SNAKE_CASE.
    * All file extensions should be in lower case.
+   * Global constants and enumerations should be in UPPER_SNAKE_CASE, prefixed with IOTCL_ (in this repo), IOTC_ (in SDKs) and APP_ or IOTC_ (in applications). Constants in function scope may follow normal variable guidelines or constant guidelines.
+   * Header file function names and types should also be prefixed as above (having appropriate case/style). 
 * For items not mentioned above, consult examples in this repo, or use best judgement.
 * For best results, Format your code with CLion *CTRL-ALT-L* or Eclipse *CTRL-SHIFT-F* K&R Formatter with at least 120 (or unlimited) character line wrap and 4 spaces indentation. As many developers use different IDEs mixing spaces and tabs in code is acceptable, as long as tab width is aligned with 4 spaces, when spaces are present in the files.
 * Ensure that headers have ```#ifdef __cplusplus``` for C++ compatibility for portable projects that are not restricted to C only.
