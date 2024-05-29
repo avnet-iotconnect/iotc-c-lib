@@ -65,4 +65,4 @@ To ensure consistency throughout this repository, as well as SDKs and sample app
 * Do not use any prefixes that designate scope or type of the variable (avoid g_global_var, struct x_my_struct, unsigned long ul_my_var).
 * If your file is longer than 400 characters, consider re-designing your code to split it into functionally related components.
 * Attempt to conform libraries and SDKs with most pedantic settings and c99 standard option, since this can help with integrations projects that have stricter compiler definitions.
-* Always eliminate sensible warnings (like unused variables, initializations, etc.) in your code. If fusing a baseline/sample project, make an attempt witin reason to ensure that adding your code to the project does not introduce new ones or warnings or introduce warnings of a new type.
+* Always eliminate sensible warnings (like unused variables, initializations, etc.) in your code. If using a baseline/sample project, make an attempt witin reason to ensure that adding your code to the project does not introduce new ones or warnings or introduce warnings of a new type.
