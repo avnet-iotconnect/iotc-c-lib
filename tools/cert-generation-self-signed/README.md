@@ -15,8 +15,8 @@ This will generate a key and a certificate with
 both 4096-bit RSA and prime256v1 Elliptic Curve Cryptography (ECC) algorithms.
 
 ```text
-mydevice_ec_crt.pem     ECC private key in pem format
-mydevice_ec_key.pem     ECC certificate in pem format
+mydevice_ec_crt.pem     ECC certificate in pem format
+mydevice_ec_key.pem     ECC private key in pem format
 mydevice_ec_fp.txt      SHA256 Fingerprint (Thumbprint) of the certificate
 mydevice_ec_crt.der     ECC certificate in binary/der format
 mydevice_ec_key.der     ECC private key in binary/der format
