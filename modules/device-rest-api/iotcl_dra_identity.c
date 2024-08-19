@@ -14,16 +14,16 @@
 
 // from https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/reference-table/#hellomsg Hello Message & REST API
 static const char* iotcl_dra_ec_error_mapping[] = {
-        "OK – No Error"
-        "Device not found. Device is not whitelisted to platform."
-        "Device is not active."
-        "Un-Associated. Device has not any template associated with it."
-        "Device is not acquired. Device is created but it is in release state."
-        "Device is disabled. It’s disabled from broker by Platform Admin"
-        "Company not found as SID is not valid"
-        "Subscription is expired."
-        "Connection Not Allowed."
-        "Invalid Bootstrap Certificate."
+        "OK – No Error",
+        "Device not found. Device is not whitelisted to platform.",
+        "Device is not active.",
+        "Un-Associated. Device has not any template associated with it.",
+        "Device is not acquired. Device is created but it is in release state.",
+        "Device is disabled. It’s disabled from broker by Platform Admin",
+        "Company not found as SID is not valid",
+        "Subscription is expired.",
+        "Connection Not Allowed.",
+        "Invalid Bootstrap Certificate.",
         "Invalid Operational Certificate."
 };
 
