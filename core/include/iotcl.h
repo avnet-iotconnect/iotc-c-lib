@@ -99,6 +99,9 @@
 extern "C" {
 #endif
 
+#define IOTCL_PF_AWS_STR "aws"
+#define IOTCL_PF_AZURE_STR "az"
+
 typedef void *(*IoTclMallocFunction)(size_t size);
 
 typedef void (*IoTclFreeFunction)(void *ptr);

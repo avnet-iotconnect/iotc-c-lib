@@ -7,6 +7,7 @@
 #include "cJSON.h"
 
 #include "iotcl_internal.h"
+#include "iotcl.h" // for Platform definitions like IOTCL_PF_AWS_STR
 #include "iotcl_cfg.h"
 #include "iotcl_log.h"
 #include "iotcl_dra_url.h"
@@ -14,6 +15,7 @@
 
 // NOTE: We assume that v2.1 in the API is not directly tied to the protocol version
 #define IOTCL_DRA_DISCOVERY_URL_FORMAT "https://%s/api/v2.1/dsdk/cpId/%s/env/%s"
+#define IOTCL_DRA_GLOBAL_DISCOVERY_URL_FORMAT "https://discovery.iotconnect.io/api/v2.1/dsdk/cpId/%s/env/%s?pf=%s"
 
 static int iotcl_dra_parse_discovery_json(IotclDraUrlContext *base_url_context, size_t base_url_slack, cJSON *json_root) {
     const char *f;
@@ -82,6 +84,23 @@ static int iotcl_dra_parse_discovery_json(IotclDraUrlContext *base_url_context, 
     return IOTCL_ERR_PARSING_ERROR;
 }
 
+int iotcl_dra_discovery_init_url_with_platform(IotclDraUrlContext *c, const char* pf, const char *cpid, const char *env) {
+    if (!pf || !cpid || !env || 0 == strlen(pf) || 0 == strlen(cpid) || 0 == strlen(env)) {
+        IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "DRA: pf, cpid and env arguments are required.");
+        return IOTCL_ERR_MISSING_VALUE;
+    }
+    size_t size = (size_t) snprintf(NULL, 0, IOTCL_DRA_GLOBAL_DISCOVERY_URL_FORMAT, cpid, env, pf);
+    char *disc_url = iotcl_malloc(size + 1);
+    if (!disc_url) {
+        IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, "DRA: Out of memory while allocating the URL buffer!");
+        return IOTCL_ERR_OUT_OF_MEMORY;
+    }
+    sprintf(disc_url, IOTCL_DRA_GLOBAL_DISCOVERY_URL_FORMAT, cpid, env, pf);
+    iotcl_dra_url_init(c, disc_url);
+    iotcl_free(disc_url);
+    return IOTCL_SUCCESS;
+}
+
 int iotcl_dra_discovery_init_url_with_host(IotclDraUrlContext *c, char *host, const char *cpid, const char *env) {
     if (!host || !cpid || !env || 0 == strlen(host) || 0 == strlen(cpid) || 0 == strlen(env)) {
         IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "DRA: Host, cpid and env arguments are required.");
@@ -98,6 +117,7 @@ int iotcl_dra_discovery_init_url_with_host(IotclDraUrlContext *c, char *host, co
     iotcl_free(disc_url);
     return IOTCL_SUCCESS;
 }
+
 
 int iotcl_dra_discovery_init_url_aws(IotclDraUrlContext *c, const char *cpid, const char *env) {
     return iotcl_dra_discovery_init_url_with_host(c, IOTCL_DRA_DEFAULT_DISCOVERY_HOST_AWS, cpid, env);
