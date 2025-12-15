@@ -5,11 +5,11 @@
 
 /*
  * This file contains functions that aid in developing SDKs for specific platforms or help implement custom approaches
- * for to IoTConnect discovery HTTP API.
+ * for IoTConnect discovery HTTP API and/or parsing device configuration from JSON independently of the REST API calls.
  */
 
-#ifndef ITOCL_DRA_JSON_CONFIG_H
-#define ITOCL_DRA_JSON_CONFIG_H
+#ifndef IOTCL_DRA_JSON_CONFIG_H
+#define IOTCL_DRA_JSON_CONFIG_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -40,4 +40,4 @@ void iotcl_dra_json_config_free(IotclDraJsonConfigResult *json_config);
 }
 #endif
 
-#endif // ITOCL_DRA_JSON_CONFIG_H
+#endif // IOTCL_DRA_JSON_CONFIG_H

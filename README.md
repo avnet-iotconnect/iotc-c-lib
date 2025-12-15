@@ -82,6 +82,3 @@ to timestamp messages. You can skip this option even if you have the needed faci
 let the server timestamp messages as they arrive. Note that in this case time is not available, 
 you should not be sending "bulk" telemetry messages with iotcl_telemetry_add_new_data_set().
 * Read the instructions in iotcl.h and relevant function to learn how properly configure the library to fit your needs best.
-* For discovery/identity parsing 
-
- 

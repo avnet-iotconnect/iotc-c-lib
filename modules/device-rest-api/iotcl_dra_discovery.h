@@ -5,11 +5,11 @@
 
 /*
  * This file contains functions that aid in developing SDKs for specific platforms or help implement custom approaches
- * for to IoTConnect discovery HTTP API.
+ * for IoTConnect discovery HTTP API.
  */
 
-#ifndef ITOCL_DRA_DISCOVERY_H
-#define ITOCL_DRA_DISCOVERY_H
+#ifndef IOTCL_DRA_DISCOVERY_H
+#define IOTCL_DRA_DISCOVERY_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -19,7 +19,7 @@
 extern "C" {
 #endif
 
-// WARNING: These values and use with  iotcl_dra_discovery_init_url_with_host() with these two values
+// WARNING: These values and use with iotcl_dra_discovery_init_url_with_host() with these two values
 // is deprecated and is only provided for backwards compatibility.
 // Default values for discovery hosts for each cloud end type
 // Not used in the library, but useful defines for the client
@@ -66,4 +66,4 @@ int iotcl_dra_discovery_parse_with_length(
 }
 #endif
 
-#endif // ITOCL_DRA_DISCOVERY_H
+#endif // IOTCL_DRA_DISCOVERY_H

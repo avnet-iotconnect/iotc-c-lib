@@ -5,11 +5,11 @@
 
 /*
  * This file contains functions that aid in developing SDKs for specific platforms or help implement custom approaches
- * for to IoTConnect discovery HTTP API.
+ * for IoTConnect discovery HTTP API.
  */
 
-#ifndef ITOCL_DRA_IDENTITY_H
-#define ITOCL_DRA_IDENTITY_H
+#ifndef IOTCL_DRA_IDENTITY_H
+#define IOTCL_DRA_IDENTITY_H
 
 #include <stdint.h>
 #include "iotcl_dra_url.h"
@@ -36,4 +36,4 @@ int iotcl_dra_identity_configure_library_mqtt_with_length(const uint8_t *respons
 }
 #endif
 
-#endif // ITOCL_DRA_IDENTITY_H
+#endif // IOTCL_DRA_IDENTITY_H
