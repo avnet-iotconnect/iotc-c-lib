@@ -28,12 +28,6 @@ static int iotcl_dra_parse_json_config(IotclDraJsonConfigResult *result, cJSON *
         return IOTCL_ERR_PARSING_ERROR;
     }
 
-    // Make sure version is 2.1
-    char *ver = get_json_string(json_root, "ver");
-    if (!ver || strcmp(ver, "2.1") != 0) {
-        IOTCL_ERROR(IOTCL_ERR_BAD_VALUE, "DRA JSON Config: Expected protocol version \"%s\", got \"%s\"", "2.1", ver ? ver : "(null)");
-        return IOTCL_ERR_BAD_VALUE;
-    }
 
     // Parse and validate platform
     char *pf = get_json_string(json_root, "pf");
@@ -43,6 +37,7 @@ static int iotcl_dra_parse_json_config(IotclDraJsonConfigResult *result, cJSON *
         return IOTCL_ERR_BAD_VALUE;
     }
 
+    char *ver = get_json_string(json_root, "ver");
     char *cpid = get_json_string(json_root, "cpid");
     char *env = get_json_string(json_root, "env");
     char *uid = get_json_string(json_root, "uid");
@@ -51,6 +46,11 @@ static int iotcl_dra_parse_json_config(IotclDraJsonConfigResult *result, cJSON *
     if (!cpid || !env || !uid || !did) {
         IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "DRA JSON Config: cpid, env, uid, and did are required and cannot be empty");
         return IOTCL_ERR_MISSING_VALUE;
+    }
+
+    // ver is only used for sanity checks
+    if (ver && strcmp(ver, "2.1") != 0) {
+        IOTCL_WARN(IOTCL_ERR_BAD_VALUE, "DRA JSON Config: Expected protocol version \"%s\", got \"%s\"", "2.1", ver ? ver : "(null)");
     }
 
     // Allocate and copy values into result

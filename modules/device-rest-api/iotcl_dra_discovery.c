@@ -118,13 +118,12 @@ int iotcl_dra_discovery_init_url_with_host(IotclDraUrlContext *c, char *host, co
     return IOTCL_SUCCESS;
 }
 
-
 int iotcl_dra_discovery_init_url_aws(IotclDraUrlContext *c, const char *cpid, const char *env) {
-    return iotcl_dra_discovery_init_url_with_host(c, IOTCL_DRA_DEFAULT_DISCOVERY_HOST_AWS, cpid, env);
+    return iotcl_dra_discovery_init_url_with_platform(c, IOTCL_PF_AWS_STR, cpid, env);
 }
 
 int iotcl_dra_discovery_init_url_azure(IotclDraUrlContext *c, const char *cpid, const char *env) {
-    return iotcl_dra_discovery_init_url_with_host(c, IOTCL_DRA_DEFAULT_DISCOVERY_HOST_AZURE, cpid, env);
+    return iotcl_dra_discovery_init_url_with_platform(c, IOTCL_PF_AZURE_STR, cpid, env);
 }
 
 int iotcl_dra_discovery_parse(IotclDraUrlContext *c, int base_url_slack, const char *response_str) {
