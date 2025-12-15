@@ -99,6 +99,7 @@
 extern "C" {
 #endif
 
+// Constants for platform abbreviation strings used with discovery URL:
 #define IOTCL_PF_AWS_STR "aws"
 #define IOTCL_PF_AZURE_STR "az"
 

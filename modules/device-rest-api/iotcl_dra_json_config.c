@@ -14,8 +14,6 @@
 #include "iotcl_util.h"
 #include "iotcl_dra_json_config.h"
 
-#define EXPECTED_VERSION "2.1"
-
 // Helper: get non-empty string from JSON or return NULL
 static char *get_json_string(cJSON *root, const char *field) {
     cJSON *item = cJSON_GetObjectItem(root, field);
@@ -30,10 +28,10 @@ static int iotcl_dra_parse_json_config(IotclDraJsonConfigResult *result, cJSON *
         return IOTCL_ERR_PARSING_ERROR;
     }
 
-    // Parse and validate version
+    // Make sure version is 2.1
     char *ver = get_json_string(json_root, "ver");
-    if (!ver || strcmp(ver, EXPECTED_VERSION) != 0) {
-        IOTCL_ERROR(IOTCL_ERR_BAD_VALUE, "DRA JSON Config: Expected version \"%s\", got \"%s\"", EXPECTED_VERSION, ver ? ver : "(null)");
+    if (!ver || strcmp(ver, "2.1") != 0) {
+        IOTCL_ERROR(IOTCL_ERR_BAD_VALUE, "DRA JSON Config: Expected protocol version \"%s\", got \"%s\"", "2.1", ver ? ver : "(null)");
         return IOTCL_ERR_BAD_VALUE;
     }
 
