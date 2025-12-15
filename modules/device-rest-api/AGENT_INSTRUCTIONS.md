@@ -1,4 +1,4 @@
-Implement iotcl_dra_json_config.h and iotcl_dra_json_config.c to parse the iotcDeviceConfig.json.
+Implement iotcl_dra_json_config.h and iotcl_dra_json_config.c to parse the iotcDeviceConfig.json using the CJson library.
 Use the json parsing patterns like the ones in #iotcl_dra_discovery.c:iotcl_dra_parse_discovery_json, iotcl_dra_identity.c:iotcl_dra_parse_response_and_configure_iotcl, iotc_c2d.c:iotcl_c2d_parse_json.
 
 Regarding fields, return strduped values in IotclDraJsonConfigResult:
@@ -7,14 +7,19 @@ Regarding fields, return strduped values in IotclDraJsonConfigResult:
 - "cpid": return and ensure non-empty, non-null
 - "env": return into struct and ensure non-empty, non-null
 - "uid": return as "duid" string in the struct and ensure non-empty, non-null
-- "did": ignore, BUT return a new boolean value into the struct "dedicated_instance" which is true if and only if strlen(uid)==strlen("did")
+- "did": return as "client_id" AND return a new boolean value into the struct "dedicated_instance" which is true if and only if strlen(uid)==strlen(did)
 - "at": ignore
 - "sk": ignore
 - "disc": ignore
 
+Write a new unit test in #tsts/unit called device_config_json.c. Add it to the makefile. Follow the patterns from old tests. The test should only test the short form json.
 
+Read #file:CONTRIBUTING.md for guidance. 
 
------------ long form json:
+Use copyringt year 2025 in new files.
+
+long form json:
+```json
 {
   "ver": "2.1",
   "pf": "az",
@@ -26,6 +31,9 @@ Regarding fields, return strduped values in IotclDraJsonConfigResult:
   "sk": "cGFzc3dvcmRwYXNzd29yZAo=",
   "disc": "https://discovery.iotconnect.io/"
 }
+```
 
------- short form json:
+short form json:
+```json
 {"ver":"2.1","pf":"aws","cpid":"48b14f8b0cb24d029c1573e36ee31e49","env":"prod","uid":"aBRITE","did":"48b14f8b0cb24d029c1573e36ee31e49-aBRITE","at":3,"disc":"https://discovery.iotconnect.io"}
+```
