@@ -5,7 +5,7 @@
 
 /*
  * This file contains functions that aid in developing SDKs for specific platforms or help implement custom approaches
- * for to IoTConnect discovery HTTP API.
+ * for IoTConnect discovery HTTP API.
  * This URL module allows for easy construction, re-construction of URLs and splitting the URL
  * into host and resource path without having to maintain memory allocations for each piece.
  */

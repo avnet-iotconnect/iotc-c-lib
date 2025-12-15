@@ -2,11 +2,15 @@ This example shows how to configure the library with discovery/identity HTTP RES
 
 In this example shows common basic steps that are required to use the library:
 * Configure the library module with IOTCL_DCT_CUSTOM.
+* (Optional) Parse the iotcDeviceConfig.json (on AWS, you can copy directly to a string).
+The parsed json can be used to resolve CPID, ENV and DUID for discovery or library config.
+See *device_config_json.c* and *end_to_end_test()* at *device_rest_api.c* 
+in the unit tests directory for examples on how to do this.
 * Construct the discovery URL and run HTTP GET for discovery.
 * Parse the HTTP response and obtain the Base API URL.
 * Build the identity API URL on top of the Base URL and run HTTP GET for identity.
 * Configure the library with the HTTP response from Identity.
-* Destroy the URLs.
+* Free the two URLs with *iotcl_dra_url_deinit()*.
 
 ```c
 int run_http_identity(IotConnectConnectionType ct, const char *cpid, const char *env, const char* duid) {

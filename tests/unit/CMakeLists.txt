@@ -25,3 +25,4 @@ add_compile_options(-std=c99 -Werror -Wall -Wextra -pedantic -Wextra -Wno-format
 add_executable(test-rest-api ${iotc_c_lib_sources} ${heap_tracker_sources} ${cjson} ${dra_sources} device_rest_api.c)
 add_executable(test-event ${iotc_c_lib_sources} ${heap_tracker_sources} ${cjson} event.c)
 add_executable(test-telemetry ${iotc_c_lib_sources} ${heap_tracker_sources} ${cjson} telemetry.c)
+add_executable(test-device-config-json ${iotc_c_lib_sources} ${heap_tracker_sources} ${cjson} ${dra_sources} device_config_json.c)

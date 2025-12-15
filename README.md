@@ -18,7 +18,7 @@ protocols.
 
 ## Dependencies
 
-* cJSON library v1.7.13 or greater - v1.7.17 is included as submodule at lib/cJSON.
+* cJSON library v1.7.13 or greater - v1.7.19 is included as submodule at lib/cJSON.
 * A dynamic memory management facility. For example malloc, FreeRTOS heap or ThreadX memory pools. 
 
 ## Licensing
@@ -33,6 +33,7 @@ This library is distributed under the [MIT License](LICENSE.md).
 * Composing [OTA and command acknowledgements](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/d2c-messages) acknowledgements.
 * Parsing HTTP [discovery](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/discovery-api/)
 and [identity](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/identity-api/) Composing [Telemetry](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/d2c-messages/#Device) messages.
+* Device Config Json parsing - iotcDeviceConfig.json at the device *Info* page.
 
 ## General Features
 * Easy to use message parsing and composition.
@@ -69,16 +70,15 @@ See [unit test examples](tests/unit) for working samples that can compile and ru
 
 ## Integration Notes
 
-* Provide cJSON library v1.7.13 or greater to your build. If you already have an older version, you will need to upgrade it. 
+* Provide cJSON library v1.7.13 or greater to your build or use the version in the lib directory. If you already have an older version, you will need to upgrade it.  
 * Add relevant include directories to your includes and add sources to your build.
 * Follow examples in this document and examples in the tests/unit/ directory to learn how to initialize and use the components in your project.
 * Review iotcl_sample_config.h to make sure that default logging configuration for example will meet your needs.
  If needed, create your own configuration file, add it to the include path and and pass it to the compiler 
  with -DIOTCL_USER_CONFIG_FILE="iotcl_config.h" **with the quotes in the actual define**. 
  See [tests/uint/CMakeLists.txt](tests/uint/CMakeLists.txt) for an reference example.
-* If you have SNTP, battery backed clock, network time from the mobile network or similar, consider providing a time function 
+* If you have SNTP, battery backed clock, network time from the mobile network or similar, consider providing a time function
 to timestamp messages. You can skip this option even if you have the needed facilities in order to save on network bandwidth and
 let the server timestamp messages as they arrive. Note that in this case time is not available, 
 you should not be sending "bulk" telemetry messages with iotcl_telemetry_add_new_data_set().
-* Read the instructions in iotcl.h and relevant function to learn how properly configure the library to fit your needs best. 
- 
+* Read the instructions in iotcl.h and relevant function to learn how properly configure the library to fit your needs best.
