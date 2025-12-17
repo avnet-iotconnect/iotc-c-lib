@@ -34,7 +34,7 @@ function genSubject {
   echo "$subject"
 }
 function root {
-  openssl ecparam -name secp256k1 -genkey -noout -out "certs/${X509_CN}-key.pem"
+  openssl ecparam -name prime256v1 -genkey -noout -out "certs/${X509_CN}-key.pem"
   openssl req -new -x509 -key "certs/${X509_CN}-key.pem" -out "certs/${X509_CN}-crt.pem" \
     -days ${X509_VALIDITY} -subj "$(genSubject ${X509_CN})"
   echo "----------- Created Certificate -----------"
