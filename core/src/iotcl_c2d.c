@@ -39,7 +39,7 @@ typedef enum {
 struct IotclC2dEventDataTag {
     cJSON *root;
     IotclC2dEventType type;
-    char *hostname; // May ore may not be allocated. Temporary storage for parsed hostname string.
+    char *hostname; // May or may not be allocated. Temporary storage for parsed hostname string.
 };
 
 static int iotcl_c2d_process_callback(struct IotclC2dEventDataTag *event_data) {
