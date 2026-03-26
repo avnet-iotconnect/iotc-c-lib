@@ -91,7 +91,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <time.h>
-#include "iotcl_cfg.h"
+#include "iotcl_cfg.h" // IWYU pragma: keep
 #include "iotcl_c2d.h"
 #include "iotcl_telemetry.h"
 

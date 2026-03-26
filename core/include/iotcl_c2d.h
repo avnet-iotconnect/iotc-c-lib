@@ -27,6 +27,7 @@
 #ifndef IOTCL_C2D_H
 #define IOTCL_C2D_H
 
+#include <stdint.h>
 #include <stddef.h>
 
 // MBEDTLS config file style - include your own to override the config. See iotcl_example_config.h
