@@ -279,11 +279,11 @@ int iotcl_telemetry_set_string(IotclMessageHandle message, const char *path, con
 }
 
 int iotcl_telemetry_set_bool(IotclMessageHandle message, const char *path, bool value) {
-    const char *FUNCTION_NAME = FUNCTION_NAME;
+    const char *FUNCTION_NAME = "iotcl_telemetry_set_bool";
     const char *leaf_name = NULL;
     cJSON *parent_object = NULL;
     int status = iotcl_telemetry_set_functions_common(
-            "iotcl_telemetry_set_bool",
+            FUNCTION_NAME,
             &parent_object,
             &leaf_name,
             message,

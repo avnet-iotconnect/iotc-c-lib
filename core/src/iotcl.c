@@ -14,6 +14,18 @@
 #include "iotcl_util.h"
 #include "iotcl.h"
 
+// IMPORTANT: Always include this header file into your iotcl_*.c sources so that we compare the version
+// BEFORE we failing compilation so that the user can be better informed.
+// Some projects already have older conflicting cJSON, and for those we need to ensure that we don't include or compile
+// the old cJSON version.
+// Version 1.7.13 introduces some return values for certain function calls, and we need those.
+#define CJSON_VERSION_COMPOUND  (CJSON_VERSION_MAJOR * 10000 + CJSON_VERSION_MINOR * 100 + CJSON_VERSION_PATCH)
+#define CJSON_MIN_VERSION 10713
+
+#if (CJSON_VERSION_COMPOUND < CJSON_MIN_VERSION)
+#error "cJSON version must be 1.7.13 or newer"
+#endif
+
 static IotclGlobalConfig config = {0};
 
 static IoTclMallocFunction cfg_malloc_fn = malloc;
@@ -136,7 +148,7 @@ int iotcl_init(IotclClientConfig *c) {
         if (!p) goto cleanup_print_oom;
     }
 
-    config.mqtt_config.version = IOTCL_PROTOCOL_VERSION_DEFAULT;
+    config.mqtt_config.version = (char *) IOTCL_PROTOCOL_VERSION_DEFAULT;
 
     if (is_azure) {
         // we use snprintf with null to calculate buffer size

@@ -5,6 +5,16 @@
 
 #include <stdio.h>
 
+// Defaulting log endlines for appropriate OS for tests only
+#ifndef IOTCL_ENDLN
+    #ifdef _WIN32
+        #define IOTCL_ENDLN "\r\n"
+    #else
+        #define IOTCL_ENDLN "\n"
+    #endif
+#endif
+
+
 #include "iotcl.h"
 #include "iotcl_util.h"
 #include "iotcl_telemetry.h"

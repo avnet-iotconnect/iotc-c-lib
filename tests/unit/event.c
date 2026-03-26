@@ -4,8 +4,17 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+
+// Defaulting log endlines for appropriate OS for tests only
+#ifndef IOTCL_ENDLN
+    #ifdef _WIN32
+        #define IOTCL_ENDLN "\r\n"
+    #else
+        #define IOTCL_ENDLN "\n"
+    #endif
+#endif
+
 
 #include "iotcl.h"
 #include "iotcl_c2d.h"

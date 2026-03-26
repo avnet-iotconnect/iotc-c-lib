@@ -112,7 +112,7 @@ static int iotcl_dra_parse_response_and_configure_iotcl(cJSON *json_root) {
     c->pub_ack = iotcl_strdup_json_string(j_topics, "ack");
     c->sub_c2d = iotcl_strdup_json_string(j_topics, "c2d");
     c->cd = iotcl_strdup_json_string(j_meta, "cd");
-    c->version = IOTCL_PROTOCOL_VERSION_DEFAULT;
+    c->version = (char *) IOTCL_PROTOCOL_VERSION_DEFAULT;
 
     // NOTE: username should be null for aws, but currently identity returns one
     // We don't know whether this is aws or not just based on identity response

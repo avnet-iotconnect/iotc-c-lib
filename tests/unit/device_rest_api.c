@@ -6,6 +6,16 @@
 #include <stdio.h>
 #include <string.h>
 
+// Defaulting log endlines for appropriate OS for tests only
+#ifndef IOTCL_ENDLN
+    #ifdef _WIN32
+        #define IOTCL_ENDLN "\r\n"
+    #else
+        #define IOTCL_ENDLN "\n"
+    #endif
+#endif
+
+
 #include "iotcl.h"
 #include "iotcl_dra_url.h"
 #include "iotcl_dra_discovery.h"
