@@ -99,8 +99,5 @@ if(IOTCL_BUILD_TESTS)
     add_executable(test_${test_name} ${test_src})
     target_link_libraries(test_${test_name} PRIVATE iotc-c-lib)
     target_include_directories(test_${test_name} PRIVATE tests/unit)
-    target_compile_definitions(test_${test_name} PRIVATE
-      IOTCL_USER_CONFIG_FILE="iotcl_config.h"
-    )
   endforeach()
 endif()
