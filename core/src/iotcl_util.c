@@ -80,6 +80,54 @@ int iotcl_iso_timestamp_now(char *buffer, size_t buffer_size) {
     }
 }
 
+
+// NOTE: Year must be positive (greater than 1970)
+static time_t tm_to_time_t_utc(const struct tm *tm) {
+    if (tm->tm_year < 71 || tm->tm_mon < 0 || tm->tm_mon > 11 ||
+        tm->tm_mday < 1 || tm->tm_mday > 31 || tm->tm_hour < 0 ||
+        tm->tm_hour > 23 || tm->tm_min < 0 || tm->tm_min > 59 ||
+        tm->tm_sec < 0 || tm->tm_sec > 60) {
+        return (time_t)(-1);
+    }
+
+    int y = tm->tm_year + 1900;
+    int m = tm->tm_mon + 1;
+    if (m < 3) {
+        m += 12;
+        y--;
+    }
+
+    // Zeller's congruence-style calendar calculations
+    // Calculate days since Unix epoch (1970-01-01)
+    time_t days = (time_t) 365 * (y - 1970)
+                   + (y - 1969) / 4
+                   - (y - 1901) / 100
+                   + (y - 1601) / 400
+                   + (153 * m - 457) / 5
+                   + tm->tm_mday - 1;
+
+    return days * 86400 + tm->tm_hour * 3600 + tm->tm_min * 60 + tm->tm_sec;
+}
+
+time_t iotcl_iso8601_basic_to_epoch_utc_time(const char *iso_timestamp_str) {
+    struct tm time = {0};
+    int sscanf_ret = sscanf(iso_timestamp_str, IOTCL_ISO_TIMESTAMP_BASIC_PARSE_FORMAT,
+                            &time.tm_year, &time.tm_mon, &time.tm_mday,
+                            &time.tm_hour, &time.tm_min, &time.tm_sec);
+    if (sscanf_ret != 6) {
+        IOTCL_ERROR(
+            IOTCL_ERR_PARSING_ERROR,
+            "Failed to parse ISO timestamp string \"%s\"! Expected format is \"%s\"",
+            iso_timestamp_str,
+            IOTCL_ISO_TIMESTAMP_BASIC_PARSE_FORMAT
+        );
+        return 0;
+    }
+    time.tm_year -= 1900; // tm_year is years since 1900
+    time.tm_mon -= 1;     // tm_mon is 0-based 
+    return tm_to_time_t_utc(&time);    
+}
+
 bool iotcl_is_printable(const char *what, const char *str, size_t length) {
     // if we disabled this, then ignore checking
     if (iotcl_get_global_config()->is_valid && iotcl_get_global_config()->disable_printable_check) {

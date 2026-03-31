@@ -111,6 +111,26 @@ typedef void (*IotclMqttTransportSend)(const char *topic, const char *json_str);
 
 typedef time_t (*IotclTimeFunction)(void);
 
+// This structure is a part of the IotclMqttConfig for configuration values related to AWS features.
+// It is only relevant if "Telemetry Files" or "Video Streaming" features are enabled, and will be NULL otherwise.
+// Future implementation may contain the S3 buckets information.
+typedef struct {
+    // When "Telemetry Files" feature is enabled (otherwise NULL),
+    // invoke with mTLS (with device credentials) to obtain temporary S3 credentials
+    char *fs_creds_url;
+
+    // When "VideoStreaming" feature is enabled (otherwise NULL),
+    // invoke with mTLS (with device credentials) to obtain temporary KVS credentials
+    char *vs_creds_url;  
+
+    // If video streaming is enabled, this value indicates whether the video streaming can be automatically started
+    bool is_vs_autostart;
+
+    // When video streaming is enabled as well as WebRTC for the template and device (otherwise NULL),
+    // this value indicates the WebRTC channel ARN
+    char *webrtc_channel_arn;
+} IotclAwsConfig;
+
 // This structure's instance is a part of IoTConnect library's global configuration and is
 // permanently kept by the library after iotcl_init() is called, and until iotcl_deinit().
 // The client can use provided values in order to configure their mqtt client.
@@ -127,6 +147,7 @@ typedef struct {
     char *sub_c2d;      // MQTT topic for receiving C2D commands.
     char *cd;           // The "CD" value that can be used with AzureRTOS and similar to configure main topic "properties" (Azure concept)
     char *version;      // The "protocol ver" value that can be used with AzureRTOS and similar to configure main topic "properties" (Azure concept)
+    IotclAwsConfig aws; // AWS Video Streaming and S3 configuration. Only relevant if "Telemetry Files" or "Video Streaming" feature is enabled
 } IotclMqttConfig;
 
 // See DEVICE CONFIGURATION GUIDE in the header of this file.

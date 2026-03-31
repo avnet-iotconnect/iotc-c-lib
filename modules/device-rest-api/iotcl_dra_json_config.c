@@ -11,16 +11,10 @@
 #include "iotcl_cfg.h"
 #include "iotcl_log.h"
 #include "iotcl_util.h"
+#include "iotcl_internal.h"
 #include "iotcl_dra_json_config.h"
 #include "iotcl.h"
 
-// Helper: get non-empty string from JSON or return NULL
-static char *get_json_string(cJSON *root, const char *field) {
-    cJSON *item = cJSON_GetObjectItem(root, field);
-    if (!item || !cJSON_IsString(item)) return NULL;
-    char *val = cJSON_GetStringValue(item);
-    return (val && strlen(val) > 0) ? val : NULL;
-}
 
 static int iotcl_dra_parse_json_config(IotclDraJsonConfigResult *result, cJSON *json_root) {
     if (!json_root) {

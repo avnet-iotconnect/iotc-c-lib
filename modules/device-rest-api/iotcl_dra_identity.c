@@ -35,15 +35,11 @@ static void iotcl_dra_clear_and_free_mqtt_config(IotclMqttConfig* c) {
     iotcl_free(c->pub_ack);
     iotcl_free(c->sub_c2d);
     iotcl_free(c->cd);
+    iotcl_free(c->aws.fs_creds_url);
+    iotcl_free(c->aws.vs_creds_url);
+    iotcl_free(c->aws.webrtc_channel_arn);
     // version is a constant
-    c->username = NULL;
-    c->host = NULL;
-    c->client_id = NULL;
-    c->pub_rpt = NULL;
-    c->pub_ack = NULL;
-    c->sub_c2d = NULL;
-    c->cd = NULL;
-    c->version = NULL;
+    memset(c, 0, sizeof(IotclMqttConfig));
 }
 static int iotcl_dra_parse_response_and_configure_iotcl(cJSON *json_root) {
     const char *f;
@@ -122,6 +118,25 @@ static int iotcl_dra_parse_response_and_configure_iotcl(cJSON *json_root) {
         return IOTCL_ERR_OUT_OF_MEMORY;
     }
 
+    f = "vs"; // inside "p"
+    if (cJSON_HasObjectItem(j_p, f)) {
+        cJSON *j_vs = cJSON_GetObjectItem(j_p, f);
+        int resut;
+        resut = iotcl_strdup_json_string_if_exists(&c->aws.fs_creds_url, j_vs, "url");
+        if (IOTCL_SUCCESS != resut) goto cleanup;
+    }
+
+    f = "vs"; // inside "p"
+    if (cJSON_HasObjectItem(j_p, f)) {
+        cJSON *j_vs = cJSON_GetObjectItem(j_p, f);
+        int resut;
+        resut = iotcl_strdup_json_string_if_exists(&c->aws.vs_creds_url, j_vs, "url");
+        if (IOTCL_SUCCESS != resut) goto cleanup;
+        resut = iotcl_strdup_json_string_if_exists(&c->aws.webrtc_channel_arn, j_vs, "carn");
+        if (IOTCL_SUCCESS != resut) goto cleanup;
+        c->aws.is_vs_autostart = cJSON_GetObjectItem(j_vs, "as") && cJSON_IsTrue(cJSON_GetObjectItem(j_vs, "as"));
+    }
+
     return IOTCL_SUCCESS;
 
     cleanup:
@@ -184,3 +199,4 @@ int iotcl_dra_identity_configure_library_mqtt_with_length(const uint8_t *respons
     cJSON_Delete(root);
     return status;
 }
+

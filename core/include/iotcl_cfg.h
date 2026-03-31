@@ -35,7 +35,11 @@ extern "C" {
 
 // -------  TIME FORMATTING -------
 // strftime Format and Size of a buffer that can accommodate a string like "YYYY-MM-DDTHH:MM:SS.000Z" (including null).
+// While /IOTCONNECT uses the long format, AWS uses the basic format used for parsing.
+// When sending data to /IOTCONNECT, the library will always use the long format.
+// Some functions will use the basic parse format to convert timestamps.
 #define IOTCL_ISO_TIMESTAMP_FORMAT "%Y-%m-%dT%H:%M:%S.000Z"
+#define IOTCL_ISO_TIMESTAMP_BASIC_PARSE_FORMAT "%d-%d-%dT%d:%d:%dZ"
 #define IOTCL_ISO_TIMESTAMP_STR_LEN (sizeof("2024-01-02T03:04:05.006Z") - 1)
 
 // -------  MQTT TOPIC FORMATS AND DEFINES -------

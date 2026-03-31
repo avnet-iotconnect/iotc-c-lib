@@ -253,7 +253,11 @@ void iotcl_deinit(void) {
     iotcl_free(config.mqtt_config.cd);
     // config.mqtt_config.version is a constant string always in this implementation
 
-    // config.is_valid = false; after memset
+    iotcl_free(config.mqtt_config.aws.fs_creds_url);
+    iotcl_free(config.mqtt_config.aws.vs_creds_url);
+    iotcl_free(config.mqtt_config.aws.webrtc_channel_arn);
+
+    // config.is_valid = false; after memset    
     memset(&config, 0, sizeof(config));
 }
 
@@ -282,13 +286,19 @@ void iotcl_mqtt_print_config(void) {
     }
     IotclMqttConfig* mc = &config.mqtt_config;
     IOTCL_INFO("-- IOTCL MQTT Config --");
-    print_value_if_not_null("Client ID", mc->client_id);
-    print_value_if_not_null("Username ", mc->username);
-    print_value_if_not_null("Host     ", mc->host);
-    print_value_if_not_null("Pub RPT  ", mc->pub_rpt);
-    print_value_if_not_null("Pub ACK  ", mc->pub_ack);
-    print_value_if_not_null("Sub C2D  ", mc->sub_c2d);
-    print_value_if_not_null("CD       ", mc->cd);
+    print_value_if_not_null("Client ID  ", mc->client_id);
+    print_value_if_not_null("Username   ", mc->username);
+    print_value_if_not_null("Host       ", mc->host);
+    print_value_if_not_null("Pub RPT    ", mc->pub_rpt);
+    print_value_if_not_null("Pub ACK    ", mc->pub_ack);
+    print_value_if_not_null("Sub C2D    ", mc->sub_c2d);
+    print_value_if_not_null("CD         ", mc->cd);
+    print_value_if_not_null("FS Creds   ", mc->aws.fs_creds_url);
+    print_value_if_not_null("VS Creds   ", mc->aws.vs_creds_url);
+    print_value_if_not_null("WebRTC ARN ", mc->aws.webrtc_channel_arn);
+    if (mc->aws.vs_creds_url) {
+        IOTCL_INFO("VS AutoStart: %s", mc->aws.is_vs_autostart ? "true" : "false");
+    }
 }
 
 int iotcl_mqtt_send_telemetry(IotclMessageHandle msg, bool pretty) {

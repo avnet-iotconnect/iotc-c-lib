@@ -40,6 +40,7 @@ if(IOTCL_ENABLE_DRA)
     modules/device-rest-api/iotcl_dra_identity.c
     modules/device-rest-api/iotcl_dra_json_config.c
     modules/device-rest-api/iotcl_dra_url.c
+    modules/device-rest-api/iotcl_dra_credentials.c
   )
 endif()
 

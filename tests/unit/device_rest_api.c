@@ -21,6 +21,7 @@
 #include "iotcl_dra_discovery.h"
 #include "iotcl_dra_identity.h"
 #include "iotcl_dra_json_config.h"
+#include "iotcl_dra_credentials.h"
 #include "heap_tracker.h"
 
 
@@ -30,8 +31,14 @@
 #define EXAMPLE_IDENTITY_RESPONSE \
     "{\"d\":{\"ec\":0,\"ct\":200,\"meta\":{\"at\":3,\"df\":60,\"cd\":\"XG4E2CA\",\"gtw\":null,\"edge\":0,\"pf\":0,\"hwv\":\"\",\"swv\":\"\",\"v\":2.1},\"has\":{\"d\":0,\"attr\":1,\"set\":0,\"r\":0,\"ota\":0},\"p\":{\"n\":\"mqtt\",\"h\":\"a3etk4e19usyja-ats.iot.us-east-1.amazonaws.com\",\"p\":8883,\"id\":\"abcde\",\"topics\":{\"rpt\":\"$aws/rules/msg_d2c_rpt/abcde/2.1/0\",\"flt\":\"$aws/rules/msg_d2c_flt/abcde/2.1/3\",\"od\":\"$aws/rules/msg_d2c_od/abcde/2.1/4\",\"hb\":\"$aws/rules/msg_d2c_hb/abcde/2.1/5\",\"ack\":\"$aws/rules/msg_d2c_ack/abcde/2.1/6\",\"dl\":\"$aws/rules/msg_d2c_dl/abcde/2.1/7\",\"di\":\"$aws/rules/msg_d2c_di/abcde/2.1/1\",\"c2d\":\"iot/abcde/cmd\",\"set\":{\"pub\":\"$aws/things/abcde/shadow/name/setting_info/report\",\"sub\":\"$aws/things/abcde/shadow/name/setting_info/property-shadow\",\"pubForAll\":\"$aws/things/abcde/shadow/name/setting_info/get\",\"subForAll\":\"$aws/things/abcde/shadow/name/setting_info/get/all\"}}},\"dt\":\"2024-03-06T16:29:56.745Z\"},\"status\":200,\"message\":\"Device info loaded successfully.\"}"
 
+#define EXAMPLE_IDENTITY_RESPONSE_WITH_FSVS \
+    "{\"d\":{\"ec\":0,\"ct\":200,\"meta\":{\"at\":3,\"df\":5,\"cd\":\"XG4E2PC\",\"gtw\":null,\"edge\":0,\"pf\":0,\"hwv\":\"\",\"swv\":\"\",\"v\":2.1,\"ctd\":false,\"ce\":0},\"has\":{\"d\":0,\"attr\":1,\"set\":0,\"r\":0,\"ota\":0},\"p\":{\"n\":\"mqtt\",\"h\":\"a3etk4e19usyja-ats.iot.us-east-1.amazonaws.com\",\"p\":8883,\"id\":\"mydevice\",\"un\":\"a3etk4e19usyja-ats.iot.us-east-1.amazonaws.com/mydevice\",\"topics\":{\"rpt\":\"$aws/rules/msg_d2c_rpt/mydevice/2.1/0\",\"flt\":\"$aws/rules/msg_d2c_flt/mydevice/2.1/3\",\"od\":\"$aws/rules/msg_d2c_od/mydevice/2.1/4\",\"hb\":\"$aws/rules/msg_d2c_hb/mydevice/2.1/5\",\"ack\":\"$aws/rules/msg_d2c_ack/mydevice/2.1/6\",\"dl\":\"$aws/rules/msg_d2c_dl/mydevice/2.1/7\",\"di\":\"$aws/rules/msg_d2c_di/mydevice/2.1/1\",\"c2d\":\"iot/mydevice/cmd\",\"set\":{\"pub\":\"$aws/things/mydevice/shadow/name/setting_info/report\",\"sub\":\"$aws/things/mydevice/shadow/name/setting_info/property-shadow\",\"pubForAll\":\"$aws/things/mydevice/shadow/name/setting_info/get\",\"subForAll\":\"$aws/things/mydevice/shadow/name/setting_info/get/all\"},\"fu\":\"$aws/rules/msg_d2c_file/mydevice/2.1/11\"},\"vs\":{\"as\":true,\"url\":\"https://c3fff4h9bsm26k.credentials.iot.us-east-1.amazonaws.com/role-aliases/kinesisvideoalias/credentials\",\"carn\":\"test::arn::here\"},\"fs\":{\"buckets\":[{\"bn\":\"iotc-857898724229-telemetry-1769715628145\",\"ca\":true,\"rarn\":\"arn:aws:iam::857898724229:role/allow-sharable-role-from-260030673750-1769715628145\"}],\"url\":\"https://c3fff4h9bsm26k.credentials.iot.us-east-1.amazonaws.com/role-aliases/filesupportalias/credentials\"}},\"dt\":\"2026-03-30T21:25:04.107Z\",\"c2dDelivery\":0},\"status\":200,\"message\":\"Device info loaded successfully.\"}"
+
 #define TEST_DEVICE_CONFIG_JSON \
     "{\"ver\":\"2.1\",\"pf\":\"az\",\"cpid\":\"48b14f8b0cb24d029c1573e36ee31e12\",\"env\":\"avnet\",\"uid\":\"TestDUID\",\"did\":\"48b14f8b0cb24d029c1573e36ee31e12-TestDUID\",\"at\":3,\"disc\":\"https://discovery.iotconnect.io\"}"
+
+#define TEST_CREDENTIALS_JSON \
+    "{\"credentials\": {\"accessKeyId\":\"AKI\",\"secretAccessKey\":\"SAK\",\"sessionToken\":\"ST\", \"expiration\": \"2016-03-15T00:05:07Z\"}}"
 
 static void end_to_end_test(void) {
     
@@ -62,6 +69,53 @@ static void end_to_end_test(void) {
     iotcl_mqtt_print_config();
     iotcl_dra_url_deinit(&identity_url);
     iotcl_deinit();
+}
+
+static void fs_and_vs_test(void) {
+    
+    IotclClientConfig config;
+    iotcl_init_client_config(&config);
+    config.device.instance_type = IOTCL_DCT_CUSTOM;
+    iotcl_init(&config);
+
+    IotclDraJsonConfigResult json_config = {0};
+    if (IOTCL_SUCCESS != iotcl_dra_json_config_parse(&json_config, TEST_DEVICE_CONFIG_JSON)) {
+        printf("ERROR: Failed to parse device config JSON\n");
+        return;    
+    }
+
+    IotclDraUrlContext discovery_url = {0};
+    iotcl_dra_discovery_init_url_with_platform(&discovery_url, json_config.pf, json_config.cpid, json_config.env);
+    printf("Discovery URL: %s\n", iotcl_dra_url_get_url(&discovery_url));
+    iotcl_dra_url_deinit(&discovery_url);
+
+    IotclDraUrlContext identity_url = {0};
+    iotcl_dra_discovery_parse(&identity_url, 0, EXAMPLE_DISCOVERY_RESPONSE);
+    iotcl_dra_identity_build_url(&identity_url, json_config.duid);
+    printf("Identity URL: %s\n", iotcl_dra_url_get_url(&identity_url));
+    // NOTE: The EXAMPLE_IDENTITY_RESPONSE is actually AWS, but for testing purposes we use it here
+    iotcl_dra_identity_configure_library_mqtt(EXAMPLE_IDENTITY_RESPONSE_WITH_FSVS);
+    
+    iotcl_dra_json_config_free(&json_config);
+    iotcl_mqtt_print_config();
+    iotcl_dra_url_deinit(&identity_url);
+    iotcl_deinit();
+}
+
+static void crdentials_test(void) {
+    IotclDraCredentialsResult credentials = {0};
+    if (IOTCL_SUCCESS != iotcl_dra_json_credentials_parse(&credentials, TEST_CREDENTIALS_JSON)) {
+        printf("ERROR: Failed to parse credentials JSON\n");
+        return;    
+    }
+    printf("Parsed Credentials:\n");
+    printf("  Access Key ID: %s\n", credentials.access_key_id);
+    printf("  Secret Access Key: %s\n", credentials.secret_access_key);
+    printf("  Session Token: %s\n", credentials.session_token);
+    printf("  Expiration String: %s\n", credentials.expiration_str);
+    printf("  Expiration: %lld\n", (long long)credentials.expiration);
+
+    iotcl_dra_json_credentials_free(&credentials);
 }
 
 static void discovery_test(void) {
@@ -104,6 +158,13 @@ static void discovery_test(void) {
 
     end_to_end_test();
 
+    printf(" --  END_TO_END_TEST WITH FS and VS -- \n");
+
+    fs_and_vs_test();
+
+    printf(" --  TESTING CREDENTIALS PARSING -- \n");
+    crdentials_test();
+
     printf(" --  TESTING ERROR AND EDGE CASES -- \n");
 
     iotcl_dra_url_init(&c, "no https");
@@ -119,6 +180,7 @@ static void discovery_test(void) {
     printf("Is HTTPS: %s\n", iotcl_dra_url_is_https(&c) ? "yes" : "no");
     iotcl_dra_url_deinit(&c);
 
+    
 
     /// END
     iotcl_deinit();

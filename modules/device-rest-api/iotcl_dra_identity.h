@@ -30,8 +30,6 @@ int iotcl_dra_identity_configure_library_mqtt(const char *response_str);
 // Parse an identity response and configure IoTConnect library mqtt settings with the response result
 int iotcl_dra_identity_configure_library_mqtt_with_length(const uint8_t *response_data, size_t response_data_size);
 
-
-
 #ifdef __cplusplus
 }
 #endif
