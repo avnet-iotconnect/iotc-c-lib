@@ -19,7 +19,8 @@ protocols.
 ## Dependencies
 
 * cJSON library v1.7.13 or greater - v1.7.19 is included as submodule at lib/cJSON.
-* A dynamic memory management facility. For example malloc, FreeRTOS heap or ThreadX memory pools. 
+* A dynamic memory management facility. For example malloc, FreeRTOS heap or ThreadX memory pools.
+* CMake 3.22 or greater, if using CMake to build.
 
 ## Licensing
 
@@ -34,6 +35,8 @@ This library is distributed under the [MIT License](LICENSE.md).
 * Parsing HTTP [discovery](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/discovery-api/)
 and [identity](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/identity-api/) Composing [Telemetry](https://docs.iotconnect.io/iotconnect/sdk/message-protocol/device-message-2-1/d2c-messages/#Device) messages.
 * Device Config JSON parsing - iotcDeviceConfig.json at the device *Info* page.
+* Device Identity information for Video Streaming and Telemetry Files (partial) support.
+* Parsing Temporary AWS credentials for the Video Streaming and Telemetry Files features.
 
 ## General Features
 * Easy to use message parsing and composition.
@@ -80,19 +83,55 @@ See [unit test examples](tests/unit) for working samples that can compile and ru
 
 # Building and Testing
 
-If using the library using a non-CMake build system, you can simply include the library sources in your build.
-The best practice is to include this library as a submodule in your project.
-
-The library supports building and including the library with CMake. 
-You can add the library to your project as a submodule and then link to it with CMake's `add_subdirectory` and `target_link_libraries` commands.
-See the Greengrass SDK as the reference implementation for CMake integration.
-
-Build the tests with:
+Build the library and the tests with:
 ```bash
 cmake -B build -D CMAKE_BUILD_TYPE=Debug # this will build the library and the tests in debug mode
 make -C build -j$(nproc) # If not using Git Bash on windows, set the -j flag accordingly or omit it
 /build/bin/test_telemetry # Run the telemetry test binary
 ```
+
+# Integrating The Library Into Your Project
+
+Before continuing, review [iotcl_example_config.h](core/include/iotcl_example_config.h) 
+and make sure that default logging configuration will meet your needs.
+
+If needed, create your own configuration file, add it to the include path and pass it to the compiler 
+ with ```add_definitions(-DIOTCL_USER_CONFIG_FILE="iotcl_config.h")``` or 
+```-DIOTCL_USER_CONFIG_FILE="iotcl_config.h"``` if not using CMake.
+
+## Library Integration For CMake Projects
+
+If your application is built with CMake, adding this section to your CakeLists.txt
+should suffice for most projects:
+
+```cmake
+add_subdirectory(lib/iotc-c-lib) # or your own submodule path to the library
+target_link_libraries(your-cmake-project PUBLIC iotc-c-lib)
+```
+
+Please review the CMake options in [CMakeLists.txt](CMakeLists.txt) to ensure 
+that the default options satisfy the needs for your project.
+
+## Custom Project Library Integration
+
+If you are integrating the library into your own project, here are some general notes that may help your integration,
+if you are using a non-CMake build system:
+
+* Provide the required version of the cJSON library in your build or use the submodule in the lib directory.  
+* Add relevant sources and include directories to your project. Typically, this will be the [core](core) directory
+and the [modules/dvice-rest-api](modules/device-rest-api) directory if your device can do HTTPS requests.
+* Follow examples in this document and examples in the tests/unit/ directory to learn how to initialize and use the components in your project.
+* Review [iotcl_example_config.h](core/include/iotcl_example_config.h) to make sure that default logging configuration will meet your needs.
+ If needed, create your own configuration file, add it to the include path and pass it to the compiler 
+ with -DIOTCL_USER_CONFIG_FILE="iotcl_config.h" **with the quotes in the actual define**.
+ Please note that if you are building the iotc-c-lib as a shared or static library, you should make sure that the library 
+ is built with the same configuration as your project.
+ See [CMakeLists.txt](CMakeLists.txt) for more details.
+* If you have SNTP, battery backed clock, network time from the mobile network or similar, consider providing a time function
+to timestamp messages. You can skip this option even if you have the needed facilities in order to save on network bandwidth and
+let the server timestamp messages as they arrive. Note that in this case, timestamping is not available, 
+so you should not be sending "bulk" telemetry messages with iotcl_telemetry_add_new_data_set().
+* Read the instructions in iotcl.h and relevant function to learn how properly configure the library to fit your needs best.
 
 
 # Development and Contribution
@@ -127,22 +166,3 @@ sudo apt install build-essential cmake
 * If adding a new feature, please make sure to add at least a positive flow test for it in the tests/unit/ directory.
 
 
-## Custom Integration Notes
-
-If you are integrating the library into your own project, here are some general notes that may help your integration,
-if you are using a non-CMake build system:
-
-* Provide the required version of the cJSON library in your build or use the submodule in the lib directory.  
-* Add relevant include directories to your includes and add sources to your build.
-* Follow examples in this document and examples in the tests/unit/ directory to learn how to initialize and use the components in your project.
-* Review [iotcl_example_config.h](core/include/iotcl_example_config.h) to make sure that default logging configuration for example will meet your needs.
- If needed, create your own configuration file, add it to the include path and pass it to the compiler 
- with -DIOTCL_USER_CONFIG_FILE="iotcl_config.h" **with the quotes in the actual define**.
- Please note that if you are building the iotc-c-lib as a shared or static library, you should make sure that the library 
- is built with the same configuration as your project.
- See [CMakeLists.txt](CMakeLists.txt) for more details.
-* If you have SNTP, battery backed clock, network time from the mobile network or similar, consider providing a time function
-to timestamp messages. You can skip this option even if you have the needed facilities in order to save on network bandwidth and
-let the server timestamp messages as they arrive. Note that in this case, timestamping is not available, 
-so you should not be sending "bulk" telemetry messages with iotcl_telemetry_add_new_data_set().
-* Read the instructions in iotcl.h and relevant function to learn how properly configure the library to fit your needs best.
