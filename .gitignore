@@ -3,6 +3,7 @@
 .cproject/
 .project/
 .vscode/
+.cache/
 
 #build files
 cmake-build-*/

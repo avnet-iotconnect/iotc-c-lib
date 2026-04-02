@@ -9,24 +9,10 @@
 #define IOTCL_INTERNAL_H
 
 #include <stdbool.h>
-#include <time.h>
-#include "cJSON.h"
 #include "iotcl.h"
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-// IMPORTANT: Always include this header file into your iotcl_*.c sources so that we compare the version
-// BEFORE we failing compilation so that the user can be better informed.
-// Some projects already have older conflicting cJSON, and for those we need to ensure that we don't include or compile
-// the old cJSON version.
-// Version 1.7.13 introduces some return values for certain function calls, and we need those.
-#define CJSON_VERSION_COMPOUND  (CJSON_VERSION_MAJOR * 10000 + CJSON_VERSION_MINOR * 100 + CJSON_VERSION_PATCH)
-#define CJSON_MIN_VERSION 10713
-
-#if (CJSON_VERSION_COMPOUND < CJSON_MIN_VERSION)
-#error "cJSON version must be 1.7.13 or newer"
 #endif
 
 typedef struct {
@@ -44,7 +30,17 @@ typedef struct {
 IotclGlobalConfig *iotcl_get_global_config(void);
 
 // A helper function to clone a string from cJSON structure and return NULL if type is invalid etc.
-char *iotcl_strdup_json_string(cJSON *cjson, const char *value_name);
+// This simplified version can be used when the field is required.
+struct cJSON;
+char *iotcl_strdup_json_string(struct cJSON *cjson, const char *value_name);
+
+// A helper function to clone a string from cJSON structure and return NULL if the field does not exist.
+// This version can be used when the field is optional
+// It returns IOTCL_ERR_OUT_OF_MEMORY if malloc fails.
+int iotcl_strdup_json_string_if_exists(char** result, struct cJSON *cjson, const char *value_name);
+
+// Helper: get non-empty string from JSON or return NULL
+char *get_json_string(struct cJSON *root, const char *field);
 
 #ifdef __cplusplus
 }

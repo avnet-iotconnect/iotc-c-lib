@@ -5,17 +5,16 @@
 
 #include <string.h>
 
-#include "cJSON.h"
 
 // MBEDTLS config file style - include your own to override the config. See iotcl_example_config.h
 #if defined(IOTCL_USER_CONFIG_FILE)
 #include IOTCL_USER_CONFIG_FILE
 #endif
 
-#include "iotcl_internal.h"
 #include "iotcl_cfg.h"
 #include "iotcl_log.h"
 #include "iotcl_dra_url.h"
+#include "iotcl.h"
 
 int iotcl_dra_url_init_with_slack(IotclDraUrlContext* c, size_t slack, const char *url) {
     const char *const HTTPS_HEADER = "https://";

@@ -14,6 +14,18 @@
 #include "iotcl_util.h"
 #include "iotcl.h"
 
+// IMPORTANT: Always include this header file into your iotcl_*.c sources so that we compare the version
+// BEFORE we failing compilation so that the user can be better informed.
+// Some projects already have older conflicting cJSON, and for those we need to ensure that we don't include or compile
+// the old cJSON version.
+// Version 1.7.13 introduces some return values for certain function calls, and we need those.
+#define CJSON_VERSION_COMPOUND  (CJSON_VERSION_MAJOR * 10000 + CJSON_VERSION_MINOR * 100 + CJSON_VERSION_PATCH)
+#define CJSON_MIN_VERSION 10713
+
+#if (CJSON_VERSION_COMPOUND < CJSON_MIN_VERSION)
+#error "cJSON version must be 1.7.13 or newer"
+#endif
+
 static IotclGlobalConfig config = {0};
 
 static IoTclMallocFunction cfg_malloc_fn = malloc;
@@ -136,7 +148,7 @@ int iotcl_init(IotclClientConfig *c) {
         if (!p) goto cleanup_print_oom;
     }
 
-    config.mqtt_config.version = IOTCL_PROTOCOL_VERSION_DEFAULT;
+    config.mqtt_config.version = (char *) IOTCL_PROTOCOL_VERSION_DEFAULT;
 
     if (is_azure) {
         // we use snprintf with null to calculate buffer size
@@ -241,7 +253,11 @@ void iotcl_deinit(void) {
     iotcl_free(config.mqtt_config.cd);
     // config.mqtt_config.version is a constant string always in this implementation
 
-    // config.is_valid = false; after memset
+    iotcl_free(config.mqtt_config.aws.fs_creds_url);
+    iotcl_free(config.mqtt_config.aws.vs_creds_url);
+    iotcl_free(config.mqtt_config.aws.webrtc_channel_arn);
+
+    // config.is_valid = false; after memset    
     memset(&config, 0, sizeof(config));
 }
 
@@ -270,13 +286,19 @@ void iotcl_mqtt_print_config(void) {
     }
     IotclMqttConfig* mc = &config.mqtt_config;
     IOTCL_INFO("-- IOTCL MQTT Config --");
-    print_value_if_not_null("Client ID", mc->client_id);
-    print_value_if_not_null("Username ", mc->username);
-    print_value_if_not_null("Host     ", mc->host);
-    print_value_if_not_null("Pub RPT  ", mc->pub_rpt);
-    print_value_if_not_null("Pub ACK  ", mc->pub_ack);
-    print_value_if_not_null("Sub C2D  ", mc->sub_c2d);
-    print_value_if_not_null("CD       ", mc->cd);
+    print_value_if_not_null("Client ID  ", mc->client_id);
+    print_value_if_not_null("Username   ", mc->username);
+    print_value_if_not_null("Host       ", mc->host);
+    print_value_if_not_null("Pub RPT    ", mc->pub_rpt);
+    print_value_if_not_null("Pub ACK    ", mc->pub_ack);
+    print_value_if_not_null("Sub C2D    ", mc->sub_c2d);
+    print_value_if_not_null("CD         ", mc->cd);
+    print_value_if_not_null("FS Creds   ", mc->aws.fs_creds_url);
+    print_value_if_not_null("VS Creds   ", mc->aws.vs_creds_url);
+    print_value_if_not_null("WebRTC ARN ", mc->aws.webrtc_channel_arn);
+    if (mc->aws.vs_creds_url) {
+        IOTCL_INFO("VS AutoStart: %s", mc->aws.is_vs_autostart ? "true" : "false");
+    }
 }
 
 int iotcl_mqtt_send_telemetry(IotclMessageHandle msg, bool pretty) {

@@ -35,15 +35,11 @@ static void iotcl_dra_clear_and_free_mqtt_config(IotclMqttConfig* c) {
     iotcl_free(c->pub_ack);
     iotcl_free(c->sub_c2d);
     iotcl_free(c->cd);
+    iotcl_free(c->aws.fs_creds_url);
+    iotcl_free(c->aws.vs_creds_url);
+    iotcl_free(c->aws.webrtc_channel_arn);
     // version is a constant
-    c->username = NULL;
-    c->host = NULL;
-    c->client_id = NULL;
-    c->pub_rpt = NULL;
-    c->pub_ack = NULL;
-    c->sub_c2d = NULL;
-    c->cd = NULL;
-    c->version = NULL;
+    memset(c, 0, sizeof(IotclMqttConfig));
 }
 static int iotcl_dra_parse_response_and_configure_iotcl(cJSON *json_root) {
     const char *f;
@@ -112,7 +108,7 @@ static int iotcl_dra_parse_response_and_configure_iotcl(cJSON *json_root) {
     c->pub_ack = iotcl_strdup_json_string(j_topics, "ack");
     c->sub_c2d = iotcl_strdup_json_string(j_topics, "c2d");
     c->cd = iotcl_strdup_json_string(j_meta, "cd");
-    c->version = IOTCL_PROTOCOL_VERSION_DEFAULT;
+    c->version = (char *) IOTCL_PROTOCOL_VERSION_DEFAULT;
 
     // NOTE: username should be null for aws, but currently identity returns one
     // We don't know whether this is aws or not just based on identity response
@@ -120,6 +116,25 @@ static int iotcl_dra_parse_response_and_configure_iotcl(cJSON *json_root) {
         iotcl_dra_clear_and_free_mqtt_config(c);
         IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, "DRA Identity: One or more response fields was not found or ran out of memory");
         return IOTCL_ERR_OUT_OF_MEMORY;
+    }
+
+    f = "fs"; // inside "p"
+    if (cJSON_HasObjectItem(j_p, f)) {
+        cJSON *j_fs = cJSON_GetObjectItem(j_p, f);
+        int result;
+        result = iotcl_strdup_json_string_if_exists(&c->aws.fs_creds_url, j_fs, "url");
+        if (IOTCL_SUCCESS != result) goto cleanup;
+    }
+
+    f = "vs"; // inside "p"
+    if (cJSON_HasObjectItem(j_p, f)) {
+        cJSON *j_vs = cJSON_GetObjectItem(j_p, f);
+        int result;
+        result = iotcl_strdup_json_string_if_exists(&c->aws.vs_creds_url, j_vs, "url");
+        if (IOTCL_SUCCESS != result) goto cleanup;
+        result = iotcl_strdup_json_string_if_exists(&c->aws.webrtc_channel_arn, j_vs, "carn");
+        if (IOTCL_SUCCESS != result) goto cleanup;
+        c->aws.is_vs_autostart = cJSON_GetObjectItem(j_vs, "as") && cJSON_IsTrue(cJSON_GetObjectItem(j_vs, "as"));
     }
 
     return IOTCL_SUCCESS;
@@ -184,3 +199,4 @@ int iotcl_dra_identity_configure_library_mqtt_with_length(const uint8_t *respons
     cJSON_Delete(root);
     return status;
 }
+

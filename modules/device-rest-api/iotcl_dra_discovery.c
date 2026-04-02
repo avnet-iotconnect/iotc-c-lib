@@ -6,7 +6,7 @@
 
 #include "cJSON.h"
 
-#include "iotcl_internal.h"
+
 #include "iotcl.h" // for Platform definitions like IOTCL_PF_AWS_STR
 #include "iotcl_cfg.h"
 #include "iotcl_log.h"

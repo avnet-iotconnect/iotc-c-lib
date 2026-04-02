@@ -26,6 +26,12 @@ int iotcl_to_iso_timestamp(time_t timestamp, char *buffer, size_t buffer_size);
 // Buffer size should be IOTCL_ISO_TIMESTAMP_STR_LEN, but argument s added for safety checking.
 int iotcl_iso_timestamp_now(char *buffer, size_t buffer_size);
 
+// Provides a low level conversion function to convert an ISO 8601 timestamp string to epoch time.
+// on systems where time funcions are not available or limited.
+// Returns 0 if parsing fails (not negative) to avoid potential issues with time_t being unsigned on some platforms
+// The time string must be UTC time in basic format like "2016-03-15T00:05:07Z" or the function will fail.
+time_t iotcl_iso8601_basic_to_epoch_utc_time(const char *iso_timestamp_str);
+
 // Checks if str is printable up to given length. Prints an error with "what" as message prefix if not printable.
 // Length should not include the null string terminator.
 bool iotcl_is_printable(const char* what, const char* str, size_t length);

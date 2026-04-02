@@ -4,11 +4,11 @@
  */
 
 #include <string.h>
+#include <stdbool.h>
 
 #include "cJSON.h"
 #include "iotcl_log.h"
 #include "iotcl_internal.h"
-#include "iotcl_util.h"
 #include "iotcl.h"
 #include "iotcl_c2d.h"
 
@@ -39,7 +39,7 @@ typedef enum {
 struct IotclC2dEventDataTag {
     cJSON *root;
     IotclC2dEventType type;
-    char *hostname; // May ore may not be allocated. Temporary storage for parsed hostname string.
+    char *hostname; // May or may not be allocated. Temporary storage for parsed hostname string.
 };
 
 static int iotcl_c2d_process_callback(struct IotclC2dEventDataTag *event_data) {
@@ -105,7 +105,7 @@ static int iotcl_c2d_parse_json(cJSON *root) {
 
     struct IotclC2dEventDataTag event_data = {0};
     event_data.root = root;
-    event_data.type = type;
+    event_data.type = (IotclC2dEventType) type;
 
     root = NULL; // Clear this pointer to avoid a double free in case some other step that can fail is added below
 

@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "iotcl_cfg.h"
+#include "iotcl_log.h"
 #include "heap_tracker.h"
 
 #define MAX_ADDRESSES 1000
@@ -44,9 +47,9 @@ void ht_print_status(void) {
 void ht_print_summary(void) {
     ht_print_status();
     if (ht_context.allocations_on_heap) {
-        printf(" --- MEMORY LEAK DETECTED --- ");
+        IOTCL_ERROR(IOTCL_ERR_OUT_OF_MEMORY, " --- MEMORY LEAK DETECTED --- ");
     } else {
-        printf("No memory leaks detected.");
+        IOTCL_INFO("No memory leaks detected.");
     }
 }
 void *ht_malloc(size_t size) {
