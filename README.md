@@ -101,7 +101,7 @@ If needed, create your own configuration file, add it to the include path and pa
 
 ## Library Integration For CMake Projects
 
-If your application is built with CMake, adding this section to your CakeLists.txt
+If your application is built with CMake, adding this section to your CMakeLists.txt
 should suffice for most projects:
 
 ```cmake
@@ -119,7 +119,7 @@ if you are using a non-CMake build system:
 
 * Provide the required version of the cJSON library in your build or use the submodule in the lib directory.  
 * Add relevant sources and include directories to your project. Typically, this will be the [core](core) directory
-and the [modules/dvice-rest-api](modules/device-rest-api) directory if your device can do HTTPS requests.
+and the [modules/device-rest-api](modules/device-rest-api) directory if your device can do HTTPS requests.
 * Follow examples in this document and examples in the tests/unit/ directory to learn how to initialize and use the components in your project.
 * Review [iotcl_example_config.h](core/include/iotcl_example_config.h) to make sure that default logging configuration will meet your needs.
  If needed, create your own configuration file, add it to the include path and pass it to the compiler 

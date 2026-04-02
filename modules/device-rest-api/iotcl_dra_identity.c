@@ -118,22 +118,22 @@ static int iotcl_dra_parse_response_and_configure_iotcl(cJSON *json_root) {
         return IOTCL_ERR_OUT_OF_MEMORY;
     }
 
-    f = "vs"; // inside "p"
+    f = "fs"; // inside "p"
     if (cJSON_HasObjectItem(j_p, f)) {
-        cJSON *j_vs = cJSON_GetObjectItem(j_p, f);
-        int resut;
-        resut = iotcl_strdup_json_string_if_exists(&c->aws.fs_creds_url, j_vs, "url");
-        if (IOTCL_SUCCESS != resut) goto cleanup;
+        cJSON *j_fs = cJSON_GetObjectItem(j_p, f);
+        int result;
+        result = iotcl_strdup_json_string_if_exists(&c->aws.fs_creds_url, j_fs, "url");
+        if (IOTCL_SUCCESS != result) goto cleanup;
     }
 
     f = "vs"; // inside "p"
     if (cJSON_HasObjectItem(j_p, f)) {
         cJSON *j_vs = cJSON_GetObjectItem(j_p, f);
-        int resut;
-        resut = iotcl_strdup_json_string_if_exists(&c->aws.vs_creds_url, j_vs, "url");
-        if (IOTCL_SUCCESS != resut) goto cleanup;
-        resut = iotcl_strdup_json_string_if_exists(&c->aws.webrtc_channel_arn, j_vs, "carn");
-        if (IOTCL_SUCCESS != resut) goto cleanup;
+        int result;
+        result = iotcl_strdup_json_string_if_exists(&c->aws.vs_creds_url, j_vs, "url");
+        if (IOTCL_SUCCESS != result) goto cleanup;
+        result = iotcl_strdup_json_string_if_exists(&c->aws.webrtc_channel_arn, j_vs, "carn");
+        if (IOTCL_SUCCESS != result) goto cleanup;
         c->aws.is_vs_autostart = cJSON_GetObjectItem(j_vs, "as") && cJSON_IsTrue(cJSON_GetObjectItem(j_vs, "as"));
     }
 
