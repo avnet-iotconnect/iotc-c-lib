@@ -83,11 +83,17 @@ See [unit test examples](tests/unit) for working samples that can compile and ru
 
 # Building and Testing
 
+Clone this repository.  Either ensure to pass ```--recursive``` flag to the ```git clone``` command or 
+update after cloning with:
+```bash
+git submodule update --init --recursive
+```
+
 Build the library and the tests with:
 ```bash
 cmake -B build -D CMAKE_BUILD_TYPE=Debug # this will build the library and the tests in debug mode
 make -C build -j$(nproc) # If not using Git Bash on windows, set the -j flag accordingly or omit it
-/build/bin/test_telemetry # Run the telemetry test binary
+build/bin/test_telemetry # Run the telemetry test binary
 ```
 
 # Integrating The Library Into Your Project
@@ -143,7 +149,7 @@ We recommend using VSCode on Linux for making modifications to the library.
 We recommend using PyCharm's Git integration for Git work as it gives the user more visibility into the changes being made 
 and better control over what ought to be committed.
 
-* Install VSCode along with C/C++, clangd, **C/C++ DevTools** and **CMake Tools** extensions.
+* Install VSCode along with C/C++, clangd, **C/C++ DevTools** and **CMake Tools** (from Microsoft) extensions.
 > [!NOTE]
 > Later, when launching VSCode, if asked to disable C/C++ extension's default IntelliSense engine, 
 > select an option to *Disable C/C++ extension Intellisense* and use clangd instead for better code analysis and navigation.
@@ -158,11 +164,14 @@ sudo apt install build-essential cmake
 * Clone this repository and open it with *Open Folder* in VSCode.
 * Validate that you can build the tests with the instructions in the [Building and Testing](#building-and-testing) section above.
 * Configure the CMake project with CMake Tools extension:
-  * Open the *Command Palette* (Ctrl+Shift+P) and run CMake: Select a Kit.  The extension will scan your system and list available compilers (e.g., GCC, Clang). 
-  * Choose the compiler you want to use (It will be GCC if you followed the steps above).
+  * Open the *Command Palette* (Ctrl+Shift+P) and run CMake: Select a Kit. 
+  * Choose the compiler you want to use (It will be GCC if you followed the steps above). "Scan for Kit" option does not seem to work reliably.
 * On the left panel click the CMake button.
-* In *Project Outline*, select a test target under *iotc-c-lib*, right click and select *Build* or *Debug* to run it.
-* Optionally, you can set breakpoints in the code and debug the tests to step through the library code.
+* In *Project Outline*, select a test target under *iotc-c-lib*, right click and select *Build*. 
+* In order to debug a test, ensure that a debugger (```apt install gdb``` on Ubuntu). You can right lick a specific test
+in *Project Outline* and *Set as Debug/Launch Target*. Clicking the *Debug* or *Run* icon at the bottom toolbar will do the appropriate action.
+You may need to restart the IDE after selecting a kit or after building for this to be properly detected.
+* You can set breakpoints in the code and debug the tests to step through the library code.
 * If adding a new feature, please make sure to add at least a positive flow test for it in the tests/unit/ directory.
 
 
