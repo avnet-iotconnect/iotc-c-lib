@@ -15,6 +15,7 @@ jobs:
 
       - name: Build Tests
         run: |
+          git submodule update --init --recursive
           sudo apt-get update &&
           sudo apt-get install -y build-essential cmake &&
           cmake -B build -DCMAKE_BUILD_TYPE=MinSizeRel &&
