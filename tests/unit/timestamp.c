@@ -56,8 +56,8 @@ int main(void) {
     int test_result = 0; // until proven otherwise
     test_result |= validate_timestamp("2020-01-01T00:00:00Z");
     test_result |= validate_timestamp("2020-12-31T23:59:59Z");
-    test_result |= validate_timestamp("2023-02-28T23:59:59Z"); // Laast leap second
-    test_result |= validate_timestamp("2023-03-01T00:00:00Z"); // Day after leap second
+    test_result |= validate_timestamp("2023-02-28T23:59:59Z"); // Last non-leap second
+    test_result |= validate_timestamp("2023-03-01T00:00:00Z"); // After non-leap second
     test_result |= validate_timestamp("1971-01-01T00:00:00Z"); // Earliest valid date
     test_result |= validate_timestamp("2024-02-29T12:34:56Z"); // Leap year
     test_result |= validate_timestamp("2024-03-01T00:00:00Z"); // Day after leap day
