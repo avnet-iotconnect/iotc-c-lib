@@ -97,14 +97,17 @@ static time_t tm_to_time_t_utc(const struct tm *tm) {
         y--;
     }
 
-    // Zeller's congruence-style calendar calculations
-    // Calculate days since Unix epoch (1970-01-01)
+    // Calculate days since Unix epoch (1970-01-01).
+    // The month formula uses a March-1 year origin; +59 converts that baseline
+    // back to January 1. (y-1968)/4 correctly counts the leap day for dates in
+    // March-December of a leap year, unlike the erroneous (y-1969)/4.
     time_t days = (time_t) 365 * (y - 1970)
-                   + (y - 1969) / 4
+                   + (y - 1968) / 4
                    - (y - 1901) / 100
                    + (y - 1601) / 400
                    + (153 * m - 457) / 5
-                   + tm->tm_mday - 1;
+                   + tm->tm_mday - 1
+                   + 59;
 
     return days * 86400 + tm->tm_hour * 3600 + tm->tm_min * 60 + tm->tm_sec;
 }
