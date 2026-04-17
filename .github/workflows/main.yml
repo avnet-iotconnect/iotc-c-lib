@@ -24,4 +24,4 @@ jobs:
       - name: Run Tests
         run: |
           cd build/bin &&
-          ./test_device_config_json  && ./test_device_rest_api && ./test_event && ./test_telemetry
+          ./test_device_config_json  && ./test_device_rest_api && ./test_event && ./test_telemetry && ./test_timestamp
