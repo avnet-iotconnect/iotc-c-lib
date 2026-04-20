@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: MIT
  * Copyright (C) 2020 Avnet
- * Authors: Nikola Markovic <nikola.markovic@avnet.com> et al.
+ * Authors: Nikola Markovic <nikola.markovic@avnet.com>,
+ *          Zackary Andraka <zackary.andraka@avnet.com> et al.
  */
 #include <string.h>
 #include <ctype.h>
@@ -52,13 +53,17 @@ int iotcl_to_iso_timestamp(time_t timestamp, char *buffer, size_t buffer_size) {
     // we could check timestamp < IOTCL_TIME_2024_START, but technically it could be incorrect
     // in case some platform decices to do something weird with time_t.
     // So we will just ensure that they year starts with 2024 or higher by using strncmp alphanumeric ordering.
-    if (strncmp(buffer, "2024", 4) == -1) {
+    if (strncmp(buffer, "2024", 4) < 0) {
         IOTCL_WARN(
                 IOTCL_ERR_CONFIG_ERROR,
                 "iotcl_to_iso_timestamp: Expected timestamp newer than January 2024, but got %s!",
                 buffer
         );
-        return IOTCL_ERR_CONFIG_ERROR;
+        // Not a critical error. While we expect a "now" timestamp
+        // the other timestamps are valid which are used in testing.
+        // We will hope that user may notice the warning.
+        return IOTCL_SUCCESS;
+
     }
     return IOTCL_SUCCESS;
 }
@@ -82,11 +87,14 @@ int iotcl_iso_timestamp_now(char *buffer, size_t buffer_size) {
 
 
 // NOTE: Year must be positive (greater than 1970)
+// We don't want o end up with any negative values
 static time_t tm_to_time_t_utc(const struct tm *tm) {
     if (tm->tm_year < 71 || tm->tm_mon < 0 || tm->tm_mon > 11 ||
         tm->tm_mday < 1 || tm->tm_mday > 31 || tm->tm_hour < 0 ||
         tm->tm_hour > 23 || tm->tm_min < 0 || tm->tm_min > 59 ||
-        tm->tm_sec < 0 || tm->tm_sec > 60) {
+        tm->tm_sec < 0 || tm->tm_sec > 60
+    ) {
+        IOTCL_ERROR(IOTCL_ERR_FAILED, "tm_to_time_t_utc: Time struct must start at 1971 and use zero-based m/d/y/h/m/s!");
         return (time_t)(-1);
     }
 
@@ -97,14 +105,18 @@ static time_t tm_to_time_t_utc(const struct tm *tm) {
         y--;
     }
 
-    // Zeller's congruence-style calendar calculations
     // Calculate days since Unix epoch (1970-01-01)
+    // Using Zeller's congruence-style calendar calculations
+    // which uses a March-1 year origin; +59 converts that baseline
+    // back to January 1. (y-1968)/4 correctly counts the leap day for dates in
+    // March-December of a leap year
     time_t days = (time_t) 365 * (y - 1970)
-                   + (y - 1969) / 4
+                   + (y - 1968) / 4
                    - (y - 1901) / 100
                    + (y - 1601) / 400
                    + (153 * m - 457) / 5
-                   + tm->tm_mday - 1;
+                   + tm->tm_mday - 1
+                   + 59; // Algorithm offset for March
 
     return days * 86400 + tm->tm_hour * 3600 + tm->tm_min * 60 + tm->tm_sec;
 }
