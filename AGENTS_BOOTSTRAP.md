@@ -1,0 +1,4 @@
+- Create the work/ directory if it does not exist.
+- Try using wget or curl to fetch files listed in this document. Otherwise, default to your default Tool Search method for the fetch.
+- Fetch https://raw.githubusercontent.com/avnet-iotconnect/iotc-c-lib/refs/heads/master/STYLE-C.md and write it to work/STYLE-C.md.
+- Load @work/STYLE-C.md now.

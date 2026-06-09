@@ -9,6 +9,8 @@ Before you submit your Pull Request (PR) consider the following guidelines:
 
 1. Be sure that an issue describes the problem you're fixing, or documents the design for the feature you'd like to add.
    Discussing the design upfront helps to ensure that we're ready to accept your work.
+1. Before making any changes, ensure that you read [STYLE-C.md](STYLE-C.md) and follow the coding standards described there.
+1. If using an AI agent to make changes, tell your agent to execute [AGENTS_BOOTSTRAP.md](AGENTS_BOOTSTRAP.md) before making any changes, and ensure that [AGENTS.md](AGENTS.md) is being loaded in every session.
 1. Make your changes in a new git branch.
 1. Add your changes **including appropriate test cases**.
 1. Follow our Coding Standard Guidelines.

@@ -1,0 +1,2 @@
+- If creating new files or editing existing files, follow the guidelines @work/STYLE-C.md.
+- Notify the user with message "I read AGENTS.md, and I am ready" now.
