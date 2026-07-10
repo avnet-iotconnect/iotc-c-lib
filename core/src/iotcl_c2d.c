@@ -60,6 +60,13 @@ static int iotcl_c2d_process_callback(struct IotclC2dEventDataTag *event_data) {
                 config->event_functions.ota_cb(event_data);
             }
             break;
+        case IOTCL_C2D_ET_MODULE_COMMAND:
+            // Module commands (e.g. the platform's AI Model push) carry the same
+            // "ack" + "urls" payload as OTA, so they route to the OTA callback.
+            if (config->event_functions.ota_cb) {
+                config->event_functions.ota_cb(event_data);
+            }
+            break;
         default:
             // should be pre-checked and never happen
             break;
@@ -97,7 +104,8 @@ static int iotcl_c2d_parse_json(cJSON *root) {
     }
     int type = (int) cJSON_GetNumberValue(j_ct);
 
-    if (type != IOTCL_C2D_ET_DEVICE_COMMAND && type != IOTCL_C2D_ET_DEVICE_OTA) {
+    if (type != IOTCL_C2D_ET_DEVICE_COMMAND && type != IOTCL_C2D_ET_DEVICE_OTA &&
+        type != IOTCL_C2D_ET_MODULE_COMMAND) {
         status = IOTCL_ERR_PARSING_ERROR;
         IOTCL_WARN(IOTCL_ERR_PARSING_ERROR, "Received unsupported message type %d", type);
         goto cleanup;
@@ -136,6 +144,11 @@ static int iotcl_c2d_validate_data_and_type(
         return IOTCL_ERR_MISSING_VALUE;
     }
     if (data->type != expected_type) {
+        // Module commands (AI Model push) share the OTA payload schema,
+        // so allow them wherever OTA data is expected.
+        if (expected_type == IOTCL_C2D_ET_DEVICE_OTA && data->type == IOTCL_C2D_ET_MODULE_COMMAND) {
+            return IOTCL_SUCCESS;
+        }
         IOTCL_ERROR(IOTCL_ERR_MISSING_VALUE, "Incorrect c2d event type %d! Expected %d.", data->type, expected_type);
         return IOTCL_ERR_BAD_VALUE;
     }
