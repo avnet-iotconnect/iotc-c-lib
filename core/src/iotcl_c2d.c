@@ -179,12 +179,26 @@ static cJSON *iotcl_c2d_get_ota_url_array_item(IotclC2dEventData data, int index
 }
 
 // The OTA schema delivers urls[] as {"url": ...} objects, but AI Model pushes
-// (ct:2 module commands) can deliver plain URL strings. Accept both shapes.
+// (ct:2 module commands) have been observed delivering other shapes. Accept a
+// plain URL string, an object with a "url" field, or -- failing that -- scan
+// the object for the first string member that looks like an https URL.
 static const char *iotcl_c2d_url_from_array_item(cJSON *url_array_item) {
     if (cJSON_IsString(url_array_item)) {
         return cJSON_GetStringValue(url_array_item);
     }
-    return iotcl_c2d_get_string_value(url_array_item, true, "url");
+    const char *url = iotcl_c2d_get_string_value(url_array_item, false, "url");
+    if (url) {
+        return url;
+    }
+    cJSON *child = NULL;
+    cJSON_ArrayForEach(child, url_array_item) {
+        const char *value = cJSON_GetStringValue(child);
+        if (value && strncmp(value, "https://", 8) == 0) {
+            return value;
+        }
+    }
+    IOTCL_ERROR(IOTCL_ERR_PARSING_ERROR, "no download URL found in the urls[] entry");
+    return NULL;
 }
 
 static char *iotcl_c2d_create_ack(IotclC2dEventType type, const char *ack_id, int status, const char *message) {
