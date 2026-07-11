@@ -178,6 +178,15 @@ static cJSON *iotcl_c2d_get_ota_url_array_item(IotclC2dEventData data, int index
     }
 }
 
+// The OTA schema delivers urls[] as {"url": ...} objects, but AI Model pushes
+// (ct:2 module commands) can deliver plain URL strings. Accept both shapes.
+static const char *iotcl_c2d_url_from_array_item(cJSON *url_array_item) {
+    if (cJSON_IsString(url_array_item)) {
+        return cJSON_GetStringValue(url_array_item);
+    }
+    return iotcl_c2d_get_string_value(url_array_item, true, "url");
+}
+
 static char *iotcl_c2d_create_ack(IotclC2dEventType type, const char *ack_id, int status, const char *message) {
     char *result = NULL;
 
@@ -243,7 +252,7 @@ const char *iotcl_c2d_get_ota_url(IotclC2dEventData data, int index) {
         // called function logs the error
         return NULL;
     }
-    return iotcl_c2d_get_string_value(url_array_item, true, "url");
+    return iotcl_c2d_url_from_array_item(url_array_item);
 }
 
 const char *iotcl_c2d_get_ota_url_hostname(IotclC2dEventData data, int index) {
@@ -259,7 +268,7 @@ const char *iotcl_c2d_get_ota_url_hostname(IotclC2dEventData data, int index) {
         // called function logs the error
         return NULL;
     }
-    const char *url = iotcl_c2d_get_string_value(url_array_item, true, "url");
+    const char *url = iotcl_c2d_url_from_array_item(url_array_item);
     if (!url) {
         // called function logs the error
         return NULL;
@@ -296,7 +305,7 @@ const char *iotcl_c2d_get_ota_url_resource(IotclC2dEventData data, int index) {
         return NULL;
     }
 
-    const char *url = iotcl_c2d_get_string_value(url_array_item, true, "url");
+    const char *url = iotcl_c2d_url_from_array_item(url_array_item);
     if (!url) {
         // called function logs the error
         return NULL;
