@@ -41,7 +41,7 @@ or introduce new warnings WRT the baseline's compiler/interpreter settings.
 
 ## Workflow Scripts
 Workflow scripts are installers, build scripts, runners and similar scripts that are usually written in bash but can be python scripts as well.
-* Prefer *bash* over *sh* and always use ```set -e```.
+* Prefer *bash* over *sh* and always use at least ```set -e```.
 * Write workflow scrips in simple to follow steps, expert-human-like style where one evaluates whether an error handler is needed, or whether the user.
 * Some initial sanity check error checks are good. Like usage, or things that can confuse the user to help with guidance.
 * Use functions where it makes sense. Balance flow readability with complexity due to repeat, or convoluting extra steps.
