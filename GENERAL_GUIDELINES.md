@@ -25,7 +25,8 @@ Adopt STYLE-C.md guidelines for Python projects where applicable, if in doubt.
   * For all other files, directories and shell scripts (where applicable or suitable) except for Markdown files at top level use kebab-case.
   * For Markdown files at repository top level use UPPER_SNAKE_CASE.
   * All file extensions should be in lower case.
-* Avoid unnecessary comment blocks for the sake of just having a comment block. For example, if function is called ```walk_animal()``` a comment block stating that "The function walks an animal" is redundant. So use self-describing function names and reserve comments for important things, so that the users actually read them.
+* Avoid unnecessary comment blocks for the sake of just having a comment block. For example, if function is called ```walk_animal()``` a comment block stating that "The function walks an animal" is redundant.
+So use self-describing function names and reserve comments for important things, so that the users actually read them.
 * AI agents must refrain from extensively commenting thought process. Focus on commenting the code or algorithms.,
 * Use descriptive function and variable names so that comments are not needed. Prefix boolean variables and function with "is_", "can_", "are_", or similar prefixes.
 Prefix getters/setters with "get_"/"set_". Match "create" with "destroy", "init" init "deinint". Avoid using generic names like "tmp", "temp" etc.
@@ -37,3 +38,13 @@ For example, for C, the c99 standard option is a good starting point for librari
 * Always eliminate sensible warnings (like unused variables, initializations, etc.) in your code.
 If using a third party baseline/sample project, make an honest attempt to ensure that adding your code to the project does not introduce new warnings
 or introduce new warnings WRT the baseline's compiler/interpreter settings.
+
+## Workflow Scripts
+Workflow scripts are installers, build scripts, runners and similar scripts that are usually written in bash but can be python scripts as well.
+* Prefer *bash* over *sh* and always use ```set -e```.
+* Write workflow scrips in simple to follow steps, expert-human-like style where one evaluates whether an error handler is needed, or whether the user.
+* Some initial sanity check error checks are good. Like usage, or things that can confuse the user to help with guidance.
+* Use functions where it makes sense. Balance flow readability with complexity due to repeat, or convoluting extra steps.
+* Avoid unneccessary variables. ```cd ${HOME}/work``` is more readable than WORK_AREA=work and then cd ${HOME}/${WORK_AREA}.
+Basically explicit where makes sense and has no reuse over unneccessary variable declaration.
+* Prefer running long steps without output or log them into logs where useful, but notify the user about the long operations.
